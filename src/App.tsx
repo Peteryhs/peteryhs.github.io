@@ -1,5 +1,12 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { type ReactNode, useState, useRef } from 'react'
+import {
+  AboutBentoGrid,
+  ProfileCard,
+  LanguagesCard,
+  WaterlooCard,
+  CompEngFocusCard,
+} from './components/AboutBento'
 import { BlurFade } from './components/BlurFade'
 import {
   CursorFollower,
@@ -7,7 +14,7 @@ import {
   type CursorInfo,
 } from './components/CursorFollower'
 import { DemoIcon } from './components/DemoIcon'
-import { topicById, topics, type Topic, type TopicId } from './content/site'
+import { topicById, type Topic, type TopicId } from './content/site'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
@@ -62,6 +69,36 @@ function TopicWord({
 }
 
 function ExpandedSection({ topic, onClose }: { topic: Topic; onClose: () => void }) {
+  const renderContent = () => {
+    switch (topic.id) {
+      case 'about':
+        return (
+          <div className="expanded-bento-dual">
+            <ProfileCard standalone />
+            <LanguagesCard standalone />
+          </div>
+        )
+      case 'waterloo':
+        return <WaterlooCard standalone />
+      case 'compeng':
+        return <CompEngFocusCard standalone />
+      default:
+        return (
+          <div className="expanded-items">
+            {topic.items?.map((item) => (
+              <article key={item.title}>
+                <h3>
+                  {item.title}
+                  {item.tag && <small className="item-tag"> · {item.tag}</small>}
+                </h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        )
+    }
+  }
+
   return (
     <motion.section
       className="expanded-section"
@@ -69,13 +106,13 @@ function ExpandedSection({ topic, onClose }: { topic: Topic; onClose: () => void
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.42, ease }}
+      transition={{ duration: 0.38, ease }}
     >
       <div className="expanded-section-inner">
         <div className="expanded-header">
           <div>
             <span className="expanded-eyebrow">{topic.eyebrow}</span>
-            <h2>{topic.title}</h2>
+            <h2 className="expanded-title">{topic.title}</h2>
           </div>
           <button
             type="button"
@@ -86,20 +123,18 @@ function ExpandedSection({ topic, onClose }: { topic: Topic; onClose: () => void
             ✕
           </button>
         </div>
-        <p className="expanded-desc">{topic.description}</p>
-        <div className="expanded-items">
-          {topic.items.map((item) => (
-            <article key={item.title}>
-              <h3>
-                {item.title}
-                {item.tag && <small className="item-tag"> · {item.tag}</small>}
-              </h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
+
+        <div className="expanded-body">{renderContent()}</div>
+
         <div className="expanded-actions">
-          <a href={`#${topic.id}`} className="expanded-link">
+          <a
+            href={
+              topic.id === 'about' || topic.id === 'waterloo' || topic.id === 'compeng'
+                ? '#about'
+                : `#${topic.id}`
+            }
+            className="expanded-link"
+          >
             Jump to full section below ↓
           </a>
         </div>
@@ -108,7 +143,26 @@ function ExpandedSection({ topic, onClose }: { topic: Topic; onClose: () => void
   )
 }
 
-function LongFormSection({ topic }: { topic: Topic }) {
+function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passions' | 'contact' }) {
+  const topic = topicById[topicId]
+
+  if (topicId === 'about') {
+    return (
+      <BlurFade delay={0.1} inViewMargin="-60px">
+        <section className="longform-section" id="about" aria-labelledby="about-heading">
+          <div className="section-title-wrap">
+            <span className="section-eyebrow">01 / about me</span>
+            <h2 id="about-heading">About Me</h2>
+          </div>
+          <p className="section-lead-desc">
+            A visual bento breakdown of who I am, where I study, and my core focus areas.
+          </p>
+          <AboutBentoGrid />
+        </section>
+      </BlurFade>
+    )
+  }
+
   return (
     <BlurFade delay={0.1} inViewMargin="-60px">
       <section className="longform-section" id={topic.id} aria-labelledby={`${topic.id}-heading`}>
@@ -116,9 +170,9 @@ function LongFormSection({ topic }: { topic: Topic }) {
           <span className="section-eyebrow">{topic.eyebrow}</span>
           <h2 id={`${topic.id}-heading`}>{topic.title}</h2>
         </div>
-        <p>{topic.description}</p>
+        <p className="section-lead-desc">{topic.description}</p>
         <div className="longform-grid">
-          {topic.items.map((item) => (
+          {topic.items?.map((item) => (
             <article key={item.title} className="longform-card">
               <h3>
                 {item.title}
@@ -199,10 +253,10 @@ export default function App() {
                   Peter
                 </>,
                 {
-                  title: 'Peter',
+                  title: 'Peter Shao',
                   badge: 'About Me',
                   preview:
-                    'Waterloo Computer Engineering student exploring distributed systems, ML & hardware.',
+                    'Toronto, Canada · CE @ uWaterloo · Building soft & hardware projects.',
                   accent: '✦',
                 },
               )}
@@ -215,35 +269,36 @@ export default function App() {
             <p>
               A student at the{' '}
               {word(
-                'experience',
+                'waterloo',
                 <>
                   Univ of Waterloo <DemoIcon kind="university" />
                 </>,
                 {
                   title: 'University of Waterloo',
                   badge: 'Education',
-                  preview: 'Honours Computer Engineering (Co-op) — Faculty of Engineering.',
+                  preview:
+                    'First Year Computer Engineering with NA’s largest co-op program.',
                   accent: '🏛',
                 },
               )}{' '}
               studying{' '}
               {word(
-                'experience',
+                'compeng',
                 <>
                   CompEng <DemoIcon kind="engineering" />
                 </>,
                 {
                   title: 'Computer Engineering',
-                  badge: 'Program',
+                  badge: 'Focus',
                   preview:
-                    'Focusing on low-level systems, hardware architectures & scalable software.',
+                    'Distributed systems, applied ML & embedded electronics engineering.',
                   accent: '⚙',
                 },
               )}
               .
             </p>
           </BlurFade>
-          {showAfter('experience')}
+          {showAfter('waterloo', 'compeng')}
 
           <BlurFade delay={0.22} yOffset={12}>
             <p>
@@ -381,9 +436,10 @@ export default function App() {
       </header>
 
       <div className="longform-content">
-        {topics.map((topic) => (
-          <LongFormSection key={topic.id} topic={topic} />
-        ))}
+        <LongFormSection topicId="about" />
+        <LongFormSection topicId="projects" />
+        <LongFormSection topicId="passions" />
+        <LongFormSection topicId="contact" />
       </div>
     </main>
   )
