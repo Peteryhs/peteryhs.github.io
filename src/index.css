@@ -1,0 +1,566 @@
+@import "@fontsource/patrick-hand";
+
+:root {
+  color-scheme: light;
+  --paper: #fbfaf7;
+  --ink: #222222;
+  --muted: #646059;
+  --line: rgba(34, 34, 34, 0.16);
+  --line-strong: rgba(34, 34, 34, 0.3);
+  --hover: rgba(230, 214, 182, 0.6);
+  --hover-active: #eddab4;
+  --accent-color: #3b82f6;
+  
+  /* Cursor card tokens */
+  --cursor-bg: rgba(253, 252, 250, 0.88);
+  --cursor-border: rgba(34, 34, 34, 0.12);
+  --cursor-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.12), 0 6px 16px -2px rgba(0, 0, 0, 0.06);
+  --card-bg: rgba(245, 243, 237, 0.7);
+
+  font-family: "Patrick Hand", "Comic Sans MS", cursive;
+  background: var(--paper);
+  color: var(--ink);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #161618;
+    --ink: #f2eee8;
+    --muted: #a69f94;
+    --line: rgba(242, 238, 232, 0.14);
+    --line-strong: rgba(242, 238, 232, 0.28);
+    --hover: rgba(92, 74, 56, 0.7);
+    --hover-active: #6e5741;
+    
+    --cursor-bg: rgba(28, 28, 32, 0.88);
+    --cursor-border: rgba(255, 255, 255, 0.14);
+    --cursor-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.5), 0 8px 20px -2px rgba(0, 0, 0, 0.35);
+    --card-bg: rgba(30, 30, 34, 0.65);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  overflow-x: hidden;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+main {
+  width: 100%;
+  position: relative;
+}
+
+/* ==========================================================================
+   Hero Intro Section
+   ========================================================================== */
+
+.intro {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding: 3rem clamp(1.5rem, 3.2vw, 4.5rem);
+}
+
+.intro-container {
+  width: min(100%, 1580px);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.intro p {
+  margin: 0;
+  font-size: clamp(1.65rem, 2.38vw, 2.52rem);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  line-height: 1.42;
+}
+
+.intro-signoff {
+  margin-top: 0.75rem !important;
+  color: var(--muted);
+  font-size: clamp(1.45rem, 2.1vw, 2.2rem) !important;
+}
+
+/* Icons & Visual flair */
+.demo-icon {
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  margin: 0 0.08em;
+  vertical-align: -0.06em;
+  color: #665f55;
+  transition: transform 200ms ease;
+}
+
+.demo-icon-wave,
+.demo-icon-university,
+.demo-icon-utilities {
+  color: #c7764f;
+}
+
+.demo-icon-engineering,
+.demo-icon-systems {
+  color: #5c7893;
+}
+
+.demo-icon-machine-learning,
+.demo-icon-infrastructure {
+  color: #6f8c7e;
+}
+
+.demo-icon-electronics,
+.demo-icon-projects,
+.demo-icon-research {
+  color: #8c6b85;
+}
+
+.no-wrap {
+  white-space: nowrap;
+}
+
+.profile-photo {
+  display: inline-block;
+  width: 1.18em;
+  height: 1.18em;
+  margin: 0 0.08em 0 0.08em;
+  vertical-align: -0.16em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 70% 30%, #f1c969 0 14%, transparent 15%),
+    radial-gradient(circle at 35% 70%, #b26039 0 24%, transparent 25%),
+    linear-gradient(135deg, #1a2732, #d68a50 52%, #f1c96a);
+  box-shadow: inset 0 0 0 0.04em rgba(255, 255, 255, 0.65), 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-photo:hover {
+  transform: scale(1.12) rotate(4deg);
+}
+
+/* ==========================================================================
+   Interactive Topic Words
+   ========================================================================== */
+
+.topic-wrap {
+  position: relative;
+  display: inline;
+}
+
+.topic-word {
+  display: inline;
+  padding: 0.05em 0.28em;
+  margin: 0 -0.05em;
+  border: 0;
+  border-radius: 0.28em;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.18em;
+  transition: background-color 180ms ease, text-decoration-color 180ms ease, transform 180ms ease;
+}
+
+.topic-word:hover,
+.topic-word:focus-visible {
+  outline: none;
+  background: var(--hover);
+  text-decoration-color: var(--ink);
+}
+
+.topic-word.is-active {
+  background: var(--hover-active);
+  text-decoration-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--line-strong);
+}
+
+.topic-word:active {
+  transform: scale(0.97);
+}
+
+/* ==========================================================================
+   Cursor Follower Dynamic Card (Magic UI / Aceternity inspired)
+   ========================================================================== */
+
+/* Custom Cursor Rules for fine pointer (desktop / mouse) devices */
+@media (pointer: fine) {
+  body, button, a, p, h1, h2, h3, article, span {
+    cursor: none !important;
+  }
+}
+
+.cursor-follower-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99999;
+  overflow: hidden;
+}
+
+.cursor-follower-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Continuous Morphing Cursor Box (Dot <-> Line <-> Popup) */
+.cursor-morph-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  border-style: solid;
+  border-color: var(--cursor-border);
+  overflow: hidden;
+  will-change: width, height, transform, border-radius, background-color;
+}
+
+.cursor-state-interactive {
+  min-width: 250px;
+  max-width: min(320px, 85vw);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+}
+
+.cursor-card-content {
+  padding: 12px 14px 10px;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  text-align: left;
+  will-change: opacity, filter;
+}
+
+.cursor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cursor-accent-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--hover);
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.cursor-title {
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.cursor-badge {
+  margin-left: auto;
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--line);
+  color: var(--muted);
+}
+
+.cursor-preview {
+  margin: 7px 0 8px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.cursor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.cursor-action {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cursor-action span {
+  font-size: 0.76rem;
+  color: var(--ink);
+  transition: transform 150ms ease;
+}
+
+/* ==========================================================================
+   Expanded Paragraph Accordion Drawer
+   ========================================================================== */
+
+.expanded-section {
+  overflow: hidden;
+  width: min(52rem, 100%);
+  margin: 0.85rem 0 1.1rem;
+}
+
+.expanded-section-inner {
+  padding: 1.25rem 1.4rem;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+.expanded-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.expanded-eyebrow {
+  display: inline-block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.expanded-section h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.2vw, 2.1rem);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.expanded-close-btn {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: all 180ms ease;
+}
+
+.expanded-close-btn:hover {
+  background: var(--hover);
+  color: var(--ink);
+  transform: rotate(90deg);
+}
+
+.expanded-desc {
+  max-width: 52rem;
+  margin: 0.35rem 0 0.85rem;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.expanded-items {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.expanded-items article {
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.expanded-items h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.expanded-items p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.item-tag {
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.expanded-actions {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.expanded-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: inherit;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+  transition: opacity 150ms ease;
+}
+
+.expanded-link:hover {
+  opacity: 0.75;
+}
+
+/* ==========================================================================
+   Longform Sections Below
+   ========================================================================== */
+
+.longform-content {
+  padding: 5rem clamp(2rem, 4vw, 5rem) 7rem;
+}
+
+.longform-section {
+  max-width: 58rem;
+  margin-inline: auto;
+  padding: 3.5rem 0;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 2rem;
+}
+
+.section-title-wrap {
+  margin-bottom: 0.4rem;
+}
+
+.section-eyebrow {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.longform-section h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.longform-section > p {
+  max-width: 48rem;
+  margin: 0.4rem 0 1.25rem;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.longform-grid {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 48rem;
+}
+
+.longform-card {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+}
+
+.longform-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.longform-card p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Responsive & Accessibility
+   ========================================================================== */
+
+@media (max-width: 720px) {
+  .intro {
+    min-height: 100svh;
+    padding: 3.5rem 1.4rem;
+  }
+  .intro p {
+    font-size: clamp(1.5rem, 6.5vw, 1.95rem);
+    line-height: 1.4;
+  }
+  .cursor-follower-layer {
+    display: none;
+  }
+  .expanded-section {
+    margin: 0.65rem 0 0.9rem;
+  }
+  .longform-content {
+    padding: 3rem 1.4rem 5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
