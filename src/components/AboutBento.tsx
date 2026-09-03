@@ -10,7 +10,7 @@ export function WaterlooCrest({ className = 'waterloo-crest' }: { className?: st
         d="M10 10 H90 V65 C90 95 50 115 50 115 C50 115 10 95 10 65 Z"
         fill="#FFD100"
         stroke="#111111"
-        strokeWidth="5"
+        strokeWidth="4"
         strokeLinejoin="round"
       />
       {/* Black Chevron */}
@@ -18,7 +18,7 @@ export function WaterlooCrest({ className = 'waterloo-crest' }: { className?: st
         d="M10 62 L50 25 L90 62 L90 76 L50 39 L10 76 Z"
         fill="#111111"
       />
-      {/* Red Lions / Cross elements */}
+      {/* Red Lions */}
       <g fill="#D52B1E">
         <path d="M26 18 C28 16 32 17 33 20 C34 23 31 26 28 26 C25 26 23 23 24 20 Z" />
         <path d="M22 26 C26 24 33 27 34 32 C35 37 30 40 27 40 C23 39 21 33 22 26 Z" />
@@ -66,8 +66,10 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
   return (
     <article className={`bento-card bento-card-languages ${standalone ? 'is-standalone' : ''}`}>
       <div className="bento-languages-content">
-        <h3 className="bento-card-title">I speak:</h3>
-        <p className="bento-lang-primary">Chinese and English</p>
+        <div>
+          <h3 className="bento-card-title">I speak:</h3>
+          <p className="bento-lang-primary">Chinese and English</p>
+        </div>
         <div className="bento-streak-box">
           <p className="bento-lang-secondary">Learning Spanish with a 1k+ streak</p>
           <span className="bento-streak-badge">1,000+ day streak</span>
@@ -100,38 +102,44 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
 }
 
 export function CompEngFocusCard({ standalone = false }: { standalone?: boolean }) {
+  const focusAreas = [
+    {
+      title: 'Distributed systems',
+      details: 'edge networking & IPS, stack design, data security',
+    },
+    {
+      title: 'Machine learning',
+      details: 'LLM Fine tuning, research reproduction & optimization, Applied ML',
+    },
+    {
+      title: 'Electronics',
+      details: 'embedded computing, imaging pipeline engineering, HW repairs',
+    },
+  ]
+
   return (
     <article className={`bento-card bento-card-compeng ${standalone ? 'is-standalone' : ''}`}>
       <h3 className="bento-card-title bento-compeng-heading">
         I learn CompEng with a focus on:
       </h3>
-      <ul className="bento-focus-list">
-        <li>
-          <strong>Distributed systems</strong>{' '}
-          <span className="bento-focus-subtext">
-            (edge networking & IPS, stack design, data security)
-          </span>
-        </li>
-        <li>
-          <strong>Machine learning</strong>{' '}
-          <span className="bento-focus-subtext">
-            (LLM Fine tuning, research reproduction & optimization, Applied ML)
-          </span>
-        </li>
-        <li>
-          <strong>Electronics</strong>{' '}
-          <span className="bento-focus-subtext">
-            (embedded computing, imaging pipeline engineering, HW repairs)
-          </span>
-        </li>
-      </ul>
+      <div className="bento-focus-list">
+        {focusAreas.map((area) => (
+          <div key={area.title} className="bento-focus-row">
+            <span className="bento-focus-bullet">-</span>
+            <div className="bento-focus-text">
+              <span className="bento-focus-name">{area.title}</span>{' '}
+              <span className="bento-focus-desc">({area.details})</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </article>
   )
 }
 
 export function AboutBentoGrid() {
   return (
-    <div className="about-bento-grid">
+    <div className="about-bento-grid" aria-label="About Me Grid">
       {/* Row 1: Profile + Languages */}
       <div className="about-bento-row-top">
         <ProfileCard />

@@ -40,9 +40,7 @@ function TopicWord({
 
   const info: CursorInfo = {
     title: customInfo?.title || topic.title,
-    eyebrow: customInfo?.eyebrow || topic.eyebrow,
     preview: customInfo?.preview || topic.preview,
-    accent: customInfo?.accent || topic.accent,
     badge: customInfo?.badge || topic.shortTitle,
   }
 
@@ -146,10 +144,8 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
   if (topicId === 'about') {
     return (
       <BlurFade delay={0.1} inViewMargin="-60px">
-        <section className="about-section-container" id="about" aria-labelledby="about-heading">
-          <h2 id="about-heading" className="about-section-title">
-            About Me
-          </h2>
+        <section className="longform-section" id="about" aria-labelledby="about-heading">
+          <h2 id="about-heading" className="longform-heading">About Me</h2>
           <AboutBentoGrid />
         </section>
       </BlurFade>
@@ -159,10 +155,7 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
   return (
     <BlurFade delay={0.1} inViewMargin="-60px">
       <section className="longform-section" id={topic.id} aria-labelledby={`${topic.id}-heading`}>
-        <div className="section-title-wrap">
-          <h2 id={`${topic.id}-heading`}>{topic.title}</h2>
-        </div>
-        <p className="section-lead-desc">{topic.description}</p>
+        <h2 id={`${topic.id}-heading`} className="longform-heading">{topic.title}</h2>
         <div className="longform-grid">
           {topic.items?.map((item) => (
             <article key={item.title} className="longform-card">
@@ -249,7 +242,6 @@ export default function App() {
                   badge: 'About Me',
                   preview:
                     'Toronto, Canada · CE @ uWaterloo · Building soft & hardware projects.',
-                  accent: '✦',
                 },
               )}
               .
@@ -270,7 +262,6 @@ export default function App() {
                   badge: 'Education',
                   preview:
                     'First Year Computer Engineering with NA’s largest co-op program.',
-                  accent: '🏛',
                 },
               )}{' '}
               studying{' '}
@@ -284,7 +275,6 @@ export default function App() {
                   badge: 'Focus',
                   preview:
                     'Distributed systems, applied ML & embedded electronics engineering.',
-                  accent: '⚙',
                 },
               )}
               .
@@ -305,7 +295,6 @@ export default function App() {
                   badge: 'Focus',
                   preview:
                     'High-availability clustering, consensus algorithms & low-latency backends.',
-                  accent: '✳',
                 },
               )}
               ,{' '}
@@ -319,7 +308,6 @@ export default function App() {
                   badge: 'Focus',
                   preview:
                     'Practical neural architectures, inference optimization & data engineering.',
-                  accent: '⚡',
                 },
               )}{' '}
               and{' '}
@@ -333,7 +321,6 @@ export default function App() {
                   badge: 'Focus',
                   preview:
                     'Microcontroller firmware, PCB design & embedded hardware systems.',
-                  accent: '🔌',
                 },
               )}
             </p>
@@ -353,7 +340,6 @@ export default function App() {
                   badge: 'Showcase',
                   preview:
                     'From everyday utilities to high-scale infrastructure and experimental research.',
-                  accent: '🛠',
                 },
               )}
               , from everyday utilities <DemoIcon kind="utilities" />, to
@@ -368,11 +354,10 @@ export default function App() {
             <p>
               Besides that, I love{' '}
               {word('passions', 'Minecraft', {
-                title: 'Minecraft & Sandbox Sim',
-                badge: 'Gaming',
+                title: 'Minecraft',
+                badge: 'Sandbox',
                 preview:
                   'Redstone computation, systems mechanics & large collaborative builds.',
-                accent: '⛏',
               })}
               ,{' '}
               {word('passions', 'Photography', {
@@ -380,7 +365,6 @@ export default function App() {
                 badge: 'Visuals',
                 preview:
                   'Framing light, candid moments, geometry & street perspectives.',
-                accent: '📷',
               })}{' '}
               and <span className="no-wrap">creative tinkering.</span>
             </p>
@@ -394,28 +378,24 @@ export default function App() {
                 title: 'GitHub',
                 badge: 'Open Source',
                 preview: 'Repositories, open-source explorations & active coding projects.',
-                accent: '🐙',
               })}
               ,{' '}
               {word('contact', 'LinkedIn', {
                 title: 'LinkedIn',
-                badge: 'Professional',
+                badge: 'Network',
                 preview: 'Connect with me for internships, projects, and work history.',
-                accent: '💼',
               })}
               ,{' '}
               {word('contact', 'Reddit', {
                 title: 'Reddit',
                 badge: 'Community',
                 preview: 'Tech discussions, hardware tinkering & community threads.',
-                accent: '💬',
               })}{' '}
               and{' '}
               {word('contact', <span className="no-wrap">Email!</span>, {
                 title: 'Email',
                 badge: 'Direct',
                 preview: 'Drop me a line anytime: feedback, ideas, or opportunities.',
-                accent: '✉',
               })}
             </p>
           </BlurFade>
