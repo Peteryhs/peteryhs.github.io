@@ -52,14 +52,29 @@ function TopicWord({
         aria-expanded={expanded}
         onClick={(e) => {
           e.stopPropagation()
+          onHover(null)
           onSelect(id)
         }}
-        onMouseEnter={(e) => onHover(info, e)}
-        onMouseMove={(e) => onHover(info, e)}
+        onMouseEnter={(e) => {
+          if (!expanded) {
+            onHover(info, e)
+          } else {
+            onHover(null)
+          }
+        }}
+        onMouseMove={(e) => {
+          if (!expanded) {
+            onHover(info, e)
+          } else {
+            onHover(null)
+          }
+        }}
         onMouseLeave={() => onHover(null)}
         onFocus={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect()
-          onHover(info, { clientX: rect.right, clientY: rect.bottom } as any)
+          if (!expanded) {
+            const rect = e.currentTarget.getBoundingClientRect()
+            onHover(info, { clientX: rect.right, clientY: rect.bottom } as any)
+          }
         }}
         onBlur={() => onHover(null)}
       >
@@ -178,8 +193,10 @@ export default function App() {
     }
   }, [activeId])
 
-  const toggleTopic = (id: TopicId) =>
+  const toggleTopic = (id: TopicId) => {
+    setCursorInfo(null)
     setActiveId((current) => (current === id ? null : id))
+  }
 
   const handleHover = (info: CursorInfo | null, e?: React.MouseEvent) => {
     if (info && e) {

@@ -619,7 +619,8 @@ main {
   overflow: hidden;
   width: 100%;
   max-width: 58rem;
-  margin: 0.85rem 0 1.25rem;
+  margin: 1.35rem 0 1.75rem;
+  padding: 10px 6px 14px;
 }
 
 .expanded-section-content {
