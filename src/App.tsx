@@ -125,12 +125,12 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
 
   if (topicId === 'about') {
     return (
-      <BlurFade delay={0.1} inViewMargin="-60px">
-        <section className="longform-section" id="about" aria-labelledby="about-heading">
+      <section className="longform-section" id="about" aria-labelledby="about-heading">
+        <BlurFade delay={0.06} duration={0.5} yOffset={10}>
           <h2 id="about-heading" className="longform-heading">About Me</h2>
-          <AboutBentoGrid />
-        </section>
-      </BlurFade>
+        </BlurFade>
+        <AboutBentoGrid />
+      </section>
     )
   }
 

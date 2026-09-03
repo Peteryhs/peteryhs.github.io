@@ -11,18 +11,23 @@
   --hover-active: #eddab4;
   --accent-color: #3b82f6;
 
-  /* Cursor & Bento tokens */
+  /* Cursor tokens */
   --cursor-bg: rgba(251, 250, 247, 0.94);
   --cursor-border: rgba(34, 34, 34, 0.12);
   --cursor-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.12),
     0 6px 16px -2px rgba(0, 0, 0, 0.06);
 
+  /* Bento Tokens: Softer & slightly thicker strokes, hover-only glow */
   --bento-bg: var(--paper);
-  --bento-border: rgba(34, 34, 34, 0.14);
-  --bento-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.04),
-    0 12px 24px rgba(0, 0, 0, 0.04);
-  --bento-shadow-hover: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 4px 8px rgba(0, 0, 0, 0.06),
-    0 16px 32px rgba(0, 0, 0, 0.08);
+  --bento-border: rgba(34, 34, 34, 0.12);
+  --bento-border-hover: rgba(34, 34, 34, 0.28);
+  --bento-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  --bento-shadow-hover: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --bento-spotlight: radial-gradient(
+    450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(224, 206, 172, 0.32),
+    transparent 80%
+  );
 
   font-family: "Patrick Hand", "Comic Sans MS", cursive;
   background: var(--paper);
@@ -49,9 +54,16 @@
       0 8px 20px -2px rgba(0, 0, 0, 0.35);
 
     --bento-bg: var(--paper);
-    --bento-border: rgba(255, 255, 255, 0.1);
-    --bento-shadow: 0 -20px 80px -20px rgba(255, 255, 255, 0.08) inset;
-    --bento-shadow-hover: 0 -20px 80px -20px rgba(255, 255, 255, 0.14) inset;
+    --bento-border: rgba(255, 255, 255, 0.12);
+    --bento-border-hover: rgba(255, 255, 255, 0.26);
+    --bento-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --bento-shadow-hover: 0 14px 36px -4px rgba(0, 0, 0, 0.6),
+      0 -20px 80px -20px rgba(255, 255, 255, 0.08) inset;
+    --bento-spotlight: radial-gradient(
+      450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.07),
+      transparent 80%
+    );
   }
 }
 
@@ -329,19 +341,40 @@ main {
 .bento-card {
   position: relative;
   background: var(--bento-bg);
-  border: 1px solid var(--bento-border);
-  border-radius: 20px;
-  padding: 1.5rem 1.75rem;
+  border: 1.75px solid var(--bento-border);
+  border-radius: 22px;
+  padding: 1.45rem 1.65rem;
   box-shadow: var(--bento-shadow);
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 220ms ease,
-    border-color 220ms ease;
+  overflow: hidden;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 240ms ease,
+    border-color 240ms ease;
 }
 
 .bento-card:hover {
   transform: translateY(-2px);
-  border-color: var(--line-strong);
+  border-color: var(--bento-border-hover);
   box-shadow: var(--bento-shadow-hover);
+}
+
+/* Interactive Spotlight Glow (Only visible on hover) */
+.bento-card-spotlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--bento-spotlight);
+  transition: opacity 280ms ease;
+}
+
+.bento-card:hover .bento-card-spotlight {
+  opacity: 1;
+}
+
+.bento-card-content {
+  position: relative;
+  z-index: 1;
 }
 
 .bento-card.is-standalone {
@@ -361,7 +394,13 @@ main {
   min-width: 124px;
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--bento-border);
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 260ms ease;
+}
+
+.bento-card:hover .bento-photo-container {
+  transform: scale(1.03) rotate(-1deg);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .bento-profile-img {
@@ -453,7 +492,7 @@ main {
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  padding: 0.15rem 0.55rem;
+  padding: 0.18rem 0.6rem;
   border-radius: 999px;
   background: var(--hover);
   color: var(--ink);
@@ -462,6 +501,12 @@ main {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  transition: transform 200ms ease, background-color 200ms ease;
+}
+
+.bento-card:hover .bento-streak-badge {
+  background: var(--hover-active);
+  transform: scale(1.04);
 }
 
 /* Card 3: University of Waterloo */
@@ -478,6 +523,11 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-card:hover .bento-crest-box {
+  transform: scale(1.06) rotate(1.5deg);
 }
 
 .waterloo-crest-img {
@@ -498,7 +548,7 @@ main {
 .bento-focus-list {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.35rem;
   margin-top: 0.4rem;
 }
 
@@ -509,6 +559,15 @@ main {
   font-size: 1.18rem;
   line-height: 1.4;
   color: var(--ink);
+  padding: 0.25rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 8px;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.bento-focus-row:hover {
+  background-color: var(--hover);
+  transform: translateX(4px);
 }
 
 .bento-focus-bullet {
@@ -526,12 +585,13 @@ main {
   font-size: 1.08rem;
 }
 
-/* Full About Bento Grid Structure */
+/* Full About Bento Grid Structure (exact match to max-width: 58rem) */
 .about-bento-grid {
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
   width: 100%;
+  max-width: 58rem;
   margin-top: 0.5rem;
 }
 
@@ -547,14 +607,14 @@ main {
 }
 
 /* ==========================================================================
-   Direct Expanded Cards (popped directly on bg without outer modal frame)
+   Direct Expanded Cards in Intro (Pixel-perfect width matching)
    ========================================================================== */
 
 .expanded-section {
   overflow: hidden;
   width: 100%;
-  max-width: min(64rem, 100%);
-  margin: 0.75rem 0 1rem;
+  max-width: 58rem;
+  margin: 0.85rem 0 1.25rem;
 }
 
 .expanded-section-content {
@@ -565,6 +625,7 @@ main {
   display: grid;
   grid-template-columns: 1.8fr 1fr;
   gap: 1.1rem;
+  width: 100%;
 }
 
 .expanded-cards-single {
@@ -574,6 +635,7 @@ main {
 .expanded-items-grid {
   display: grid;
   gap: 0.85rem;
+  width: 100%;
 }
 
 /* ==========================================================================
@@ -585,7 +647,7 @@ main {
 }
 
 .longform-section {
-  max-width: 62rem;
+  max-width: 58rem;
   margin-inline: auto;
   padding: 3.5rem 0;
   scroll-margin-top: 2rem;
@@ -602,21 +664,21 @@ main {
 .longform-grid {
   display: grid;
   gap: 0.85rem;
-  max-width: 52rem;
+  max-width: 58rem;
 }
 
 .longform-card {
   padding: 0.85rem 1rem;
   border-radius: 14px;
   background: var(--paper);
-  border: 1px solid var(--line);
+  border: 1.75px solid var(--bento-border);
   box-shadow: var(--bento-shadow);
   transition: transform 200ms ease, border-color 200ms ease;
 }
 
 .longform-card:hover {
   transform: translateY(-2px);
-  border-color: var(--line-strong);
+  border-color: var(--bento-border-hover);
 }
 
 .longform-card h3 {
