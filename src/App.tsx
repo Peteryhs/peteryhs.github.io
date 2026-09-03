@@ -124,13 +124,34 @@ function ExpandedSection({ topic }: { topic: Topic }) {
     <motion.section
       className="expanded-section"
       aria-label={topic.title}
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.36, ease }}
+      initial={{ opacity: 0, height: 0, filter: 'blur(8px)' }}
+      animate={{
+        opacity: 1,
+        height: 'auto',
+        filter: 'blur(0px)',
+        transition: {
+          height: { duration: 0.42, ease },
+          opacity: { duration: 0.35, ease },
+          filter: { duration: 0.35, ease },
+        },
+      }}
+      exit={{
+        opacity: 0,
+        height: 0,
+        filter: 'blur(8px)',
+        transition: {
+          height: { duration: 0.38, ease },
+          opacity: { duration: 0.28, ease },
+          filter: { duration: 0.28, ease },
+        },
+      }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="expanded-section-content">{renderContent()}</div>
+      <div className="expanded-section-content">
+        <BlurFade delay={0.04} duration={0.4} yOffset={10}>
+          {renderContent()}
+        </BlurFade>
+      </div>
     </motion.section>
   )
 }

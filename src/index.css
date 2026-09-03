@@ -623,19 +623,20 @@ main {
 }
 
 /* ==========================================================================
-   Direct Expanded Cards in Intro (Pixel-perfect width matching)
+   Direct Expanded Cards in Intro (Smooth height collapse & padding containment)
    ========================================================================== */
 
 .expanded-section {
   overflow: hidden;
   width: 100%;
   max-width: 58rem;
-  margin: 1.35rem 0 1.75rem;
-  padding: 10px 6px 14px;
+  margin: 0;
+  padding: 0;
 }
 
 .expanded-section-content {
   width: 100%;
+  padding: 1.35rem 6px 1.75rem;
 }
 
 .expanded-cards-dual {
