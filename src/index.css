@@ -323,7 +323,7 @@ main {
 }
 
 /* ==========================================================================
-   Minimalist Bento Grid Component Styles (Magic UI Pattern)
+   Minimalist Bento Grid Component Styles
    ========================================================================== */
 
 .bento-card {
@@ -351,8 +351,8 @@ main {
 /* Card 1: Profile */
 .bento-profile-wrap {
   display: flex;
-  align-items: flex-start;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 1.6rem;
 }
 
 .bento-photo-container {
@@ -424,14 +424,15 @@ main {
 .bento-languages-content {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
   height: 100%;
-  justify-content: space-between;
 }
 
 .bento-lang-primary {
   font-family: "Patrick Hand", "Comic Sans MS", cursive;
   font-size: 1.25rem;
-  margin: 0.45rem 0 0.75rem;
+  margin: 0.35rem 0 0;
   color: var(--ink);
 }
 
@@ -479,9 +480,10 @@ main {
   justify-content: center;
 }
 
-.waterloo-crest {
+.waterloo-crest-img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 
 .bento-waterloo-info {
@@ -545,122 +547,33 @@ main {
 }
 
 /* ==========================================================================
-   Expanded Paragraph Accordion Drawer
+   Direct Expanded Cards (popped directly on bg without outer modal frame)
    ========================================================================== */
 
 .expanded-section {
   overflow: hidden;
-  width: min(64rem, 100%);
-  margin: 0.85rem 0 1.1rem;
+  width: 100%;
+  max-width: min(64rem, 100%);
+  margin: 0.75rem 0 1rem;
 }
 
-.expanded-section-inner {
-  padding: 1.35rem 1.5rem;
-  border-radius: 20px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  box-shadow: var(--bento-shadow);
+.expanded-section-content {
+  width: 100%;
 }
 
-.expanded-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.85rem;
-}
-
-.expanded-title {
-  margin: 0;
-  font-size: clamp(1.6rem, 2.2vw, 2.1rem);
-  font-weight: 400;
-  line-height: 1.1;
-}
-
-.expanded-close-btn {
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--muted);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  transition: all 180ms ease;
-}
-
-.expanded-close-btn:hover {
-  background: var(--hover);
-  color: var(--ink);
-  transform: rotate(90deg);
-}
-
-.expanded-bento-dual {
+.expanded-cards-dual {
   display: grid;
   grid-template-columns: 1.8fr 1fr;
-  gap: 0.95rem;
+  gap: 1.1rem;
 }
 
-.expanded-items {
+.expanded-cards-single {
+  width: 100%;
+}
+
+.expanded-items-grid {
   display: grid;
-  gap: 0.6rem;
-}
-
-.expanded-items article {
-  padding: 0.75rem 0.95rem;
-  border-radius: 12px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-}
-
-.expanded-items h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 400;
-  line-height: 1.2;
-}
-
-.expanded-items p {
-  margin: 0.2rem 0 0;
-  color: var(--muted);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.84rem;
-  line-height: 1.45;
-}
-
-.item-tag {
-  color: var(--muted);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.expanded-actions {
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--line);
-}
-
-.expanded-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: inherit;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.82rem;
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 0.22em;
-  transition: opacity 150ms ease;
-}
-
-.expanded-link:hover {
-  opacity: 0.75;
+  gap: 0.85rem;
 }
 
 /* ==========================================================================
@@ -727,11 +640,12 @@ main {
 
 @media (max-width: 820px) {
   .about-bento-row-top,
-  .expanded-bento-dual {
+  .expanded-cards-dual {
     grid-template-columns: 1fr;
   }
   .bento-profile-wrap {
     flex-direction: column;
+    align-items: flex-start;
   }
 }
 

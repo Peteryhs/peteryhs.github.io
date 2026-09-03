@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { type ReactNode, useState, useRef } from 'react'
+import { type ReactNode, useState, useRef, useEffect } from 'react'
 import {
   AboutBentoGrid,
   ProfileCard,
@@ -50,7 +50,10 @@ function TopicWord({
         type="button"
         className={`topic-word ${expanded ? 'is-active' : ''}`}
         aria-expanded={expanded}
-        onClick={() => onSelect(id)}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect(id)
+        }}
         onMouseEnter={(e) => onHover(info, e)}
         onMouseMove={(e) => onHover(info, e)}
         onMouseLeave={() => onHover(null)}
@@ -66,30 +69,35 @@ function TopicWord({
   )
 }
 
-function ExpandedSection({ topic, onClose }: { topic: Topic; onClose: () => void }) {
+function ExpandedSection({ topic }: { topic: Topic }) {
   const renderContent = () => {
     switch (topic.id) {
       case 'about':
         return (
-          <div className="expanded-bento-dual">
-            <ProfileCard standalone />
-            <LanguagesCard standalone />
+          <div className="expanded-cards-dual">
+            <ProfileCard />
+            <LanguagesCard />
           </div>
         )
       case 'waterloo':
-        return <WaterlooCard standalone />
+        return (
+          <div className="expanded-cards-single">
+            <WaterlooCard />
+          </div>
+        )
       case 'compeng':
-        return <CompEngFocusCard standalone />
+        return (
+          <div className="expanded-cards-single">
+            <CompEngFocusCard />
+          </div>
+        )
       default:
         return (
-          <div className="expanded-items">
+          <div className="expanded-items-grid">
             {topic.items?.map((item) => (
-              <article key={item.title}>
-                <h3>
-                  {item.title}
-                  {item.tag && <small className="item-tag"> · {item.tag}</small>}
-                </h3>
-                <p>{item.text}</p>
+              <article key={item.title} className="bento-card">
+                <h3 className="bento-card-title">{item.title}</h3>
+                <p className="bento-card-body">{item.text}</p>
               </article>
             ))}
           </div>
@@ -104,36 +112,10 @@ function ExpandedSection({ topic, onClose }: { topic: Topic; onClose: () => void
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.38, ease }}
+      transition={{ duration: 0.36, ease }}
+      onClick={(e) => e.stopPropagation()}
     >
-      <div className="expanded-section-inner">
-        <div className="expanded-header">
-          <h2 className="expanded-title">{topic.title}</h2>
-          <button
-            type="button"
-            className="expanded-close-btn"
-            onClick={onClose}
-            aria-label="Close section"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="expanded-body">{renderContent()}</div>
-
-        <div className="expanded-actions">
-          <a
-            href={
-              topic.id === 'about' || topic.id === 'waterloo' || topic.id === 'compeng'
-                ? '#about'
-                : `#${topic.id}`
-            }
-            className="expanded-link"
-          >
-            Jump to full section below ↓
-          </a>
-        </div>
-      </div>
+      <div className="expanded-section-content">{renderContent()}</div>
     </motion.section>
   )
 }
@@ -177,6 +159,25 @@ export default function App() {
   const [cursorInfo, setCursorInfo] = useState<CursorInfo | null>(null)
   const cursorRef = useRef<CursorFollowerRef>(null)
 
+  // Click anywhere outside expanded cards to animate them out
+  useEffect(() => {
+    if (!activeId) return
+
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      if (target.closest('.expanded-section') || target.closest('.topic-word')) {
+        return
+      }
+      setActiveId(null)
+    }
+
+    document.addEventListener('pointerdown', handleOutsideClick)
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick)
+    }
+  }, [activeId])
+
   const toggleTopic = (id: TopicId) =>
     setActiveId((current) => (current === id ? null : id))
 
@@ -207,13 +208,7 @@ export default function App() {
     const topic = activeId && ids.includes(activeId) ? topicById[activeId] : null
     return (
       <AnimatePresence initial={false}>
-        {topic && (
-          <ExpandedSection
-            key={topic.id}
-            topic={topic}
-            onClose={() => setActiveId(null)}
-          />
-        )}
+        {topic && <ExpandedSection key={topic.id} topic={topic} />}
       </AnimatePresence>
     )
   }
