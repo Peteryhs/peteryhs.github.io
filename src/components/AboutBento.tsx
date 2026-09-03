@@ -62,11 +62,13 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
   return (
     <BentoCardWrapper className="bento-card-languages" standalone={standalone}>
       <div className="bento-languages-content">
-        <h3 className="bento-card-title">I speak:</h3>
-        <p className="bento-lang-primary">Chinese and English</p>
+        <div>
+          <h3 className="bento-card-title">I speak:</h3>
+          <p className="bento-lang-primary">Chinese and English</p>
+        </div>
         <div className="bento-streak-box">
           <p className="bento-lang-secondary">Learning Spanish with a 1k+ streak</p>
-          <span className="bento-streak-badge">1,000+ day streak</span>
+          <span className="bento-streak-badge">1,000+ DAY STREAK</span>
         </div>
       </div>
     </BentoCardWrapper>
