@@ -441,10 +441,12 @@ export default function App() {
       </header>
 
       <div className="longform-content">
-        <LongFormSection topicId="about" />
-        <LongFormSection topicId="projects" />
-        <LongFormSection topicId="passions" />
-        <LongFormSection topicId="contact" />
+        <div className="longform-container">
+          <LongFormSection topicId="about" />
+          <LongFormSection topicId="projects" />
+          <LongFormSection topicId="passions" />
+          <LongFormSection topicId="contact" />
+        </div>
       </div>
     </main>
   )

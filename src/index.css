@@ -661,12 +661,20 @@ main {
    ========================================================================== */
 
 .longform-content {
-  padding: 4rem clamp(2rem, 4vw, 5rem) 7rem;
+  padding: 1rem clamp(1.5rem, 3.2vw, 4.5rem) 7rem;
+}
+
+.longform-container {
+  width: min(100%, 1580px);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .longform-section {
+  width: 100%;
   max-width: 58rem;
-  margin-inline: auto;
+  margin: 0;
   padding: 3.5rem 0;
   scroll-margin-top: 2rem;
 }
