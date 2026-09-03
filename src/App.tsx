@@ -220,7 +220,7 @@ export default function App() {
       <header className="intro" id="top">
         <div className="intro-container">
           <BlurFade delay={0.06} yOffset={12}>
-            <p>
+            <p className="intro-sentence">
               Hi <DemoIcon kind="wave" />, I am{' '}
               {word(
                 'about',
@@ -245,7 +245,7 @@ export default function App() {
           {showAfter('about')}
 
           <BlurFade delay={0.14} yOffset={12}>
-            <p>
+            <p className="intro-sentence">
               A student at the{' '}
               {word(
                 'waterloo',
@@ -278,7 +278,7 @@ export default function App() {
           {showAfter('waterloo', 'compeng')}
 
           <BlurFade delay={0.22} yOffset={12}>
-            <p>
+            <p className="intro-sentence">
               I am passionate about{' '}
               {word(
                 'projects',
@@ -323,7 +323,7 @@ export default function App() {
           {showAfter('projects')}
 
           <BlurFade delay={0.3} yOffset={12}>
-            <p>
+            <p className="intro-sentence">
               I love making{' '}
               {word(
                 'projects',
@@ -346,7 +346,7 @@ export default function App() {
           </BlurFade>
 
           <BlurFade delay={0.38} yOffset={12}>
-            <p>
+            <p className="intro-sentence">
               Besides that, I love{' '}
               {word('passions', 'Minecraft', {
                 title: 'Minecraft',
@@ -367,7 +367,7 @@ export default function App() {
           {showAfter('passions')}
 
           <BlurFade delay={0.46} yOffset={12}>
-            <p>
+            <p className="intro-sentence">
               You can spot me on the internet via{' '}
               {word('contact', 'GitHub', {
                 title: 'GitHub',
@@ -397,7 +397,7 @@ export default function App() {
           {showAfter('contact')}
 
           <BlurFade delay={0.54} yOffset={12}>
-            <p className="intro-signoff">See you around!</p>
+            <p className="intro-sentence intro-signoff">See you around!</p>
           </BlurFade>
         </div>
       </header>
