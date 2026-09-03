@@ -1,5 +1,3 @@
-import { motion } from 'motion/react'
-
 export function WaterlooCrest({ className = 'waterloo-crest' }: { className?: string }) {
   return (
     <svg
@@ -72,9 +70,7 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
         <p className="bento-lang-primary">Chinese and English</p>
         <div className="bento-streak-box">
           <p className="bento-lang-secondary">Learning Spanish with a 1k+ streak</p>
-          <span className="bento-streak-badge" aria-label="1000+ day streak">
-            🔥 1,000+ days
-          </span>
+          <span className="bento-streak-badge">1,000+ day streak</span>
         </div>
       </div>
     </article>
@@ -104,64 +100,53 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
 }
 
 export function CompEngFocusCard({ standalone = false }: { standalone?: boolean }) {
-  const focusAreas = [
-    {
-      title: 'Distributed systems',
-      details: 'edge networking & IPS, stack design, data security',
-      icon: '✳',
-    },
-    {
-      title: 'Machine learning',
-      details: 'LLM Fine tuning, research reproduction & optimization, Applied ML',
-      icon: '⚡',
-    },
-    {
-      title: 'Electronics',
-      details: 'embedded computing, imaging pipeline engineering, HW repairs',
-      icon: '🔌',
-    },
-  ]
-
   return (
     <article className={`bento-card bento-card-compeng ${standalone ? 'is-standalone' : ''}`}>
       <h3 className="bento-card-title bento-compeng-heading">
         I learn CompEng with a focus on:
       </h3>
-      <div className="bento-focus-grid">
-        {focusAreas.map((area) => (
-          <div key={area.title} className="bento-focus-item">
-            <div className="bento-focus-header">
-              <span className="bento-focus-icon">{area.icon}</span>
-              <strong className="bento-focus-title">{area.title}</strong>
-            </div>
-            <p className="bento-focus-desc">({area.details})</p>
-          </div>
-        ))}
-      </div>
+      <ul className="bento-focus-list">
+        <li>
+          <strong>Distributed systems</strong>{' '}
+          <span className="bento-focus-subtext">
+            (edge networking & IPS, stack design, data security)
+          </span>
+        </li>
+        <li>
+          <strong>Machine learning</strong>{' '}
+          <span className="bento-focus-subtext">
+            (LLM Fine tuning, research reproduction & optimization, Applied ML)
+          </span>
+        </li>
+        <li>
+          <strong>Electronics</strong>{' '}
+          <span className="bento-focus-subtext">
+            (embedded computing, imaging pipeline engineering, HW repairs)
+          </span>
+        </li>
+      </ul>
     </article>
   )
 }
 
 export function AboutBentoGrid() {
   return (
-    <section className="about-bento-section" aria-label="About Me Bento Grid">
-      <div className="about-bento-grid">
-        {/* Row 1: Profile + Languages */}
-        <div className="about-bento-row-top">
-          <ProfileCard />
-          <LanguagesCard />
-        </div>
-
-        {/* Row 2: University of Waterloo */}
-        <div className="about-bento-row-middle">
-          <WaterlooCard />
-        </div>
-
-        {/* Row 3: CompEng Focus Areas */}
-        <div className="about-bento-row-bottom">
-          <CompEngFocusCard />
-        </div>
+    <div className="about-bento-grid">
+      {/* Row 1: Profile + Languages */}
+      <div className="about-bento-row-top">
+        <ProfileCard />
+        <LanguagesCard />
       </div>
-    </section>
+
+      {/* Row 2: University of Waterloo */}
+      <div className="about-bento-row-middle">
+        <WaterlooCard />
+      </div>
+
+      {/* Row 3: CompEng Focus Areas */}
+      <div className="about-bento-row-bottom">
+        <CompEngFocusCard />
+      </div>
+    </div>
   )
 }

@@ -110,10 +110,7 @@ function ExpandedSection({ topic, onClose }: { topic: Topic; onClose: () => void
     >
       <div className="expanded-section-inner">
         <div className="expanded-header">
-          <div>
-            <span className="expanded-eyebrow">{topic.eyebrow}</span>
-            <h2 className="expanded-title">{topic.title}</h2>
-          </div>
+          <h2 className="expanded-title">{topic.title}</h2>
           <button
             type="button"
             className="expanded-close-btn"
@@ -149,14 +146,10 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
   if (topicId === 'about') {
     return (
       <BlurFade delay={0.1} inViewMargin="-60px">
-        <section className="longform-section" id="about" aria-labelledby="about-heading">
-          <div className="section-title-wrap">
-            <span className="section-eyebrow">01 / about me</span>
-            <h2 id="about-heading">About Me</h2>
-          </div>
-          <p className="section-lead-desc">
-            A visual bento breakdown of who I am, where I study, and my core focus areas.
-          </p>
+        <section className="about-section-container" id="about" aria-labelledby="about-heading">
+          <h2 id="about-heading" className="about-section-title">
+            About Me
+          </h2>
           <AboutBentoGrid />
         </section>
       </BlurFade>
@@ -167,7 +160,6 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
     <BlurFade delay={0.1} inViewMargin="-60px">
       <section className="longform-section" id={topic.id} aria-labelledby={`${topic.id}-heading`}>
         <div className="section-title-wrap">
-          <span className="section-eyebrow">{topic.eyebrow}</span>
           <h2 id={`${topic.id}-heading`}>{topic.title}</h2>
         </div>
         <p className="section-lead-desc">{topic.description}</p>
