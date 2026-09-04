@@ -201,7 +201,20 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         ? 'text'
         : 'default'
 
+    // Retain active content during exit animation so the actual tooltip card morphs back
+    const currentText = displayedInfo?.text || displayedInfo?.preview || displayedInfo?.title || ''
+    const [savedContent, setSavedContent] = useState(currentText)
+
+    useEffect(() => {
+      if (currentText) {
+        setSavedContent(currentText)
+      }
+    }, [currentText])
+
+    const textToDisplay = currentText || savedContent
+
     // Variants for seamless continuous shape morphing (Dot -> Line -> Box)
+    // Vertically aligned with y: -14 across both text caret and card for zero vertical jumping
     const morphVariants: Variants = {
       default: {
         width: 14,
@@ -230,15 +243,13 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         height: 'auto',
         borderRadius: 10,
         x: 14,
-        y: -10, // Vertically center-aligned with the cursor/caret line midpoint
+        y: -14, // Exact same vertical center baseline as the text caret
         borderWidth: 1,
         borderColor: cardBorder,
         backgroundColor: cardBg,
         boxShadow: cardShadow,
       },
     }
-
-    const contentText = displayedInfo?.text || displayedInfo?.preview || displayedInfo?.title || ''
 
     return (
       <div className="cursor-follower-layer" aria-hidden="true">
@@ -250,82 +261,29 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               y: smoothY,
             }}
           >
-            {/* Single continuous morphing container */}
+            {/* Direct continuous morphing container */}
             <motion.div
-              layout
               className={`cursor-morph-box cursor-state-${cursorState}`}
               animate={cursorState}
               variants={morphVariants}
               transition={{
-                layout: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
-                  ease: [0.16, 1, 0.3, 1], // Non-bouncing smooth cubic bezier
-                },
-                backgroundColor: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.16,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-                borderColor: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.16,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-                boxShadow: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.16,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-                width: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-                height: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-                borderRadius: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-                x: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                },
-                y: {
-                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                },
+                duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 1.8,
+                ease: [0.16, 1, 0.3, 1],
               }}
               style={{
                 rotate:
                   !shouldReduceMotion && cursorState === 'interactive' ? cardTilt : 0,
               }}
             >
-              <AnimatePresence mode="wait">
-                {cursorState === 'interactive' && contentText && (
-                  <motion.div
-                    key={contentText}
-                    className="cursor-card-content"
-                    initial={{
-                      opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(4px)',
-                    }}
-                    animate={{
-                      opacity: 1,
-                      filter: 'blur(0px)',
-                    }}
-                    exit={{
-                      opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(2px)',
-                      transition: { duration: 0.08, ease: 'easeOut' },
-                    }}
-                    transition={{
-                      duration: shouldReduceMotion ? 0 : 0.18,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                  >
-                    <p className="cursor-text">{contentText}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div
+                className="cursor-card-content"
+                style={{
+                  opacity: cursorState === 'interactive' ? 1 : 0,
+                  transition: `opacity ${shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.6}s ease-out`,
+                }}
+              >
+                <p className="cursor-text">{textToDisplay}</p>
+              </div>
             </motion.div>
           </motion.div>
         )}
