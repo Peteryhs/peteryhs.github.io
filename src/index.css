@@ -1,4 +1,5 @@
 @import "@fontsource/patrick-hand";
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 :root {
   color-scheme: light;
@@ -463,12 +464,8 @@ main {
 }
 
 .bento-freetime-list {
-  margin: 0;
-  padding-left: 1.15rem;
-  font-family: "Patrick Hand", "Comic Sans MS", cursive !important;
-  font-size: 1.15rem !important;
-  line-height: 1.4 !important;
-  color: var(--ink) !important;
+  margin-top: 0.35rem;
+  gap: 0.25rem;
 }
 
 /* Card 2: Languages - Squeezed & centered vertically */
@@ -503,25 +500,131 @@ main {
   margin: 0 !important;
 }
 
-.bento-streak-badge {
+.bento-streak-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  color: var(--ink) !important;
+  margin-top: 0.15rem;
+}
+
+.bento-streak-badge-group {
   display: inline-flex;
   align-items: center;
-  width: fit-content;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+  gap: 0.25rem;
+  cursor: pointer;
+  padding: 0.05rem 0.25rem;
+  border-radius: 6px;
   background: var(--hover);
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   transition: transform 200ms ease, background-color 200ms ease;
 }
 
-.bento-card:hover .bento-streak-badge {
+.bento-card:hover .bento-streak-badge-group {
   background: var(--hover-active);
-  transform: scale(1.04);
+  transform: scale(1.06);
+}
+
+.bento-streak-count {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  color: var(--ink) !important;
+  letter-spacing: -0.01em;
+  line-height: 1 !important;
+}
+
+.bento-fire-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 20px;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-card:hover .bento-fire-badge {
+  transform: scale(1.15) translateY(-1px);
+}
+
+.bento-fire-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transition: transform 200ms ease;
+  animation: flameIdleFlicker 2.8s ease-in-out infinite alternate;
+}
+
+.bento-card:hover .bento-fire-svg {
+  animation: flameActiveWobble 1.1s ease-in-out infinite;
+}
+
+.flame-outer {
+  transform-origin: 22px 46px;
+  animation: flameOuterPulse 2.2s ease-in-out infinite alternate;
+}
+
+.flame-inner {
+  transform-origin: 22px 43px;
+  animation: flameInnerPulse 1.7s ease-in-out infinite alternate;
+}
+
+@keyframes flameIdleFlicker {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.02, 0.98) rotate(-1.5deg);
+  }
+  100% {
+    transform: scale(0.98, 1.02) rotate(1.5deg);
+  }
+}
+
+@keyframes flameActiveWobble {
+  0%, 100% {
+    transform: scale(1.04) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.12, 0.94) rotate(-3.5deg);
+  }
+  50% {
+    transform: scale(0.95, 1.08) rotate(3deg);
+  }
+  75% {
+    transform: scale(1.08, 0.98) rotate(-2deg);
+  }
+}
+
+@keyframes flameOuterPulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.03, 1.02);
+  }
+}
+
+@keyframes flameInnerPulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.06, 0.96);
+  }
+}
+
+.bento-particles-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+  border-radius: inherit;
 }
 
 /* Card 3: University of Waterloo */
@@ -723,6 +826,291 @@ main {
 }
 
 /* ==========================================================================
+   True North Timeline Section
+   ========================================================================== */
+
+.truenorth-intro-wrap {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.truenorth-intro-card {
+  padding: 1.35rem 1.65rem;
+}
+
+.truenorth-intro-text {
+  font-family: "Patrick Hand", "Comic Sans MS", cursive !important;
+  font-size: 1.3rem !important;
+  line-height: 1.45 !important;
+  color: var(--ink) !important;
+  margin: 0 !important;
+}
+
+.truenorth-timeline-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding-left: 5.5rem;
+  width: 100%;
+}
+
+/* Continuous Vertical Timeline Spine */
+.truenorth-spine {
+  position: absolute;
+  left: 2rem;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  width: 2.5px;
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+.truenorth-timeline-item {
+  position: relative;
+  width: 100%;
+}
+
+/* Horizontal Stem connecting Spine to Card */
+.truenorth-stem {
+  position: absolute;
+  left: calc(-5.5rem + 2rem);
+  top: 50%;
+  width: calc(5.5rem - 2rem);
+  height: 2px;
+  background: var(--line-strong);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: background-color 220ms ease;
+}
+
+/* Year Badge on the Spine */
+.truenorth-year-node {
+  position: absolute;
+  left: calc(-5.5rem + 2rem);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.truenorth-year-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  border: 1.75px solid var(--line-strong);
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+
+.truenorth-timeline-item:hover .truenorth-stem {
+  background: var(--ink);
+}
+
+.truenorth-timeline-item:hover .truenorth-year-text {
+  background: var(--hover-active);
+  border-color: var(--ink);
+  transform: scale(1.08);
+}
+
+.truenorth-card {
+  padding: 1.4rem 1.65rem;
+}
+
+.truenorth-card-title {
+  font-family: "Patrick Hand", "Comic Sans MS", cursive !important;
+  font-size: 1.65rem !important;
+  font-weight: 400 !important;
+  color: var(--ink) !important;
+  margin: 0 0 0.5rem !important;
+  line-height: 1.2 !important;
+}
+
+.truenorth-card-body {
+  font-family: "Patrick Hand", "Comic Sans MS", cursive !important;
+  font-size: 1.22rem !important;
+  color: var(--ink) !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+}
+
+/* ==========================================================================
+   About Me Interactive Grid Pattern Background (Full Viewport Bleed)
+   ========================================================================== */
+
+.about-section-outer {
+  position: relative;
+  width: 100%;
+}
+
+.about-longform-section {
+  position: relative;
+  overflow: visible;
+  width: 100%;
+  max-width: 58rem;
+  margin: 0;
+  padding: 3.5rem 0;
+  scroll-margin-top: 2rem;
+}
+
+.about-longform-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.interactive-grid-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100%;
+  pointer-events: auto;
+  z-index: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+
+.interactive-grid-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.interactive-grid-line {
+  stroke: var(--line);
+  stroke-dasharray: 0;
+  opacity: 0.85;
+}
+
+.interactive-grid-square {
+  fill: transparent;
+  stroke: transparent;
+  transition: fill 0.35s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.25s ease;
+}
+
+.interactive-grid-square.is-active,
+.interactive-grid-square:hover {
+  fill: var(--hover-active);
+  stroke: var(--line-strong);
+}
+
+@media (prefers-color-scheme: dark) {
+  .interactive-grid-square.is-active,
+  .interactive-grid-square:hover {
+    fill: rgba(110, 87, 65, 0.75);
+    stroke: rgba(242, 238, 232, 0.25);
+  }
+}
+
+/* Snake Simulation (#eda339 snake, #385dc8 apple) */
+.snake-body-square {
+  fill: #eda339 !important;
+  stroke: rgba(237, 163, 57, 0.9) !important;
+  stroke-width: 1px;
+}
+
+.snake-head-square {
+  fill: #eda339 !important;
+  stroke: rgba(255, 255, 255, 0.75) !important;
+  stroke-width: 1.5px;
+}
+
+.snake-body-square.is-flashing {
+  animation: snakeFlashWhite 0.27s ease-in-out 3;
+}
+
+@keyframes snakeFlashWhite {
+  0%, 100% {
+    fill: #eda339 !important;
+    stroke: rgba(237, 163, 57, 0.9) !important;
+    filter: none;
+  }
+  50% {
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 1));
+  }
+}
+
+.snake-apple-square {
+  fill: #385dc8 !important;
+  stroke: rgba(56, 93, 200, 0.95) !important;
+  stroke-width: 1.5px;
+  animation: applePulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes applePulse {
+  0% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px rgba(56, 93, 200, 0.5));
+  }
+}
+
+.snake-milestone-text {
+  font-family: 'Press Start 2P', 'Courier New', monospace !important;
+  font-size: 8.5px;
+  fill: #385dc8;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  paint-order: stroke fill;
+  stroke: var(--bg, #f4f0e7);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: milestoneFloat 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-color-scheme: dark) {
+  .snake-head-square {
+    stroke: rgba(255, 255, 255, 0.9) !important;
+  }
+  .snake-milestone-text {
+    fill: #688aff;
+    stroke: var(--bg, #161513);
+    stroke-width: 3px;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.9));
+  }
+}
+
+@keyframes milestoneFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(-24px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-34px);
+  }
+}
+
+/* ==========================================================================
    Responsive & Accessibility
    ========================================================================== */
 
@@ -754,6 +1142,35 @@ main {
   }
   .longform-content {
     padding: 2.5rem 1.4rem 5rem;
+  }
+  .truenorth-timeline-container {
+    padding-left: 3.5rem;
+    gap: 1.25rem;
+  }
+  .truenorth-spine {
+    left: 1rem;
+  }
+  .truenorth-stem {
+    left: calc(-3.5rem + 1rem);
+    width: calc(3.5rem - 1rem);
+  }
+  .truenorth-year-node {
+    left: calc(-3.5rem + 1rem);
+  }
+  .truenorth-year-text {
+    font-size: 0.72rem;
+    padding: 0.14rem 0.4rem;
+  }
+  .truenorth-card,
+  .truenorth-intro-card {
+    padding: 1.15rem 1.25rem;
+  }
+  .truenorth-card-title {
+    font-size: 1.45rem !important;
+  }
+  .truenorth-card-body,
+  .truenorth-intro-text {
+    font-size: 1.15rem !important;
   }
 }
 

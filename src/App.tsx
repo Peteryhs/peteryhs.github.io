@@ -14,6 +14,8 @@ import {
   type CursorInfo,
 } from './components/CursorFollower'
 import { DemoIcon } from './components/DemoIcon'
+import { InteractiveGridPattern } from './components/InteractiveGridPattern'
+import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
 import { topicById, type Topic, type TopicId } from './content/site'
 
 const ease = [0.16, 1, 0.3, 1] as const
@@ -94,6 +96,30 @@ function ExpandedSection({ topic }: { topic: Topic }) {
             <LanguagesCard />
           </div>
         )
+      case 'truenorth':
+        return (
+          <div className="expanded-cards-single">
+            <TrueNorthTimeline />
+          </div>
+        )
+      case 'electronics':
+        return (
+          <div className="expanded-cards-single">
+            <TrueNorthTimeline filterKey="electronics" />
+          </div>
+        )
+      case 'systems':
+        return (
+          <div className="expanded-cards-single">
+            <TrueNorthTimeline filterKey="systems" />
+          </div>
+        )
+      case 'ml':
+        return (
+          <div className="expanded-cards-single">
+            <TrueNorthTimeline filterKey="ml" />
+          </div>
+        )
       case 'waterloo':
         return (
           <div className="expanded-cards-single">
@@ -158,15 +184,27 @@ function ExpandedSection({ topic }: { topic: Topic }) {
 
 function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passions' | 'contact' }) {
   const topic = topicById[topicId]
+  const aboutRef = useRef<HTMLElement>(null)
 
   if (topicId === 'about') {
     return (
-      <section className="longform-section" id="about" aria-labelledby="about-heading">
-        <BlurFade delay={0.06} duration={0.5} yOffset={10}>
-          <h2 id="about-heading" className="longform-heading">About Me</h2>
-        </BlurFade>
-        <AboutBentoGrid />
-      </section>
+      <div className="about-section-outer" ref={aboutRef as any}>
+        <InteractiveGridPattern sectionRef={aboutRef} />
+        <section
+          className="longform-section about-longform-section"
+          id="about"
+          aria-labelledby="about-heading"
+        >
+          <div className="about-longform-inner">
+            <BlurFade delay={0.06} duration={0.5} yOffset={10}>
+              <h2 id="about-heading" className="longform-heading">
+                About Me
+              </h2>
+            </BlurFade>
+            <AboutBentoGrid />
+          </div>
+        </section>
+      </div>
     )
   }
 
@@ -319,46 +357,46 @@ export default function App() {
             <p className="intro-sentence">
               I am passionate about{' '}
               {word(
-                'projects',
+                'systems',
                 <>
                   distributed systems <DemoIcon kind="systems" />
                 </>,
                 {
                   title: 'Distributed Systems',
-                  badge: 'Focus',
+                  badge: 'True North · 2022',
                   preview:
-                    'High-availability clustering, consensus algorithms & low-latency backends.',
+                    'Self-hosting grown into complex systems reaching users across the internet.',
                 },
               )}
               ,{' '}
               {word(
-                'projects',
+                'ml',
                 <>
                   ML <DemoIcon kind="machine-learning" />
                 </>,
                 {
                   title: 'Machine Learning',
-                  badge: 'Focus',
+                  badge: 'True North · 2023',
                   preview:
-                    'Practical neural architectures, inference optimization & data engineering.',
+                    'Reproducing research, fine-tuning models & cost-effective AI detectors.',
                 },
               )}{' '}
               and{' '}
               {word(
-                'projects',
+                'electronics',
                 <span className="no-wrap">
                   electronics <DemoIcon kind="electronics" />.
                 </span>,
                 {
                   title: 'Electronics & Hardware',
-                  badge: 'Focus',
+                  badge: 'True North · 2018',
                   preview:
-                    'Microcontroller firmware, PCB design & embedded hardware systems.',
+                    'Customizing hardware & software, from broken laptops to custom-programmed cameras.',
                 },
               )}
             </p>
           </BlurFade>
-          {showAfter('projects')}
+          {showAfter('systems', 'ml', 'electronics', 'truenorth')}
 
           <BlurFade delay={0.3} yOffset={12}>
             <p className="intro-sentence">
@@ -443,6 +481,7 @@ export default function App() {
       <div className="longform-content">
         <div className="longform-container">
           <LongFormSection topicId="about" />
+          <TrueNorthSection />
           <LongFormSection topicId="projects" />
           <LongFormSection topicId="passions" />
           <LongFormSection topicId="contact" />

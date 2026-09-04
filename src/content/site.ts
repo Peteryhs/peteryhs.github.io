@@ -1,5 +1,9 @@
 export type TopicId =
   | 'about'
+  | 'truenorth'
+  | 'electronics'
+  | 'systems'
+  | 'ml'
   | 'waterloo'
   | 'compeng'
   | 'projects'
@@ -27,6 +31,51 @@ export const topics: Topic[] = [
       { title: 'Program', text: 'Computer Engineering @ University of Waterloo' },
       { title: 'Freetime', text: 'Homelab Nerd & Audio/camera aficionado' },
     ],
+  },
+  {
+    id: 'truenorth',
+    title: 'True North',
+    shortTitle: 'True North',
+    preview: 'Six years of engineering · 2018 Electronics, 2022 Systems, 2023 ML.',
+    description: "After six years of engineering, I found a few topics I'm truly passionate about.",
+    items: [
+      {
+        title: 'Electronics',
+        text: 'Customizing hardware & software to my needs, most recently a custom-programmed camera.',
+        tag: '2018',
+      },
+      {
+        title: 'Distributed systems',
+        text: 'Self-hosting grown into complex systems reaching users across the internet.',
+        tag: '2022',
+      },
+      {
+        title: 'Machine learning',
+        text: 'Fine-tuning & training from published research at a fraction of the cost.',
+        tag: '2023',
+      },
+    ],
+  },
+  {
+    id: 'electronics',
+    title: 'Electronics & Hardware',
+    shortTitle: 'Electronics',
+    preview: 'Customizing hardware & software, from broken laptops to custom-programmed cameras.',
+    description: 'Hardware customizations, embedded firmware, and camera engineering.',
+  },
+  {
+    id: 'systems',
+    title: 'Distributed Systems',
+    shortTitle: 'Systems',
+    preview: 'Self-hosting grown into complex systems reaching users across the internet.',
+    description: 'Edge networking, Linux servers, clustering, and data security.',
+  },
+  {
+    id: 'ml',
+    title: 'Machine Learning',
+    shortTitle: 'ML',
+    preview: 'Reproducing research, fine-tuning models & cost-effective AI detectors.',
+    description: 'Applied machine learning, generative models, and inference acceleration.',
   },
   {
     id: 'waterloo',
