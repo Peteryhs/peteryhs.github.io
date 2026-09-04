@@ -267,7 +267,7 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               animate={cursorState}
               variants={morphVariants}
               transition={{
-                duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 1.8,
+                duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
                 ease: [0.16, 1, 0.3, 1],
               }}
               style={{
@@ -279,7 +279,7 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
                 className="cursor-card-content"
                 style={{
                   opacity: cursorState === 'interactive' ? 1 : 0,
-                  transition: `opacity ${shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.6}s ease-out`,
+                  transition: `opacity ${shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.18 : 0.09}s ease-out`,
                 }}
               >
                 <p className="cursor-text">{textToDisplay}</p>

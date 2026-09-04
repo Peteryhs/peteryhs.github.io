@@ -352,7 +352,7 @@ export default function App() {
                   distributed systems <DemoIcon kind="systems" />
                 </>,
                 {
-                  text: 'Self-hosting since 2022: high-availability homelab clusters, edge networking, and data security.',
+                  text: 'Homelab clusters, edge networking, and high-availability systems',
                 },
               )}
               ,{' '}
@@ -362,7 +362,7 @@ export default function App() {
                   ML <DemoIcon kind="machine-learning" />
                 </>,
                 {
-                  text: 'Fine-tuning open weights, reproducing novel research papers, and optimizing efficient inference.',
+                  text: 'Fine-tuning open weights, model optimization, & fast inference',
                 },
               )}{' '}
               and{' '}
@@ -372,7 +372,7 @@ export default function App() {
                   electronics <DemoIcon kind="electronics" />.
                 </span>,
                 {
-                  text: 'Tinkering since 2018: custom-flashed camera firmware, embedded microcontrollers, and circuit repair.',
+                  text: 'Embedded firmware, microcontrollers, and custom hardware',
                 },
               )}
             </p>
@@ -388,7 +388,7 @@ export default function App() {
                   projects <DemoIcon kind="projects" />
                 </>,
                 {
-                  text: 'A collection of everyday utilities, low-latency infrastructure experiments, and ML prototypes.',
+                  text: 'Everyday utilities, low-latency infrastructure, and ML prototypes',
                 },
               )}
               , from everyday utilities <DemoIcon kind="utilities" />, to
@@ -403,13 +403,13 @@ export default function App() {
             <p className="intro-sentence">
               Besides that, I love{' '}
               {word('passions', 'Minecraft', {
-                text: 'Designing complex Redstone logic circuits, computational machinery, and collaborative worlds.',
+                text: 'Redstone logic circuits, computational machinery, and servers',
               })}
               ,{' '}
               {word('passions', 'Photography', {
-                text: 'Capturing street contrast, architectural geometry, and candid everyday moments.',
-              })}{' '}
-              and <span className="no-wrap">creative tinkering.</span>
+                text: 'Street contrast, architectural geometry, and candid moments',
+              })}
+              {' '}and <span className="no-wrap">creative tinkering.</span>
             </p>
           </BlurFade>
           {showAfter('passions')}
@@ -418,19 +418,19 @@ export default function App() {
             <p className="intro-sentence">
               You can spot me on the internet via{' '}
               {word('contact', 'GitHub', {
-                text: 'Open-source repositories, active software experiments, and hobby code on GitHub.',
+                text: 'Open-source repositories, active experiments, and hobby code',
               })}
               ,{' '}
               {word('contact', 'LinkedIn', {
-                text: 'Professional background, hackathon achievements, and engineering co-op updates.',
+                text: 'Professional background, hackathons, and engineering co-op',
               })}
               ,{' '}
               {word('contact', 'Reddit', {
-                text: 'Active in self-hosted infrastructure, mechanical keyboard, and hardware communities.',
-              })}{' '}
-              and{' '}
+                text: 'Self-hosted infrastructure, keyboards, and hardware communities',
+              })}
+              {' '}and{' '}
               {word('contact', <span className="no-wrap">Email!</span>, {
-                text: 'Always open to chat about engineering ideas, collaborations, or co-op opportunities.',
+                text: 'Always open to chat about engineering ideas & opportunities',
               })}
             </p>
           </BlurFade>

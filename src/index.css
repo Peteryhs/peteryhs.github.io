@@ -272,14 +272,14 @@ main {
 }
 
 .cursor-card-content {
-  padding: 8px 14px;
+  padding: 7px 13px;
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   text-align: left;
   white-space: nowrap;
   width: max-content;
-  min-width: 240px;
-  max-width: min(440px, 86vw);
+  min-width: 180px;
+  max-width: min(380px, 86vw);
   box-sizing: border-box;
   will-change: opacity;
 }
@@ -292,7 +292,6 @@ main {
   color: var(--ink);
   font-weight: 460;
   letter-spacing: -0.005em;
-  text-wrap: balance;
   text-align: left;
 }
 
