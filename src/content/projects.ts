@@ -1,3 +1,10 @@
+export interface ProjectTheme {
+  primary: string
+  secondary: string
+  edgeGradient: string
+  spotlightTint: string
+}
+
 export interface ProjectItem {
   slug: string
   name: string
@@ -9,6 +16,7 @@ export interface ProjectItem {
   description: string
   stats: Record<string, string | number>
   notes?: string
+  theme: ProjectTheme
   links: {
     github: string
     marketplace?: string[]
@@ -22,6 +30,13 @@ export const projectsData: ProjectItem[] = [
     tagline: 'Autonomous tool routing for the self-hosted AI platform',
     stars: 28,
     repo: 'ShaoRou459/OpenWebUI-Agentic-Tooling',
+    theme: {
+      primary: '#10b981',
+      secondary: '#6366f1',
+      edgeGradient:
+        'linear-gradient(135deg, rgba(16, 185, 129, 0.6) 0%, rgba(6, 182, 212, 0.25) 45%, rgba(99, 102, 241, 0.55) 100%)',
+      spotlightTint: 'rgba(16, 185, 129, 0.22)',
+    },
     description:
       'A plugin suite that turns OpenWebUI from a chat interface into an autonomous agent. It auto-routes queries to dedicated tools like image generation, vision, code execution, and a custom-built deep research agent. 1,000+ combined community deployments to servers across two marketplace listings.',
     stats: {
@@ -46,6 +61,13 @@ export const projectsData: ProjectItem[] = [
     starsNote: 'co-owned repo, hosted under anaqvi02',
     repo: 'anaqvi02/we-have-pangram-at-home',
     coAuthored: 'Peter Shao, Ali Naqvi',
+    theme: {
+      primary: '#3898ec',
+      secondary: '#f97316',
+      edgeGradient:
+        'linear-gradient(135deg, rgba(56, 152, 236, 0.68) 0%, rgba(56, 152, 236, 0.18) 36%, rgba(249, 115, 22, 0.18) 64%, rgba(249, 115, 22, 0.68) 100%)',
+      spotlightTint: 'rgba(56, 152, 236, 0.22)',
+    },
     description:
       'A custom AI-text detector built from only public data, extending the Pangram classifier approach as a first-ever language model training project with significantly less cost. Reaches 93.4% on a benchmark of 4,000 unseen essays and 89% on the RAID benchmark built from untrained generators, trained end to end on a single H100.',
     stats: {
@@ -66,6 +88,13 @@ export const projectsData: ProjectItem[] = [
     tagline: 'Hybrid homelab fleet, home origin + cloud edge',
     stars: 15,
     repo: 'Peteryhs/Server',
+    theme: {
+      primary: '#f59e0b',
+      secondary: '#2563eb',
+      edgeGradient:
+        'linear-gradient(135deg, rgba(245, 158, 11, 0.64) 0%, rgba(245, 158, 11, 0.2) 40%, rgba(37, 99, 235, 0.18) 65%, rgba(37, 99, 235, 0.58) 100%)',
+      spotlightTint: 'rgba(245, 158, 11, 0.22)',
+    },
     description:
       'A hybrid homelab fleet, one home origin server and one public edge gateway, running 20+ self-hosted containers for family and friends across ~13TB of storage. The residential network exposes zero ports: traffic arrives through the edge gateway with TLS passthrough and CrowdSec threat blocking, the result of 4 years of iteration on its 5th stable build.',
     stats: {
@@ -85,6 +114,13 @@ export const projectsData: ProjectItem[] = [
     stars: 240822,
     starsNote: 'upstream project, not mine',
     repo: 'NousResearch/hermes-agent',
+    theme: {
+      primary: '#8b5cf6',
+      secondary: '#38bdf8',
+      edgeGradient:
+        'linear-gradient(135deg, rgba(139, 92, 246, 0.64) 0%, rgba(99, 102, 241, 0.2) 45%, rgba(56, 189, 248, 0.55) 100%)',
+      spotlightTint: 'rgba(139, 92, 246, 0.22)',
+    },
     description:
       'A contributor to Hermes Agent, an open-source AI agent framework with 240,000+ GitHub stars. Shipped a security fix that stops secret environment variables from leaking in terminal output, with more PRs under review for desktop launcher reliability and dashboard design.',
     stats: {

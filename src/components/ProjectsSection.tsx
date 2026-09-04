@@ -104,12 +104,28 @@ export function ProjectCard({
     e.currentTarget.style.setProperty('--mouse-y', `${y}px`)
   }
 
+  const customStyle: React.CSSProperties = {
+    ['--project-primary' as any]: project.theme.primary,
+    ['--project-secondary' as any]: project.theme.secondary,
+    ['--project-edge-gradient' as any]: project.theme.edgeGradient,
+    ['--project-spotlight-tint' as any]: project.theme.spotlightTint,
+  }
+
   return (
     <article
       className={`bento-card project-card ${className}`}
+      style={customStyle}
       onMouseMove={handleMouseMove}
     >
-      <div className="bento-card-spotlight" aria-hidden="true" />
+      {/* Ambient spreading back glow */}
+      <div className="project-card-ambient" aria-hidden="true" />
+      {/* Radiant perimeter border glow */}
+      <div className="project-card-border-glow" aria-hidden="true" />
+      {/* Inward spreading gradient bleed from edges */}
+      <div className="project-card-edge-bleed" aria-hidden="true" />
+      {/* Interactive mouse spotlight */}
+      <div className="project-card-spotlight" aria-hidden="true" />
+
       <div className="bento-card-content project-card-inner">
         {/* Header: Title, Tagline & Star Counter */}
         <div className="project-card-header">
