@@ -93,20 +93,24 @@ interface AStarNode {
   parent: AStarNode | null
 }
 
-// Full A* Pathfinding with parent backtracking and flood-fill survival fallback
+// Full A* Pathfinding with card boundary obstacle awareness and flood-fill survival fallback
 function findNextMoveAStar(
   head: Point,
   target: Point,
   body: Point[],
   cols: number,
-  rows: number
+  rows: number,
+  cardObstacles?: Set<string>
 ): Point | null {
   if (target.x < 0 || target.x >= cols || target.y < 0 || target.y >= rows) {
     return null
   }
 
-  // The snake tail will move out of the way on the next tick unless eating, so exclude tail from obstacles
-  const bodyObstacles = new Set(body.slice(0, -1).map((p) => `${p.x},${p.y}`))
+  // Obstacles include snake body (minus moving tail) + all cells occupied by Bento cards/tiles
+  const obstacles = new Set(body.slice(0, -1).map((p) => `${p.x},${p.y}`))
+  if (cardObstacles) {
+    cardObstacles.forEach((k) => obstacles.add(k))
+  }
 
   const openList: AStarNode[] = [
     {
@@ -159,7 +163,7 @@ function findNextMoveAStar(
         nx >= cols ||
         ny < 0 ||
         ny >= rows ||
-        bodyObstacles.has(nKey) ||
+        obstacles.has(nKey) ||
         closedSet.has(nKey)
       ) {
         continue
@@ -199,7 +203,7 @@ function findNextMoveAStar(
     const nx = head.x + d.x
     const ny = head.y + d.y
     const key = `${nx},${ny}`
-    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !bodyObstacles.has(key)) {
+    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !obstacles.has(key)) {
       validNeighbors.push({ x: nx, y: ny })
     }
   }
@@ -212,7 +216,7 @@ function findNextMoveAStar(
   let bestScore = -Infinity
 
   for (const neighbor of validNeighbors) {
-    const space = countReachableSpace(neighbor, bodyObstacles, cols, rows, 60)
+    const space = countReachableSpace(neighbor, obstacles, cols, rows, 60)
     const dist = manhattan(neighbor, target)
     const score = space * 10 - dist
     if (score > bestScore) {
@@ -247,13 +251,13 @@ export function InteractiveGridPattern({
   const achievementIdxRef = useRef(0)
   const messageIdCounterRef = useRef(0)
 
-  // Autonomous Snake State
+  // Autonomous Snake State (initialized in open space on the right)
   const [snakeBody, setSnakeBody] = useState<Point[]>([
-    { x: 14, y: 8 },
-    { x: 13, y: 8 },
-    { x: 12, y: 8 },
+    { x: 26, y: 6 },
+    { x: 25, y: 6 },
+    { x: 24, y: 6 },
   ])
-  const [apple, setApple] = useState<Point>({ x: 20, y: 8 })
+  const [apple, setApple] = useState<Point>({ x: 28, y: 12 })
   const [isFlashing, setIsFlashing] = useState(false)
   const isResettingRef = useRef(false)
 
@@ -298,50 +302,76 @@ export function InteractiveGridPattern({
     }
   }, [width, height])
 
-  // Spawn apple strictly inside visible bounds (prioritizing right side on desktop)
-  const spawnApple = useCallback((body: Point[], cols: number, rows: number): Point => {
-    const bodySet = new Set(body.map((p) => `${p.x},${p.y}`))
-    const safeCols = Math.max(cols, 6)
-    const safeRows = Math.max(rows, 6)
+  // Compute exact cells covered by the existing cards/tiles so the snake never goes underneath
+  const getCardObstacles = useCallback((): Set<string> => {
+    const obstacles = new Set<string>()
+    const container = containerRef.current
+    const section = sectionRef.current
+    if (!container || !section) return obstacles
 
-    // On wider displays (desktop), favor the open space on the right (cols * 0.42 to cols - 3)
-    const minCol = safeCols >= 18 ? Math.floor(safeCols * 0.42) : 2
-    const maxCol = Math.max(minCol + 1, safeCols - 3)
-    const minRow = 2
-    const maxRow = Math.max(minRow + 1, safeRows - 2)
+    const gridRect = container.getBoundingClientRect()
+    const cards = section.querySelectorAll('.bento-card, .longform-heading')
 
-    for (let attempts = 0; attempts < 100; attempts++) {
-      const x = Math.floor(Math.random() * (maxCol - minCol + 1)) + minCol
-      const y = Math.floor(Math.random() * (maxRow - minRow + 1)) + minRow
-      if (!bodySet.has(`${x},${y}`) && x >= 2 && x <= maxCol && y >= 2 && y <= maxRow) {
-        return { x, y }
-      }
-    }
+    cards.forEach((card) => {
+      const r = card.getBoundingClientRect()
+      // Map pixel rectangle to grid cells with zero clipping
+      const startCol = Math.max(0, Math.floor((r.left - gridRect.left) / width))
+      const endCol = Math.min(dimensions.cols - 1, Math.floor((r.right - gridRect.left) / width))
+      const startRow = Math.max(0, Math.floor((r.top - gridRect.top) / height))
+      const endRow = Math.min(dimensions.rows - 1, Math.floor((r.bottom - gridRect.top) / height))
 
-    // Fallback: iterate and find any open coordinate within bounds
-    for (let c = maxCol; c >= 2; c--) {
-      for (let r = 2; r <= maxRow; r++) {
-        if (!bodySet.has(`${c},${r}`) && c < cols - 2 && r < rows - 1) {
-          return { x: c, y: r }
+      for (let c = startCol; c <= endCol; c++) {
+        for (let row = startRow; row <= endRow; row++) {
+          obstacles.add(`${c},${row}`)
         }
       }
-    }
-    return { x: Math.min(cols - 3, 4), y: Math.min(rows - 2, 4) }
-  }, [])
+    })
 
-  // Ensure apple and snake stay inside valid bounds when dimensions update
+    return obstacles
+  }, [dimensions.cols, dimensions.rows, width, height, sectionRef])
+
+  // Spawn apple strictly inside open, visible areas outside existing tiles/cards
+  const spawnApple = useCallback(
+    (body: Point[], cols: number, rows: number, cardObstacles?: Set<string>): Point => {
+      const bodySet = new Set(body.map((p) => `${p.x},${p.y}`))
+      const openCells: Point[] = []
+
+      for (let c = 1; c < cols - 1; c++) {
+        for (let r = 1; r < rows - 1; r++) {
+          const key = `${c},${r}`
+          if (!bodySet.has(key) && (!cardObstacles || !cardObstacles.has(key))) {
+            openCells.push({ x: c, y: r })
+          }
+        }
+      }
+
+      if (openCells.length > 0) {
+        // Prioritize open spaces on the right side if available
+        const rightCells = openCells.filter((p) => p.x >= Math.floor(cols * 0.42))
+        const pool = rightCells.length > 0 ? rightCells : openCells
+        return pool[Math.floor(Math.random() * pool.length)]
+      }
+
+      return { x: Math.min(cols - 2, 4), y: Math.min(rows - 2, 4) }
+    },
+    []
+  )
+
+  // Ensure apple and snake stay inside valid open bounds when dimensions update
   useEffect(() => {
     if (dimensions.cols > 4 && dimensions.rows > 4) {
+      const cardObstacles = getCardObstacles()
       if (
         apple.x < 1 ||
         apple.x >= dimensions.cols - 1 ||
         apple.y < 1 ||
-        apple.y >= dimensions.rows - 1
+        apple.y >= dimensions.rows - 1 ||
+        cardObstacles.has(`${apple.x},${apple.y}`)
       ) {
-        setApple(spawnApple(snakeBody, dimensions.cols, dimensions.rows))
+        setApple(spawnApple(snakeBody, dimensions.cols, dimensions.rows, cardObstacles))
       }
     }
-  }, [dimensions, apple, snakeBody, spawnApple])
+  }, [dimensions, apple, snakeBody, spawnApple, getCardObstacles])
 
   // Autonomous Snake Game Loop
   useEffect(() => {
@@ -353,13 +383,15 @@ export function InteractiveGridPattern({
       // Pause advancing if currently flashing/resetting
       if (isResettingRef.current) return
 
+      const cardObstacles = getCardObstacles()
+
       setSnakeBody((curBody) => {
         if (curBody.length === 0 || isResettingRef.current) return curBody
         const head = curBody[0]
-        const nextMove = findNextMoveAStar(head, apple, curBody, dimensions.cols, dimensions.rows)
+        const nextMove = findNextMoveAStar(head, apple, curBody, dimensions.cols, dimensions.rows, cardObstacles)
 
         // When snake reaches length 20 or gets completely trapped:
-        // Flash white 3 times (820ms), then reset at a random location
+        // Flash white 3 times (820ms), then reset at a random location outside cards
         if (!nextMove || curBody.length >= 20) {
           isResettingRef.current = true
           setIsFlashing(true)
@@ -367,24 +399,34 @@ export function InteractiveGridPattern({
           setTimeout(() => {
             const safeCols = Math.max(dimensions.cols, 8)
             const safeRows = Math.max(dimensions.rows, 8)
+            const obstacles = getCardObstacles()
 
-            // Pick a new random starting coordinate in open space
-            const minX = safeCols >= 18 ? Math.floor(safeCols * 0.38) : 3
-            const maxX = Math.max(minX + 2, safeCols - 4)
-            const minY = 3
-            const maxY = Math.max(minY + 2, safeRows - 3)
+            // Find valid 3-cell contiguous horizontal starts in open space
+            const validStarts: Point[] = []
+            for (let c = 3; c < safeCols - 2; c++) {
+              for (let r = 2; r < safeRows - 2; r++) {
+                if (
+                  !obstacles.has(`${c},${r}`) &&
+                  !obstacles.has(`${c - 1},${r}`) &&
+                  !obstacles.has(`${c - 2},${r}`)
+                ) {
+                  validStarts.push({ x: c, y: r })
+                }
+              }
+            }
 
-            const startX = Math.floor(Math.random() * (maxX - minX + 1)) + minX
-            const startY = Math.floor(Math.random() * (maxY - minY + 1)) + minY
+            const rightStarts = validStarts.filter((p) => p.x >= Math.floor(safeCols * 0.42))
+            const pool = rightStarts.length > 0 ? rightStarts : validStarts
+            const start = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : { x: safeCols - 4, y: 4 }
 
             const newBody = [
-              { x: startX, y: startY },
-              { x: startX - 1, y: startY },
-              { x: startX - 2, y: startY },
+              { x: start.x, y: start.y },
+              { x: start.x - 1, y: start.y },
+              { x: start.x - 2, y: start.y },
             ]
 
             setSnakeBody(newBody)
-            setApple(spawnApple(newBody, dimensions.cols, dimensions.rows))
+            setApple(spawnApple(newBody, dimensions.cols, dimensions.rows, obstacles))
             setIsFlashing(false)
             isResettingRef.current = false
           }, 820)
@@ -419,9 +461,9 @@ export function InteractiveGridPattern({
             setMessages((prev) => prev.filter((m) => m.id === msgId ? false : true))
           }, 2400)
 
-          // Grow snake and spawn next apple
+          // Grow snake and spawn next apple in open space
           const grownBody = [nextMove, ...curBody]
-          setApple(spawnApple(grownBody, dimensions.cols, dimensions.rows))
+          setApple(spawnApple(grownBody, dimensions.cols, dimensions.rows, cardObstacles))
           return grownBody
         }
 
@@ -431,7 +473,7 @@ export function InteractiveGridPattern({
     }, tickInterval)
 
     return () => clearInterval(interval)
-  }, [apple, dimensions.cols, dimensions.rows, width, height, spawnApple, shouldReduceMotion])
+  }, [apple, dimensions.cols, dimensions.rows, width, height, spawnApple, getCardObstacles, shouldReduceMotion])
 
   const handleMouseEnterSquare = useCallback((key: string) => {
     if (leaveTimerRef.current) {
