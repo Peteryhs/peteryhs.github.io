@@ -41,17 +41,17 @@ export const topics: Topic[] = [
     items: [
       {
         title: 'Electronics',
-        text: 'Customizing hardware & software to my needs, most recently a custom-programmed camera.',
+        text: 'Technology does incredible things, but they are also flawed. I want to understand them, and improve them for myself and others.',
         tag: '2018',
       },
       {
         title: 'Distributed systems',
-        text: 'Self-hosting grown into complex systems reaching users across the internet.',
+        text: 'A simple Linux server on my laptop grew into a stack that hosts everything I use. I want to build systems that serve the people around me, not just myself.',
         tag: '2022',
       },
       {
         title: 'Machine learning',
-        text: 'Fine-tuning & training from published research at a fraction of the cost.',
+        text: "Google's magic erase sparked my interest in AI, LLMs got me into the research papers, not just the models. I want to understand them, and improve their methodology and practicality.",
         tag: '2023',
       },
     ],

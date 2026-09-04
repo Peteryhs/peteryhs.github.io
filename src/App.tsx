@@ -15,6 +15,7 @@ import {
 } from './components/CursorFollower'
 import { DemoIcon } from './components/DemoIcon'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
+import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
 import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
 import { topicById, type Topic, type TopicId } from './content/site'
 
@@ -130,6 +131,12 @@ function ExpandedSection({ topic }: { topic: Topic }) {
             <CompEngFocusCard />
           </div>
         )
+      case 'projects':
+        return (
+          <div className="expanded-cards-single">
+            <ProjectsGrid isExpanded />
+          </div>
+        )
       default:
         return (
           <div className="expanded-items-grid">
@@ -148,33 +155,35 @@ function ExpandedSection({ topic }: { topic: Topic }) {
     <motion.section
       className="expanded-section"
       aria-label={topic.title}
-      initial={{ opacity: 0, height: 0, filter: 'blur(8px)' }}
+      initial={{ opacity: 0, height: 0, filter: 'blur(10px)', y: -6 }}
       animate={{
         opacity: 1,
         height: 'auto',
         filter: 'blur(0px)',
+        y: 0,
         transition: {
           height: { duration: 0.42, ease },
           opacity: { duration: 0.35, ease },
           filter: { duration: 0.35, ease },
+          y: { duration: 0.35, ease },
         },
       }}
       exit={{
         opacity: 0,
         height: 0,
-        filter: 'blur(8px)',
+        filter: 'blur(10px)',
+        y: -6,
         transition: {
           height: { duration: 0.38, ease },
           opacity: { duration: 0.28, ease },
           filter: { duration: 0.28, ease },
+          y: { duration: 0.28, ease },
         },
       }}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="expanded-section-content">
-        <BlurFade delay={0.04} duration={0.4} yOffset={10}>
-          {renderContent()}
-        </BlurFade>
+        {renderContent()}
       </div>
     </motion.section>
   )
@@ -204,6 +213,10 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
         </section>
       </div>
     )
+  }
+
+  if (topicId === 'projects') {
+    return <ProjectsSection />
   }
 
   return (
@@ -280,10 +293,12 @@ export default function App() {
   }
 
   const showAfter = (...ids: TopicId[]) => {
-    if (!activeId || !ids.includes(activeId)) return null
+    const isMatching = Boolean(activeId && ids.includes(activeId))
     return (
       <AnimatePresence mode="wait">
-        <ExpandedSection key={activeId} topic={topicById[activeId]} />
+        {isMatching && activeId && (
+          <ExpandedSection key={activeId} topic={topicById[activeId]} />
+        )}
       </AnimatePresence>
     )
   }

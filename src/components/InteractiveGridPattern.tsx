@@ -23,16 +23,15 @@ interface FloatingMessage {
 }
 
 const ACHIEVEMENTS = [
-  'Hack the Ridge 22',
-  'Hack the Ridge 23',
-  'Hack the Ridge 24',
-  'Hack the Ridge 25',
-  'Hack the Ridge 26',
-  'DECA Team Ontario 46',
-  'DECA Team Ontario 47',
+  'DECA 45',
   'IRHSAI 24',
+  'Hack the Ridge Team 24',
+  'DECA Team Ontario 46',
   'IRHSAI 25',
+  'Hack the Ridge Team 25',
+  'DECA Team Ontario 47',
   'IRHSAI 26',
+  "UW CE '31",
 ]
 
 // Manhattan distance heuristic for A*
@@ -257,8 +256,17 @@ export function InteractiveGridPattern({
     { x: 25, y: 6 },
     { x: 24, y: 6 },
   ])
+  const snakeBodyRef = useRef<Point[]>([
+    { x: 26, y: 6 },
+    { x: 25, y: 6 },
+    { x: 24, y: 6 },
+  ])
+
   const [apple, setApple] = useState<Point>({ x: 28, y: 12 })
-  const [isFlashing, setIsFlashing] = useState(false)
+  const appleRef = useRef<Point>({ x: 28, y: 12 })
+
+  const [snakeStatus, setSnakeStatus] = useState<'alive' | 'disappearing' | 'restarting'>('alive')
+  const [snakeGenKey, setSnakeGenKey] = useState(0)
   const isResettingRef = useRef(false)
 
   // Scroll tracking: Fades in when entering About Me, stays visible, fades out when leaving About Me
@@ -273,6 +281,11 @@ export function InteractiveGridPattern({
     [0, 0.16, 0.84, 1],
     [0, 1, 1, 0]
   )
+
+  // Sync state to refs for non-tearing game loop
+  useEffect(() => {
+    appleRef.current = apple
+  }, [apple])
 
   // Measure container and window to compute exact grid dimensions
   useEffect(() => {
@@ -361,119 +374,205 @@ export function InteractiveGridPattern({
   useEffect(() => {
     if (dimensions.cols > 4 && dimensions.rows > 4) {
       const cardObstacles = getCardObstacles()
+      const curApple = appleRef.current
       if (
-        apple.x < 1 ||
-        apple.x >= dimensions.cols - 1 ||
-        apple.y < 1 ||
-        apple.y >= dimensions.rows - 1 ||
-        cardObstacles.has(`${apple.x},${apple.y}`)
+        curApple.x < 1 ||
+        curApple.x >= dimensions.cols - 1 ||
+        curApple.y < 1 ||
+        curApple.y >= dimensions.rows - 1 ||
+        cardObstacles.has(`${curApple.x},${curApple.y}`)
       ) {
-        setApple(spawnApple(snakeBody, dimensions.cols, dimensions.rows, cardObstacles))
+        const newApple = spawnApple(snakeBodyRef.current, dimensions.cols, dimensions.rows, cardObstacles)
+        appleRef.current = newApple
+        setApple(newApple)
       }
     }
-  }, [dimensions, apple, snakeBody, spawnApple, getCardObstacles])
+  }, [dimensions.cols, dimensions.rows, spawnApple, getCardObstacles])
 
-  // Autonomous Snake Game Loop
+  // Stable Autonomous Snake Game Loop with guaranteed sequential milestones
   useEffect(() => {
     if (shouldReduceMotion) return
 
     const tickInterval = 175 // Smooth, retro-arcade pace
 
     const interval = setInterval(() => {
-      // Pause advancing if currently flashing/resetting
+      // Pause advancing if currently resetting/disappearing
       if (isResettingRef.current) return
 
       const cardObstacles = getCardObstacles()
+      const curBody = snakeBodyRef.current
+      const curApple = appleRef.current
 
-      setSnakeBody((curBody) => {
-        if (curBody.length === 0 || isResettingRef.current) return curBody
-        const head = curBody[0]
-        const nextMove = findNextMoveAStar(head, apple, curBody, dimensions.cols, dimensions.rows, cardObstacles)
+      if (curBody.length === 0) return
 
-        // When snake reaches length 20 or gets completely trapped:
-        // Flash white 3 times (820ms), then reset at a random location outside cards
-        if (!nextMove || curBody.length >= 20) {
-          isResettingRef.current = true
-          setIsFlashing(true)
+      const head = curBody[0]
+      const nextMove = findNextMoveAStar(head, curApple, curBody, dimensions.cols, dimensions.rows, cardObstacles)
 
-          setTimeout(() => {
-            const safeCols = Math.max(dimensions.cols, 8)
-            const safeRows = Math.max(dimensions.rows, 8)
-            const obstacles = getCardObstacles()
+      // When snake reaches length 20 or gets completely trapped:
+      // Smooth blur-fade out, reposition in open space, and smooth blur-fade in
+      if (!nextMove || curBody.length >= 20) {
+        isResettingRef.current = true
+        setSnakeStatus('disappearing')
 
-            // Find valid 3-cell contiguous horizontal starts in open space
-            const validStarts: Point[] = []
-            for (let c = 3; c < safeCols - 2; c++) {
-              for (let r = 2; r < safeRows - 2; r++) {
-                if (
-                  !obstacles.has(`${c},${r}`) &&
-                  !obstacles.has(`${c - 1},${r}`) &&
-                  !obstacles.has(`${c - 2},${r}`)
-                ) {
-                  validStarts.push({ x: c, y: r })
-                }
+        setTimeout(() => {
+          const safeCols = Math.max(dimensions.cols, 8)
+          const safeRows = Math.max(dimensions.rows, 8)
+          const obstacles = getCardObstacles()
+
+          // Find valid 3-cell contiguous horizontal starts in open space
+          const validStarts: Point[] = []
+          for (let c = 3; c < safeCols - 2; c++) {
+            for (let r = 2; r < safeRows - 2; r++) {
+              if (
+                !obstacles.has(`${c},${r}`) &&
+                !obstacles.has(`${c - 1},${r}`) &&
+                !obstacles.has(`${c - 2},${r}`)
+              ) {
+                validStarts.push({ x: c, y: r })
               }
             }
-
-            const rightStarts = validStarts.filter((p) => p.x >= Math.floor(safeCols * 0.42))
-            const pool = rightStarts.length > 0 ? rightStarts : validStarts
-            const start = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : { x: safeCols - 4, y: 4 }
-
-            const newBody = [
-              { x: start.x, y: start.y },
-              { x: start.x - 1, y: start.y },
-              { x: start.x - 2, y: start.y },
-            ]
-
-            setSnakeBody(newBody)
-            setApple(spawnApple(newBody, dimensions.cols, dimensions.rows, obstacles))
-            setIsFlashing(false)
-            isResettingRef.current = false
-          }, 820)
-
-          return curBody // Keep current body intact during flash animation
-        }
-
-        // Check if snake ate the apple
-        if (nextMove.x === apple.x && nextMove.y === apple.y) {
-          // Spawn floating milestone achievement text right above the apple with safe boundary clamping
-          const milestoneText = ACHIEVEMENTS[achievementIdxRef.current % ACHIEVEMENTS.length]
-          achievementIdxRef.current += 1
-          const msgId = messageIdCounterRef.current++
-
-          const totalGridWidth = dimensions.cols * width
-          const safeX = Math.max(135, Math.min(apple.x * width + width / 2, totalGridWidth - 135))
-          const safeY = Math.max(42, apple.y * height - 8)
-
-          const newMsg: FloatingMessage = {
-            id: msgId,
-            text: milestoneText,
-            x: safeX,
-            y: safeY,
-            key: `${msgId}-${milestoneText}`,
           }
 
-          // Replace with single latest message so consecutive milestones never overlap
-          setMessages([newMsg])
+          const rightStarts = validStarts.filter((p) => p.x >= Math.floor(safeCols * 0.42))
+          const pool = rightStarts.length > 0 ? rightStarts : validStarts
+          const start = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : { x: safeCols - 4, y: 4 }
 
-          // Remove message after animation completes (2.4s)
+          const newBody = [
+            { x: start.x, y: start.y },
+            { x: start.x - 1, y: start.y },
+            { x: start.x - 2, y: start.y },
+          ]
+
+          const newApple = spawnApple(newBody, dimensions.cols, dimensions.rows, obstacles)
+          snakeBodyRef.current = newBody
+          appleRef.current = newApple
+          setSnakeBody(newBody)
+          setApple(newApple)
+          setSnakeGenKey((k) => k + 1)
+          setSnakeStatus('restarting')
+
           setTimeout(() => {
-            setMessages((prev) => prev.filter((m) => m.id === msgId ? false : true))
-          }, 2400)
+            setSnakeStatus('alive')
+            isResettingRef.current = false
+          }, 450)
+        }, 380)
 
-          // Grow snake and spawn next apple in open space
-          const grownBody = [nextMove, ...curBody]
-          setApple(spawnApple(grownBody, dimensions.cols, dimensions.rows, cardObstacles))
-          return grownBody
+        return
+      }
+
+      // Check if snake ate the apple
+      if (nextMove.x === curApple.x && nextMove.y === curApple.y) {
+        // Guaranteed sequential milestone in exact order:
+        const currentMilestoneIndex = achievementIdxRef.current % ACHIEVEMENTS.length
+        const milestoneText = ACHIEVEMENTS[currentMilestoneIndex]
+        const isFinalMilestone = currentMilestoneIndex === ACHIEVEMENTS.length - 1
+
+        const msgId = messageIdCounterRef.current++
+        const totalGridWidth = dimensions.cols * width
+        const safeX = Math.max(140, Math.min(curApple.x * width + width / 2, totalGridWidth - 140))
+        const safeY = Math.max(42, curApple.y * height - 8)
+
+        const newMsg: FloatingMessage = {
+          id: msgId,
+          text: milestoneText,
+          x: safeX,
+          y: safeY,
+          key: `${msgId}-${milestoneText}-${Date.now()}`,
         }
 
-        // Regular move: advance head and remove tail
-        return [nextMove, ...curBody.slice(0, -1)]
-      })
+        // Replace with single latest message so consecutive milestones never overlap
+        setMessages([newMsg])
+
+        // Remove message after animation completes (2.4s)
+        setTimeout(() => {
+          setMessages((prev) => (prev.filter((m) => m.id !== msgId)))
+        }, 2400)
+
+        // If reached final milestone (UW CE '31):
+        if (isFinalMilestone) {
+          // Immediately pause any further movement/eating
+          isResettingRef.current = true
+          // Reset achievement counter so the first apple after restart is DECA 45 (index 0)
+          achievementIdxRef.current = 0
+
+          // Clear the apple immediately so it cannot be re-eaten or trigger another milestone
+          appleRef.current = { x: -999, y: -999 }
+          setApple({ x: -999, y: -999 })
+
+          // Grow snake for this final milestone step
+          const grownBody = [nextMove, ...curBody]
+          snakeBodyRef.current = grownBody
+          setSnakeBody(grownBody)
+
+          // Display UW CE '31, then blur-fade out and restart fresh at bottom
+          setTimeout(() => {
+            setSnakeStatus('disappearing')
+
+            setTimeout(() => {
+              const safeCols = Math.max(dimensions.cols, 8)
+              const safeRows = Math.max(dimensions.rows, 8)
+              const obstacles = getCardObstacles()
+
+              // Spawn at bottom open space to start fresh
+              const validStarts: Point[] = []
+              for (let c = 3; c < safeCols - 2; c++) {
+                for (let r = Math.max(2, safeRows - 6); r < safeRows - 2; r++) {
+                  if (
+                    !obstacles.has(`${c},${r}`) &&
+                    !obstacles.has(`${c - 1},${r}`) &&
+                    !obstacles.has(`${c - 2},${r}`)
+                  ) {
+                    validStarts.push({ x: c, y: r })
+                  }
+                }
+              }
+
+              const pool = validStarts.length > 0 ? validStarts : [{ x: safeCols - 4, y: safeRows - 3 }]
+              const start = pool[Math.floor(Math.random() * pool.length)]
+
+              const freshBody = [
+                { x: start.x, y: start.y },
+                { x: start.x - 1, y: start.y },
+                { x: start.x - 2, y: start.y },
+              ]
+
+              const newApple = spawnApple(freshBody, dimensions.cols, dimensions.rows, obstacles)
+              snakeBodyRef.current = freshBody
+              appleRef.current = newApple
+              setSnakeBody(freshBody)
+              setApple(newApple)
+              setSnakeGenKey((k) => k + 1)
+              setSnakeStatus('restarting')
+
+              setTimeout(() => {
+                setSnakeStatus('alive')
+                isResettingRef.current = false
+              }, 450)
+            }, 380)
+          }, 850)
+
+          return
+        }
+
+        // Regular milestone advancement:
+        achievementIdxRef.current += 1
+        const grownBody = [nextMove, ...curBody]
+        const newApple = spawnApple(grownBody, dimensions.cols, dimensions.rows, cardObstacles)
+        snakeBodyRef.current = grownBody
+        appleRef.current = newApple
+        setSnakeBody(grownBody)
+        setApple(newApple)
+        return
+      }
+
+      // Regular move: advance head and remove tail
+      const newBody = [nextMove, ...curBody.slice(0, -1)]
+      snakeBodyRef.current = newBody
+      setSnakeBody(newBody)
     }, tickInterval)
 
     return () => clearInterval(interval)
-  }, [apple, dimensions.cols, dimensions.rows, width, height, spawnApple, getCardObstacles, shouldReduceMotion])
+  }, [dimensions.cols, dimensions.rows, width, height, spawnApple, getCardObstacles, shouldReduceMotion])
 
   const handleMouseEnterSquare = useCallback((key: string) => {
     if (leaveTimerRef.current) {
@@ -499,6 +598,44 @@ export function InteractiveGridPattern({
     [width, height, dimensions.cols, dimensions.rows, handleMouseEnterSquare]
   )
 
+  // Place apple on square click
+  const handleSquareClick = useCallback(
+    (col: number, row: number) => {
+      if (shouldReduceMotion) return
+
+      // Do not allow placing under bento cards
+      const obstacles = getCardObstacles()
+      const key = `${col},${row}`
+      if (obstacles.has(key)) return
+
+      // Do not allow placing on perimeter border or out of bounds
+      if (col <= 0 || col >= dimensions.cols - 1 || row <= 0 || row >= dimensions.rows - 1) return
+
+      // Do not allow placing directly on snake head/body
+      const isSnakeCell = snakeBodyRef.current.some((p) => p.x === col && p.y === row)
+      if (isSnakeCell) return
+
+      // Move apple directly to clicked square
+      const newApple = { x: col, y: row }
+      appleRef.current = newApple
+      setApple(newApple)
+    },
+    [getCardObstacles, dimensions.cols, dimensions.rows, shouldReduceMotion]
+  )
+
+  const handleSvgClick = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      if (shouldReduceMotion) return
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const col = Math.floor(x / width)
+      const row = Math.floor(y / height)
+      handleSquareClick(col, row)
+    },
+    [width, height, handleSquareClick, shouldReduceMotion]
+  )
+
   const snakeSet = new Set(snakeBody.map((p) => `${p.x},${p.y}`))
 
   return (
@@ -515,6 +652,7 @@ export function InteractiveGridPattern({
         width="100%"
         height="100%"
         onMouseMove={handleMouseMove}
+        onClick={handleSvgClick}
         onMouseLeave={() => setHoveredSquare(null)}
       >
         <defs>
@@ -539,30 +677,49 @@ export function InteractiveGridPattern({
 
         {/* Apple (#385dc8) */}
         {!shouldReduceMotion && (
-          <rect
+          <motion.rect
+            key={`apple-${apple.x}-${apple.y}`}
             x={apple.x * width}
             y={apple.y * height}
             width={width}
             height={height}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="snake-apple-square"
           />
         )}
 
-        {/* Snake Body (#eda339) */}
-        {!shouldReduceMotion &&
-          snakeBody.map((p, idx) => {
-            const isHead = idx === 0
-            return (
-              <rect
-                key={`snake-${idx}-${p.x}-${p.y}`}
-                x={p.x * width}
-                y={p.y * height}
-                width={width}
-                height={height}
-                className={`snake-body-square ${isHead ? 'snake-head-square' : ''} ${isFlashing ? 'is-flashing' : ''}`}
-              />
-            )
-          })}
+        {/* Snake Body (#eda339) with smooth blur-fade disappearance & restart */}
+        {!shouldReduceMotion && (
+          <motion.g
+            key={`snake-group-${snakeGenKey}`}
+            initial={{ opacity: 0, filter: 'blur(8px)' }}
+            animate={
+              snakeStatus === 'disappearing'
+                ? { opacity: 0, filter: 'blur(10px)' }
+                : { opacity: 1, filter: 'blur(0px)' }
+            }
+            transition={{
+              duration: snakeStatus === 'disappearing' ? 0.38 : 0.45,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+          >
+            {snakeBody.map((p, idx) => {
+              const isHead = idx === 0
+              return (
+                <rect
+                  key={`snake-${idx}-${p.x}-${p.y}`}
+                  x={p.x * width}
+                  y={p.y * height}
+                  width={width}
+                  height={height}
+                  className={`snake-body-square ${isHead ? 'snake-head-square' : ''}`}
+                />
+              )
+            })}
+          </motion.g>
+        )}
 
         {/* Interactive hoverable squares across entire viewport */}
         {Array.from({ length: dimensions.rows }).map((_, r) =>
@@ -584,6 +741,10 @@ export function InteractiveGridPattern({
                 height={height}
                 className={`interactive-grid-square ${isHovered ? 'is-active' : ''} ${squaresClassName}`}
                 onMouseEnter={() => handleMouseEnterSquare(key)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleSquareClick(c, r)
+                }}
               />
             )
           })
@@ -605,4 +766,3 @@ export function InteractiveGridPattern({
     </motion.div>
   )
 }
-
