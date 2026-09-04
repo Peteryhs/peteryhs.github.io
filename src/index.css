@@ -261,41 +261,18 @@ main {
   left: 0;
   pointer-events: none;
   border-style: solid;
+  border-color: var(--cursor-border);
   overflow: hidden;
-  will-change: width, height, transform, border-radius;
-  transition: background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1),
-              backdrop-filter 0.16s ease,
-              -webkit-backdrop-filter 0.16s ease;
-}
-
-.cursor-state-default {
-  background-color: var(--ink);
-  border-color: transparent;
-  border-width: 0;
-  box-shadow: 0 0 0 1.5px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.2);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.cursor-state-text {
-  background-color: var(--ink);
-  border-color: transparent;
-  border-width: 0;
-  box-shadow: 0 0 0 1px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.16);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  will-change: width, height, transform, border-radius, background-color;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cursor-state-interactive {
   width: max-content;
   min-width: 260px;
   max-width: min(440px, 86vw);
-  background-color: var(--cursor-bg);
-  border-color: var(--cursor-border);
-  border-width: 1px;
-  box-shadow: var(--cursor-shadow);
   backdrop-filter: blur(18px) saturate(180%);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
 }
@@ -303,6 +280,7 @@ main {
 .cursor-card-content {
   padding: 8px 14px;
   color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   text-align: left;
   will-change: opacity, filter;
 }

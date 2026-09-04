@@ -172,7 +172,7 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         ? 'text'
         : 'default'
 
-    // Variants for unified continuous shape morphing (Dot <-> Line <-> Box)
+    // Variants for seamless continuous shape morphing (Dot -> Line -> Box)
     const morphVariants: Variants = {
       default: {
         width: 14,
@@ -180,20 +180,29 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         borderRadius: '999px',
         x: -7,
         y: -7,
+        borderWidth: 0,
+        backgroundColor: 'var(--ink)',
+        boxShadow: '0 0 0 1.5px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.2)',
       },
       text: {
         width: 2.5,
-        height: 26,
+        height: 28,
         borderRadius: '2px',
         x: -1.25,
-        y: -13,
+        y: -14,
+        borderWidth: 0,
+        backgroundColor: 'var(--ink)',
+        boxShadow: '0 0 0 1px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.16)',
       },
       interactive: {
         width: 'auto',
         height: 'auto',
         borderRadius: '10px',
         x: 14,
-        y: -10, // Vertically center-aligned with the cursor caret line midpoint
+        y: -10, // Vertically center-aligned with the cursor/caret line midpoint
+        borderWidth: 1,
+        backgroundColor: 'var(--cursor-bg)',
+        boxShadow: 'var(--cursor-shadow)',
       },
     }
 
@@ -209,20 +218,15 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               y: smoothY,
             }}
           >
-            {/* Unified continuous morphing container */}
+            {/* Single continuous morphing container */}
             <motion.div
               layout
               className={`cursor-morph-box cursor-state-${cursorState}`}
               animate={cursorState}
               variants={morphVariants}
               transition={{
-                layout: {
-                  type: 'spring',
-                  damping: 26,
-                  stiffness: cursorState === 'interactive' ? 440 : 540,
-                  mass: 0.14,
-                },
-                duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.18 : 0.14,
+                layout: { type: 'spring', damping: 28, stiffness: 440, mass: 0.18 },
+                duration: shouldReduceMotion ? 0 : 0.2,
                 ease: [0.16, 1, 0.3, 1],
               }}
               style={{
@@ -242,12 +246,15 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
                     animate={{
                       opacity: 1,
                       filter: 'blur(0px)',
-                      transition: { duration: 0.14, ease: [0.16, 1, 0.3, 1] },
                     }}
                     exit={{
                       opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(2px)',
-                      transition: { duration: 0.08, ease: 'easeOut' },
+                      filter: shouldReduceMotion ? 'none' : 'blur(3px)',
+                      transition: { duration: 0.1, ease: 'easeOut' },
+                    }}
+                    transition={{
+                      duration: shouldReduceMotion ? 0 : 0.18,
+                      ease: [0.16, 1, 0.3, 1],
                     }}
                   >
                     <p className="cursor-text">{contentText}</p>
