@@ -41,9 +41,7 @@ function TopicWord({
   const expanded = activeId === id
 
   const info: CursorInfo = {
-    title: customInfo?.title || topic.title,
-    preview: customInfo?.preview || topic.preview,
-    badge: customInfo?.badge || topic.shortTitle,
+    text: customInfo?.text || customInfo?.preview || topic.preview,
   }
 
   return (
@@ -252,39 +250,40 @@ export default function App() {
     }
   }, [activeId])
 
-  const toggleTopic = (id: TopicId) => {
-    setCursorInfo(null)
-    setActiveId((current) => (current === id ? null : id))
+  const handleSelect = (id: TopicId) => {
+    setActiveId((prev) => (prev === id ? null : id))
   }
 
   const handleHover = (info: CursorInfo | null, e?: React.MouseEvent) => {
-    if (info && e) {
+    setCursorInfo(info)
+    if (e && info) {
       cursorRef.current?.syncPosition(e.clientX, e.clientY)
     }
-    setCursorInfo(info)
   }
 
   const word = (
     id: TopicId,
     children: ReactNode,
-    customInfo?: Partial<CursorInfo>,
-  ) => (
-    <TopicWord
-      id={id}
-      activeId={activeId}
-      onSelect={toggleTopic}
-      onHover={handleHover}
-      customInfo={customInfo}
-    >
-      {children}
-    </TopicWord>
-  )
+    customInfo?: { text?: string; preview?: string; title?: string; badge?: string },
+  ) => {
+    return (
+      <TopicWord
+        id={id}
+        activeId={activeId}
+        onSelect={handleSelect}
+        onHover={handleHover}
+        customInfo={customInfo}
+      >
+        {children}
+      </TopicWord>
+    )
+  }
 
   const showAfter = (...ids: TopicId[]) => {
-    const topic = activeId && ids.includes(activeId) ? topicById[activeId] : null
+    if (!activeId || !ids.includes(activeId)) return null
     return (
-      <AnimatePresence initial={false}>
-        {topic && <ExpandedSection key={topic.id} topic={topic} />}
+      <AnimatePresence mode="wait">
+        <ExpandedSection key={activeId} topic={topicById[activeId]} />
       </AnimatePresence>
     )
   }
@@ -309,10 +308,7 @@ export default function App() {
                   Peter
                 </>,
                 {
-                  title: 'Peter Shao',
-                  badge: 'About Me',
-                  preview:
-                    'Toronto, Canada · CE @ uWaterloo · Building soft & hardware projects.',
+                  text: 'Peter Shao / PeterYHS, Toronto based tech nerd',
                 },
               )}
               .
@@ -329,10 +325,7 @@ export default function App() {
                   Univ of Waterloo <DemoIcon kind="university" />
                 </>,
                 {
-                  title: 'University of Waterloo',
-                  badge: 'Education',
-                  preview:
-                    'First Year Computer Engineering with NA’s largest co-op program.',
+                  text: 'University famous for its co-op program in Waterloo, ON',
                 },
               )}{' '}
               studying{' '}
@@ -342,10 +335,7 @@ export default function App() {
                   CompEng <DemoIcon kind="engineering" />
                 </>,
                 {
-                  title: 'Computer Engineering',
-                  badge: 'Focus',
-                  preview:
-                    'Distributed systems, applied ML & embedded electronics engineering.',
+                  text: "First year computer engineering, class of '31",
                 },
               )}
               .
@@ -362,10 +352,7 @@ export default function App() {
                   distributed systems <DemoIcon kind="systems" />
                 </>,
                 {
-                  title: 'Distributed Systems',
-                  badge: 'True North · 2022',
-                  preview:
-                    'Self-hosting grown into complex systems reaching users across the internet.',
+                  text: 'Self-hosting since 2022: high-availability homelab clusters, edge networking, and data security.',
                 },
               )}
               ,{' '}
@@ -375,10 +362,7 @@ export default function App() {
                   ML <DemoIcon kind="machine-learning" />
                 </>,
                 {
-                  title: 'Machine Learning',
-                  badge: 'True North · 2023',
-                  preview:
-                    'Reproducing research, fine-tuning models & cost-effective AI detectors.',
+                  text: 'Fine-tuning open weights, reproducing novel research papers, and optimizing efficient inference.',
                 },
               )}{' '}
               and{' '}
@@ -388,10 +372,7 @@ export default function App() {
                   electronics <DemoIcon kind="electronics" />.
                 </span>,
                 {
-                  title: 'Electronics & Hardware',
-                  badge: 'True North · 2018',
-                  preview:
-                    'Customizing hardware & software, from broken laptops to custom-programmed cameras.',
+                  text: 'Tinkering since 2018: custom-flashed camera firmware, embedded microcontrollers, and circuit repair.',
                 },
               )}
             </p>
@@ -407,10 +388,7 @@ export default function App() {
                   projects <DemoIcon kind="projects" />
                 </>,
                 {
-                  title: 'Featured Projects',
-                  badge: 'Showcase',
-                  preview:
-                    'From everyday utilities to high-scale infrastructure and experimental research.',
+                  text: 'A collection of everyday utilities, low-latency infrastructure experiments, and ML prototypes.',
                 },
               )}
               , from everyday utilities <DemoIcon kind="utilities" />, to
@@ -425,17 +403,11 @@ export default function App() {
             <p className="intro-sentence">
               Besides that, I love{' '}
               {word('passions', 'Minecraft', {
-                title: 'Minecraft',
-                badge: 'Sandbox',
-                preview:
-                  'Redstone computation, systems mechanics & large collaborative builds.',
+                text: 'Designing complex Redstone logic circuits, computational machinery, and collaborative worlds.',
               })}
               ,{' '}
               {word('passions', 'Photography', {
-                title: 'Photography',
-                badge: 'Visuals',
-                preview:
-                  'Framing light, candid moments, geometry & street perspectives.',
+                text: 'Capturing street contrast, architectural geometry, and candid everyday moments.',
               })}{' '}
               and <span className="no-wrap">creative tinkering.</span>
             </p>
@@ -446,27 +418,19 @@ export default function App() {
             <p className="intro-sentence">
               You can spot me on the internet via{' '}
               {word('contact', 'GitHub', {
-                title: 'GitHub',
-                badge: 'Open Source',
-                preview: 'Repositories, open-source explorations & active coding projects.',
+                text: 'Open-source repositories, active software experiments, and hobby code on GitHub.',
               })}
               ,{' '}
               {word('contact', 'LinkedIn', {
-                title: 'LinkedIn',
-                badge: 'Network',
-                preview: 'Connect with me for internships, projects, and work history.',
+                text: 'Professional background, hackathon achievements, and engineering co-op updates.',
               })}
               ,{' '}
               {word('contact', 'Reddit', {
-                title: 'Reddit',
-                badge: 'Community',
-                preview: 'Tech discussions, hardware tinkering & community threads.',
+                text: 'Active in self-hosted infrastructure, mechanical keyboard, and hardware communities.',
               })}{' '}
               and{' '}
               {word('contact', <span className="no-wrap">Email!</span>, {
-                title: 'Email',
-                badge: 'Direct',
-                preview: 'Drop me a line anytime: feedback, ideas, or opportunities.',
+                text: 'Always open to chat about engineering ideas, collaborations, or co-op opportunities.',
               })}
             </p>
           </BlurFade>

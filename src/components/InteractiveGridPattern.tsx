@@ -400,8 +400,8 @@ export function InteractiveGridPattern({
           const msgId = messageIdCounterRef.current++
 
           const totalGridWidth = dimensions.cols * width
-          const safeX = Math.max(120, Math.min(apple.x * width + width / 2, totalGridWidth - 120))
-          const safeY = Math.max(40, apple.y * height - 8)
+          const safeX = Math.max(135, Math.min(apple.x * width + width / 2, totalGridWidth - 135))
+          const safeY = Math.max(42, apple.y * height - 8)
 
           const newMsg: FloatingMessage = {
             id: msgId,

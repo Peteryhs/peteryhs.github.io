@@ -10,10 +10,11 @@ import {
 import { useEffect, useState, useRef, useImperativeHandle, forwardRef } from 'react'
 
 export interface CursorInfo {
-  title: string
+  text?: string
+  preview?: string
+  title?: string
   shortTitle?: string
   eyebrow?: string
-  preview?: string
   accent?: string
   badge?: string
 }
@@ -172,7 +173,6 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         : 'default'
 
     // Variants for seamless continuous shape morphing (Dot -> Line -> Box)
-    // Box spawns centered with the cursor's vertical midpoint (y: -10) rather than at the bottom (y: 14)
     const morphVariants: Variants = {
       default: {
         width: 14,
@@ -197,7 +197,7 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
       interactive: {
         width: 'auto',
         height: 'auto',
-        borderRadius: '14px',
+        borderRadius: '10px',
         x: 14,
         y: -10, // Vertically center-aligned with the cursor/caret line midpoint
         borderWidth: 1,
@@ -205,6 +205,8 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         boxShadow: 'var(--cursor-shadow)',
       },
     }
+
+    const contentText = displayedInfo?.text || displayedInfo?.preview || displayedInfo?.title || ''
 
     return (
       <div className="cursor-follower-layer" aria-hidden="true">
@@ -223,9 +225,8 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               animate={cursorState}
               variants={morphVariants}
               transition={{
-                // 25% softer, calmer spring physics for gentle shrinking & morphing
                 layout: { type: 'spring', damping: 30, stiffness: 330, mass: 0.28 },
-                duration: shouldReduceMotion ? 0 : 0.26,
+                duration: shouldReduceMotion ? 0 : 0.22,
                 ease: [0.16, 1, 0.3, 1],
               }}
               style={{
@@ -234,13 +235,13 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               }}
             >
               <AnimatePresence mode="wait">
-                {cursorState === 'interactive' && displayedInfo && (
+                {cursorState === 'interactive' && contentText && (
                   <motion.div
-                    key={displayedInfo.title}
+                    key={contentText}
                     className="cursor-card-content"
                     initial={{
                       opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(6px)',
+                      filter: shouldReduceMotion ? 'none' : 'blur(5px)',
                     }}
                     animate={{
                       opacity: 1,
@@ -248,33 +249,15 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
                     }}
                     exit={{
                       opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(4px)',
-                      transition: { duration: 0.16, ease: [0.16, 1, 0.3, 1] }, // 25% gentler exit fade
+                      filter: shouldReduceMotion ? 'none' : 'blur(3px)',
+                      transition: { duration: 0.14, ease: [0.16, 1, 0.3, 1] },
                     }}
                     transition={{
-                      duration: shouldReduceMotion ? 0 : 0.22,
+                      duration: shouldReduceMotion ? 0 : 0.18,
                       ease: [0.16, 1, 0.3, 1],
                     }}
                   >
-                    <div className="cursor-card-header">
-                      <span className="cursor-accent-pill">
-                        {displayedInfo.accent || '✦'}
-                      </span>
-                      <span className="cursor-title">{displayedInfo.title}</span>
-                      {displayedInfo.badge && (
-                        <span className="cursor-badge">{displayedInfo.badge}</span>
-                      )}
-                    </div>
-
-                    {displayedInfo.preview && (
-                      <p className="cursor-preview">{displayedInfo.preview}</p>
-                    )}
-
-                    <div className="cursor-footer">
-                      <span className="cursor-action">
-                        Click to toggle chapter <span>↓</span>
-                      </span>
-                    </div>
+                    <p className="cursor-text">{contentText}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
