@@ -255,42 +255,42 @@ main {
   pointer-events: none;
 }
 
-.cursor-morph-box {
+.cursor-pointer-dot {
   position: absolute;
   top: 0;
   left: 0;
   pointer-events: none;
-  border-style: solid;
-  border-color: var(--cursor-border);
-  overflow: hidden;
   will-change: width, height, transform, border-radius, background-color;
 }
 
-.cursor-state-interactive {
+.cursor-tooltip-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
   width: max-content;
   min-width: 260px;
   max-width: min(440px, 86vw);
+  padding: 8px 14px;
+  background: var(--cursor-bg);
+  border: 1px solid var(--cursor-border);
+  border-radius: 10px;
+  box-shadow: var(--cursor-shadow);
   backdrop-filter: blur(18px) saturate(180%);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
-  border-radius: 10px !important;
-}
-
-.cursor-card-content {
-  padding: 8px 14px;
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  text-align: left;
-  will-change: opacity, filter;
+  will-change: transform, opacity, filter;
 }
 
 .cursor-text {
   margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 0.81rem;
   line-height: 1.34;
   color: var(--ink);
   font-weight: 460;
   letter-spacing: -0.005em;
   text-wrap: balance;
+  text-align: left;
 }
 
 /* ==========================================================================

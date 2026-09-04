@@ -172,37 +172,37 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         ? 'text'
         : 'default'
 
-    // Variants for seamless continuous shape morphing (Dot -> Line -> Box)
-    const morphVariants: Variants = {
+    // Variants for dedicated cursor element (Dot -> Text Line -> Target Dot)
+    const cursorVariants: Variants = {
       default: {
         width: 14,
         height: 14,
         borderRadius: '999px',
         x: -7,
         y: -7,
-        borderWidth: 0,
+        opacity: 1,
         backgroundColor: 'var(--ink)',
         boxShadow: '0 0 0 1.5px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.2)',
       },
       text: {
         width: 2.5,
-        height: 28,
+        height: 26,
         borderRadius: '2px',
         x: -1.25,
-        y: -14,
-        borderWidth: 0,
+        y: -13,
+        opacity: 1,
         backgroundColor: 'var(--ink)',
         boxShadow: '0 0 0 1px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.16)',
       },
       interactive: {
-        width: 'auto',
-        height: 'auto',
-        borderRadius: '10px',
-        x: 14,
-        y: -10, // Vertically center-aligned with the cursor/caret line midpoint
-        borderWidth: 1,
-        backgroundColor: 'var(--cursor-bg)',
-        boxShadow: 'var(--cursor-shadow)',
+        width: 8,
+        height: 8,
+        borderRadius: '999px',
+        x: -4,
+        y: -4,
+        opacity: 0.85,
+        backgroundColor: 'var(--ink)',
+        boxShadow: '0 0 0 1.5px var(--paper), 0 0 0 3px rgba(0, 0, 0, 0.08)',
       },
     }
 
@@ -218,50 +218,59 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               y: smoothY,
             }}
           >
-            {/* Single continuous morphing container */}
+            {/* Dedicated cursor element: morphs cleanly between dot and text caret */}
             <motion.div
               layout
-              className={`cursor-morph-box cursor-state-${cursorState}`}
+              className={`cursor-pointer-dot cursor-state-${cursorState}`}
               animate={cursorState}
-              variants={morphVariants}
+              variants={cursorVariants}
               transition={{
-                layout: { type: 'spring', damping: 30, stiffness: 330, mass: 0.28 },
-                duration: shouldReduceMotion ? 0 : 0.22,
+                layout: { type: 'spring', damping: 28, stiffness: 380, mass: 0.2 },
+                duration: shouldReduceMotion ? 0 : 0.18,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              style={{
-                rotate:
-                  !shouldReduceMotion && cursorState === 'interactive' ? cardTilt : 0,
-              }}
-            >
-              <AnimatePresence mode="wait">
-                {cursorState === 'interactive' && contentText && (
-                  <motion.div
-                    key={contentText}
-                    className="cursor-card-content"
-                    initial={{
-                      opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(5px)',
-                    }}
-                    animate={{
-                      opacity: 1,
-                      filter: 'blur(0px)',
-                    }}
-                    exit={{
-                      opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(3px)',
-                      transition: { duration: 0.14, ease: [0.16, 1, 0.3, 1] },
-                    }}
-                    transition={{
-                      duration: shouldReduceMotion ? 0 : 0.18,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                  >
-                    <p className="cursor-text">{contentText}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+            />
+
+            {/* Floating tooltip card: cleanly fades & scales in/out beside cursor without squishing */}
+            <AnimatePresence>
+              {displayedInfo && contentText && (
+                <motion.div
+                  key={contentText}
+                  className="cursor-tooltip-card"
+                  initial={{
+                    opacity: 0,
+                    scale: shouldReduceMotion ? 1 : 0.94,
+                    x: 14,
+                    y: -12,
+                    filter: shouldReduceMotion ? 'none' : 'blur(4px)',
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    x: 14,
+                    y: -12,
+                    filter: 'blur(0px)',
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: shouldReduceMotion ? 1 : 0.94,
+                    x: 14,
+                    y: -10,
+                    filter: shouldReduceMotion ? 'none' : 'blur(3px)',
+                    transition: { duration: 0.12, ease: [0.16, 1, 0.3, 1] },
+                  }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.18,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  style={{
+                    rotate: !shouldReduceMotion ? cardTilt : 0,
+                  }}
+                >
+                  <p className="cursor-text">{contentText}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </div>
