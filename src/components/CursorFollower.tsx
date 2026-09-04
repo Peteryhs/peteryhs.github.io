@@ -165,7 +165,36 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
 
     if (isTouch) return null
 
-    // Determine current cursor state (using debounced displayedInfo)
+    // Synchronous initial theme detection with reactive updates for seamless frame-by-frame RGBA interpolation
+    const [isDark, setIsDark] = useState(() => {
+      if (typeof window === 'undefined') return false
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    })
+
+    useEffect(() => {
+      const mql = window.matchMedia('(prefers-color-scheme: dark)')
+      const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
+      mql.addEventListener('change', handler)
+      return () => mql.removeEventListener('change', handler)
+    }, [])
+
+    // Explicit RGBA color definitions for mathematical frame-by-frame blending
+    const inkColor = isDark ? 'rgba(242, 238, 232, 1)' : 'rgba(34, 34, 34, 1)'
+    const cardBg = isDark ? 'rgba(22, 22, 24, 0.96)' : 'rgba(251, 250, 247, 0.98)'
+    const cardBorder = isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(34, 34, 34, 0.12)'
+    const transparentBorder = isDark ? 'rgba(242, 238, 232, 0)' : 'rgba(34, 34, 34, 0)'
+
+    const cardShadow = isDark
+      ? '0 18px 40px -6px rgba(0, 0, 0, 0.5), 0 8px 20px -2px rgba(0, 0, 0, 0.35)'
+      : '0 16px 36px -6px rgba(0, 0, 0, 0.12), 0 6px 16px -2px rgba(0, 0, 0, 0.06)'
+    const dotShadow = isDark
+      ? '0 0 0 1.5px rgba(22, 22, 24, 1), 0 2px 8px rgba(0, 0, 0, 0.4)'
+      : '0 0 0 1.5px rgba(251, 250, 247, 1), 0 2px 8px rgba(0, 0, 0, 0.2)'
+    const lineShadow = isDark
+      ? '0 0 0 1px rgba(22, 22, 24, 1), 0 2px 8px rgba(0, 0, 0, 0.3)'
+      : '0 0 0 1px rgba(251, 250, 247, 1), 0 2px 8px rgba(0, 0, 0, 0.16)'
+
+    // Active cursor state
     const cursorState = displayedInfo
       ? 'interactive'
       : isTextHover
@@ -177,32 +206,35 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
       default: {
         width: 14,
         height: 14,
-        borderRadius: '999px',
+        borderRadius: 999,
         x: -7,
         y: -7,
         borderWidth: 0,
-        backgroundColor: 'var(--ink)',
-        boxShadow: '0 0 0 1.5px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.2)',
+        borderColor: transparentBorder,
+        backgroundColor: inkColor,
+        boxShadow: dotShadow,
       },
       text: {
         width: 2.5,
         height: 28,
-        borderRadius: '2px',
+        borderRadius: 2,
         x: -1.25,
         y: -14,
         borderWidth: 0,
-        backgroundColor: 'var(--ink)',
-        boxShadow: '0 0 0 1px var(--paper), 0 2px 8px rgba(0, 0, 0, 0.16)',
+        borderColor: transparentBorder,
+        backgroundColor: inkColor,
+        boxShadow: lineShadow,
       },
       interactive: {
         width: 'auto',
         height: 'auto',
-        borderRadius: '10px',
+        borderRadius: 10,
         x: 14,
         y: -10, // Vertically center-aligned with the cursor/caret line midpoint
         borderWidth: 1,
-        backgroundColor: 'var(--cursor-bg)',
-        boxShadow: 'var(--cursor-shadow)',
+        borderColor: cardBorder,
+        backgroundColor: cardBg,
+        boxShadow: cardShadow,
       },
     }
 
@@ -225,9 +257,42 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               animate={cursorState}
               variants={morphVariants}
               transition={{
-                layout: { type: 'spring', damping: 28, stiffness: 440, mass: 0.18 },
-                duration: shouldReduceMotion ? 0 : 0.2,
-                ease: [0.16, 1, 0.3, 1],
+                layout: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
+                  ease: [0.16, 1, 0.3, 1], // Non-bouncing smooth cubic bezier
+                },
+                backgroundColor: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.16,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+                borderColor: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.16,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+                boxShadow: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.2 : 0.16,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+                width: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+                height: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+                borderRadius: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+                x: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+                y: {
+                  duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
+                  ease: [0.16, 1, 0.3, 1],
+                },
               }}
               style={{
                 rotate:
@@ -249,8 +314,8 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
                     }}
                     exit={{
                       opacity: 0,
-                      filter: shouldReduceMotion ? 'none' : 'blur(3px)',
-                      transition: { duration: 0.1, ease: 'easeOut' },
+                      filter: shouldReduceMotion ? 'none' : 'blur(2px)',
+                      transition: { duration: 0.08, ease: 'easeOut' },
                     }}
                     transition={{
                       duration: shouldReduceMotion ? 0 : 0.18,
