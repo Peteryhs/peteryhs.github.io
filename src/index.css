@@ -209,7 +209,10 @@ main {
   text-decoration-color: var(--line-strong);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.18em;
-  transition: background-color 180ms ease, text-decoration-color 180ms ease, transform 180ms ease;
+  transition: background-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    text-decoration-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .topic-word:hover,
@@ -955,7 +958,7 @@ main {
 .interactive-grid-square {
   fill: transparent;
   stroke: transparent;
-  transition: fill 0.35s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.25s ease;
+  transition: fill 200ms cubic-bezier(0.16, 1, 0.3, 1), stroke 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .interactive-grid-square.is-active,
@@ -1035,6 +1038,7 @@ main {
   stroke-linejoin: round;
   transform-box: fill-box;
   transform-origin: center;
+  will-change: transform, opacity;
   animation: milestoneFloat 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -1053,19 +1057,19 @@ main {
 @keyframes milestoneFloat {
   0% {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translate3d(0, 4px, 0);
   }
   12% {
     opacity: 1;
-    transform: translateY(-8px);
+    transform: translate3d(0, -8px, 0);
   }
   75% {
     opacity: 1;
-    transform: translateY(-24px);
+    transform: translate3d(0, -24px, 0);
   }
   100% {
     opacity: 0;
-    transform: translateY(-34px);
+    transform: translate3d(0, -34px, 0);
   }
 }
 

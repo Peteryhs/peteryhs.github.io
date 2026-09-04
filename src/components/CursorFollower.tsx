@@ -63,15 +63,15 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
     const mouseX = useMotionValue(-100)
     const mouseY = useMotionValue(-100)
 
-    // Lightweight, responsive spring tracking
-    const springConfig = { damping: 34, stiffness: 850, mass: 0.12 }
+    // Ultra-responsive, critically-damped spring tracking (high stiffness, low mass, zero overshoot)
+    const springConfig = { damping: 38, stiffness: 950, mass: 0.1 }
     const smoothX = useSpring(mouseX, springConfig)
     const smoothY = useSpring(mouseY, springConfig)
 
     // Subtle card velocity tilt
     const xVelocity = useMotionValue(0)
-    const smoothVx = useSpring(xVelocity, { damping: 24, stiffness: 400 })
-    const cardTilt = useTransform(smoothVx, [-800, 800], [-3, 3])
+    const smoothVx = useSpring(xVelocity, { damping: 28, stiffness: 450 })
+    const cardTilt = useTransform(smoothVx, [-800, 800], [-2.5, 2.5])
 
     // Instant position sync handler
     useImperativeHandle(ref, () => ({
@@ -267,7 +267,8 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
               animate={cursorState}
               variants={morphVariants}
               transition={{
-                duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.18,
+                // 25% slower morphing duration for luxurious, silky smooth expansion & contraction
+                duration: shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.28 : 0.23,
                 ease: [0.16, 1, 0.3, 1],
               }}
               style={{
@@ -279,7 +280,7 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
                 className="cursor-card-content"
                 style={{
                   opacity: cursorState === 'interactive' ? 1 : 0,
-                  transition: `opacity ${shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.18 : 0.09}s ease-out`,
+                  transition: `opacity ${shouldReduceMotion ? 0 : cursorState === 'interactive' ? 0.22 : 0.12}s ease-out`,
                 }}
               >
                 <p className="cursor-text">{textToDisplay}</p>

@@ -56,6 +56,10 @@ export function BlurFade({
         duration: shouldReduceMotion ? 0 : duration,
         ease: [0.16, 1, 0.3, 1],
       }}
+      style={{
+        willChange: 'transform, opacity, filter',
+        transform: 'translate3d(0, 0, 0)',
+      }}
       className={className}
     >
       {children}
