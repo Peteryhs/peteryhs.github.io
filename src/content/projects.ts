@@ -23,9 +23,9 @@ export const projectsData: ProjectItem[] = [
     stars: 28,
     repo: 'ShaoRou459/OpenWebUI-Agentic-Tooling',
     description:
-      'A tool-routing suite that turns OpenWebUI, the self-hosted AI platform, from a chat interface into an autonomous agent. Its auto tool selector routes queries to search, image, vision, and code tools on its own, and together with the agentic Exa search tool it has passed 1,000+ combined community downloads.',
+      'A plugin suite that turns OpenWebUI from a chat interface into an autonomous agent. It auto-routes queries to dedicated tools like image generation, vision, code execution, and a custom-built deep research agent. 1,000+ combined community deployments to servers across two marketplace listings.',
     stats: {
-      'Combined Downloads': '1,064+',
+      'Deployments': '1,000+',
       'Auto Tool Selector': '767 dl',
       'Exa Router': '297 dl',
       Releases: '6',
@@ -47,10 +47,10 @@ export const projectsData: ProjectItem[] = [
     repo: 'anaqvi02/we-have-pangram-at-home',
     coAuthored: 'Peter Shao, Ali Naqvi',
     description:
-      'A custom AI-text detector built from only public data, extending the Pangram classifier as a first-ever LM training project with a hard-negative mining loop that swaps costly live generation for an embedding index. Reaches 0.934 ROC-AUC on 4,000 unseen essays and 0.89 on RAID held-out generators, trained end to end in about 90 minutes on a single H100.',
+      'A custom AI-text detector built from only public data, extending the Pangram classifier approach as a first-ever language model training project with significantly less cost. Reaches 93.4% on a benchmark of 4,000 unseen essays and 89% on the RAID benchmark built from untrained generators, trained end to end on a single H100.',
     stats: {
-      'ROC-AUC (Essays)': '0.934',
-      'ROC-AUC (RAID)': '0.890',
+      'ROC-AUC (Essays)': '93.4%',
+      'ROC-AUC (RAID)': '89.0%',
       'In-Domain Validation': '99.88%',
       'Train Time (1x H100)': '90 min',
     },
