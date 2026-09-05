@@ -138,6 +138,9 @@ export function SunSystemsOrbit({ isActive }: SunSystemsOrbitProps) {
               </g>
             </svg>
           </div>
+
+          {/* Right-Edge Depth of Field Blur Lens (Out of focus effect) */}
+          <div className="sun-systems-dof-blur-edge" aria-hidden="true" />
         </motion.div>
       )}
     </AnimatePresence>

@@ -1869,7 +1869,7 @@ html.theme-sun-dark main {
 
 .sun-systems-satellites-orbit-group {
   transform-origin: 130px 130px;
-  animation: sunSystemsOrbitRevolve 12s linear infinite;
+  animation: sunSystemsOrbitRevolve 24s linear infinite;
 }
 
 @keyframes sunSystemsOrbitRevolve {
@@ -1884,7 +1884,7 @@ html.theme-sun-dark main {
 .satellite-cube {
   transform-box: fill-box;
   transform-origin: center;
-  animation: satelliteCounterRotate 12s linear infinite;
+  animation: satelliteCounterRotate 24s linear infinite;
 }
 
 @keyframes satelliteCounterRotate {
@@ -1896,10 +1896,41 @@ html.theme-sun-dark main {
   }
 }
 
+/* Right-Edge Depth of Field Out-of-Focus Lens */
+.sun-systems-dof-blur-edge {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 22vw;
+  min-width: 150px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.25) 30%,
+    rgba(0, 0, 0, 0.7) 70%,
+    black 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.25) 30%,
+    rgba(0, 0, 0, 0.7) 70%,
+    black 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
 @media (max-width: 900px) {
   .sun-systems-orbit-positioner {
     left: 92vw;
     width: clamp(550px, 95vw, 850px);
     height: clamp(550px, 95vw, 850px);
+  }
+  .sun-systems-dof-blur-edge {
+    width: 28vw;
   }
 }
