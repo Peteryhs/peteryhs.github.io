@@ -2,6 +2,9 @@ import { type MouseEvent, useState } from 'react'
 import { BlurFade } from './BlurFade'
 import { SunSystemsOrbit } from './SunSystemsOrbit'
 import { SunSystemsLogo } from './SunSystemsLogo'
+import { AIDetectorMatrix } from './AIDetectorMatrix'
+import { AgenticRoutingTree } from './AgenticRoutingTree'
+import { HermesStarsBackdrop } from './HermesStarsBackdrop'
 import { projectsData, type ProjectItem } from '../content/projects'
 
 function GithubIcon({ className = '' }: { className?: string }) {
@@ -110,6 +113,7 @@ export function ProjectCard({
 
   return (
     <article
+      id={`project-${project.slug}`}
       className={`bento-card project-card ${
         project.slug === 'sun-systems' || project.slug === 'ai-detector' ? 'card-has-hover-logo' : ''
       } ${className}`}
@@ -214,6 +218,9 @@ export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
   return (
     <>
       <SunSystemsOrbit isActive={hoveredSlug === 'sun-systems'} />
+      <AIDetectorMatrix isActive={hoveredSlug === 'ai-detector'} />
+      <AgenticRoutingTree isActive={hoveredSlug === 'openwebui-agentic-tooling'} />
+      <HermesStarsBackdrop isActive={hoveredSlug === 'hermes-contributions'} />
 
       <div className={`projects-grid ${isExpanded ? 'is-expanded-view' : ''}`}>
         {projectsData.map((project, idx) => (

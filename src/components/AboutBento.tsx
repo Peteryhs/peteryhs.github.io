@@ -1,11 +1,19 @@
 import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback } from 'react'
 import { BlurFade } from './BlurFade'
 
+function scrollToAbout() {
+  const el = document.getElementById('about')
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
 interface BentoCardProps {
   children: ReactNode
   className?: string
   standalone?: boolean
   cardRef?: React.RefObject<HTMLElement | null>
+  onClick?: (e: MouseEvent<HTMLElement>) => void
   onMouseEnter?: (e: MouseEvent<HTMLElement>) => void
   onMouseLeave?: (e: MouseEvent<HTMLElement>) => void
 }
@@ -15,6 +23,7 @@ function BentoCardWrapper({
   className = '',
   standalone = false,
   cardRef,
+  onClick,
   onMouseEnter,
   onMouseLeave,
 }: BentoCardProps) {
@@ -26,11 +35,28 @@ function BentoCardWrapper({
     e.currentTarget.style.setProperty('--mouse-y', `${y}px`)
   }
 
+  const handleClick = (e: MouseEvent<HTMLElement>) => {
+    if (onClick) {
+      onClick(e)
+    } else if (standalone) {
+      scrollToAbout()
+    }
+  }
+
   return (
     <article
       ref={cardRef as any}
-      className={`bento-card ${className} ${standalone ? 'is-standalone' : ''}`}
+      className={`bento-card ${className} ${standalone ? 'is-standalone is-clickable' : ''}`}
       onMouseMove={handleMouseMove}
+      onClick={handleClick}
+      role={standalone || onClick ? 'button' : undefined}
+      tabIndex={standalone || onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if ((standalone || onClick) && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          handleClick(e as any)
+        }
+      }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >

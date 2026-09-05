@@ -17,6 +17,8 @@ import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 import { DemoIcon } from './components/DemoIcon'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
+import { CompactProjectsGrid } from './components/CompactProjectsGrid'
+import { PassionsSection, PhotographyExpandedView, MinecraftExpandedView } from './components/PassionsSection'
 import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
 import { topicById, type Topic, type TopicId } from './content/site'
 
@@ -135,7 +137,20 @@ function ExpandedSection({ topic }: { topic: Topic }) {
       case 'projects':
         return (
           <div className="expanded-cards-single">
-            <ProjectsGrid isExpanded />
+            <CompactProjectsGrid />
+          </div>
+        )
+      case 'passions':
+      case 'photography':
+        return (
+          <div className="expanded-cards-single">
+            <PhotographyExpandedView />
+          </div>
+        )
+      case 'minecraft':
+        return (
+          <div className="expanded-cards-single">
+            <MinecraftExpandedView />
           </div>
         )
       default:
@@ -154,7 +169,7 @@ function ExpandedSection({ topic }: { topic: Topic }) {
 
   return (
     <motion.section
-      className="expanded-section"
+      className={`expanded-section expanded-section-${topic.id}`}
       aria-label={topic.title}
       initial={{ opacity: 0, height: 0, filter: 'blur(10px)', y: -6 }}
       animate={{
@@ -218,6 +233,10 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
 
   if (topicId === 'projects') {
     return <ProjectsSection />
+  }
+
+  if (topicId === 'passions') {
+    return <PassionsSection />
   }
 
   return (
@@ -421,21 +440,22 @@ export default function App() {
               </span>
             </p>
           </BlurFade>
+          {showAfter('projects')}
 
           <BlurFade delay={0.38} yOffset={12}>
             <p className="intro-sentence">
               Besides that, I love{' '}
-              {word('passions', 'Minecraft', {
-                text: 'Redstone logic circuits, computational machinery, and servers',
+              {word('minecraft', 'Minecraft', {
+                text: '1.8 PvP Bedwars, modern SMPs, modpacks, & Sun Systems friend servers',
               })}
               ,{' '}
-              {word('passions', 'Photography', {
-                text: 'Street contrast, architectural geometry, and candid moments',
+              {word('photography', 'Photography', {
+                text: 'Spontaneous walks, outing recaps, year-in-reviews, & camera gear',
               })}
               {' '}and <span className="no-wrap">creative tinkering.</span>
             </p>
           </BlurFade>
-          {showAfter('passions')}
+          {showAfter('minecraft', 'photography', 'passions')}
 
           <BlurFade delay={0.46} yOffset={12}>
             <p className="intro-sentence">

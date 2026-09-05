@@ -8,6 +8,8 @@ export type TopicId =
   | 'compeng'
   | 'projects'
   | 'passions'
+  | 'photography'
+  | 'minecraft'
   | 'contact'
 
 export type Topic = {
@@ -127,14 +129,28 @@ export const topics: Topic[] = [
   },
   {
     id: 'passions',
-    title: 'Other Passions',
-    shortTitle: 'Passions',
-    preview: 'Photography, Minecraft mechanics, and the pleasure of looking closely.',
-    description: 'Creative sandbox worlds and visual arts that keep technical work playful.',
+    title: 'Hobbies',
+    shortTitle: 'Hobbies',
+    preview: 'Photography, camera gear, recap videos, and Minecraft.',
+    description: 'Capturing moments, recap videos, Minecraft SMPs, and homelab hosting.',
     items: [
-      { title: 'Photography', text: 'Street, geometry, framing light, and candid architecture.' },
-      { title: 'Minecraft', text: 'Redstone computation, systems mechanics & shared worlds.' },
+      { title: 'Photography', text: 'Trips, spontaneous walks, recap videos, and camera kit.' },
+      { title: 'Minecraft', text: '1.8 PvP, SMPs, Promience II, Deceasedcraftr, and hosting.' },
     ],
+  },
+  {
+    id: 'photography',
+    title: 'Photography & Video Production',
+    shortTitle: 'Photography',
+    preview: 'Spontaneous walks, outing recaps, year-in-reviews, & camera gear',
+    description: 'Capturing moments, recap videos, and camera kit.',
+  },
+  {
+    id: 'minecraft',
+    title: 'Minecraft',
+    shortTitle: 'Minecraft',
+    preview: '1.8 PvP Bedwars, modern SMPs, modpacks, & friend servers',
+    description: '1.8 PvP, SMPs, Prominence II, and hosting.',
   },
   {
     id: 'contact',

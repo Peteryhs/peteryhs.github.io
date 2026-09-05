@@ -130,12 +130,17 @@ export function TrueNorthTimeline({
 
             {/* Passion Card */}
             <TrueNorthCard
-              className="truenorth-card"
+              className={`truenorth-card ${filterKey ? 'is-clickable' : ''}`}
               dataYear={item.year}
               innerRef={(el) => registerCardRef?.(item.year, el)}
               onMouseEnter={() => onHoverYear?.(item.year)}
               onMouseMove={() => onManualHoverYear?.(item.year)}
-              onClick={() => onHoverYear?.(item.year)}
+              onClick={() => {
+                onHoverYear?.(item.year)
+                if (filterKey) {
+                  document.getElementById('truenorth')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+              }}
             >
               <h3 className="truenorth-card-title">{item.title}</h3>
               <p className="truenorth-card-body">{item.body}</p>
