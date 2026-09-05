@@ -1,6 +1,7 @@
 import { type MouseEvent, useState } from 'react'
 import { BlurFade } from './BlurFade'
 import { SunSystemsOrbit } from './SunSystemsOrbit'
+import { SunSystemsLogo } from './SunSystemsLogo'
 import { projectsData, type ProjectItem } from '../content/projects'
 
 function GithubIcon({ className = '' }: { className?: string }) {
@@ -109,7 +110,9 @@ export function ProjectCard({
 
   return (
     <article
-      className={`bento-card project-card ${className}`}
+      className={`bento-card project-card ${
+        project.slug === 'sun-systems' || project.slug === 'ai-detector' ? 'card-has-hover-logo' : ''
+      } ${className}`}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => onHoverChange?.(true)}
       onMouseLeave={() => onHoverChange?.(false)}
@@ -119,8 +122,36 @@ export function ProjectCard({
         {/* Header: Title, Tagline & Star Counter */}
         <div className="project-card-header">
           <div className="project-card-heading-group">
-            <h3 className="project-card-title">{project.name}</h3>
+            <div className="project-card-title-wrap">
+              <h3
+                className={`project-card-title ${
+                  project.slug === 'sun-systems' || project.slug === 'ai-detector' ? 'has-hover-logo' : ''
+                }`}
+              >
+                <span className="project-title-text">{project.name}</span>
+              </h3>
+            </div>
             <p className="project-card-tagline">{project.tagline}</p>
+            {project.slug === 'sun-systems' && (
+              <span className="project-title-logo-swap" aria-hidden="true">
+                <img
+                  src="/assets/ss-lockup-white.svg"
+                  alt="Sun Systems"
+                  className="project-title-wordmark-img"
+                  draggable={false}
+                />
+              </span>
+            )}
+            {project.slug === 'ai-detector' && (
+              <span className="project-title-logo-swap" aria-hidden="true">
+                <img
+                  src="/assets/ai-detector-logo.png"
+                  alt="AI Detector"
+                  className="project-title-logo-img"
+                  draggable={false}
+                />
+              </span>
+            )}
           </div>
 
           {/* GitHub Stars (Muted GitHub style) */}
