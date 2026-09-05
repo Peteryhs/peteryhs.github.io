@@ -1800,3 +1800,48 @@ html.dark .snake-milestone-text {
   stroke-width: 3.5px;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.72));
 }
+
+/* ==========================================================================
+   Magic UI Backlight Component
+   ========================================================================== */
+
+.backlight-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+}
+
+.backlight-glow {
+  position: absolute;
+  inset: -14px;
+  border-radius: 30px;
+  pointer-events: none;
+  z-index: 0;
+  will-change: opacity, transform;
+  opacity: 0;
+  background: radial-gradient(
+    var(--backlight-size, 480px) circle at var(--backlight-x, 50%) var(--backlight-y, 50%),
+    var(--backlight-color, rgba(235, 175, 95, 0.38)),
+    rgba(230, 160, 80, 0.1) 45%,
+    transparent 75%
+  );
+  filter: blur(52px);
+}
+
+html.dark .backlight-glow,
+:root.dark .backlight-glow {
+  background: radial-gradient(
+    var(--backlight-size, 480px) circle at var(--backlight-x, 50%) var(--backlight-y, 50%),
+    var(--backlight-color, rgba(140, 110, 245, 0.35)),
+    rgba(70, 130, 240, 0.12) 48%,
+    transparent 75%
+  );
+  filter: blur(56px);
+}
+
+.backlight-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
