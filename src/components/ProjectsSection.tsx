@@ -104,52 +104,24 @@ export function ProjectCard({
     e.currentTarget.style.setProperty('--mouse-y', `${y}px`)
   }
 
-  const customStyle: React.CSSProperties = {
-    ['--project-primary' as any]: project.theme.primary,
-    ['--project-secondary' as any]: project.theme.secondary,
-    ['--project-edge-gradient' as any]: project.theme.edgeGradient,
-    ['--project-spotlight-tint' as any]: project.theme.spotlightTint,
-  }
-
   return (
     <article
       className={`bento-card project-card ${className}`}
-      style={customStyle}
       onMouseMove={handleMouseMove}
     >
-      {/* Ambient spreading back glow */}
-      <div className="project-card-ambient" aria-hidden="true" />
-      {/* Radiant perimeter border glow */}
-      <div className="project-card-border-glow" aria-hidden="true" />
-      {/* Inward spreading gradient bleed from edges */}
-      <div className="project-card-edge-bleed" aria-hidden="true" />
-      {/* Interactive mouse spotlight */}
-      <div className="project-card-spotlight" aria-hidden="true" />
-
+      <div className="bento-card-spotlight" aria-hidden="true" />
       <div className="bento-card-content project-card-inner">
         {/* Header: Title, Tagline & Star Counter */}
         <div className="project-card-header">
           <div className="project-card-heading-group">
-            <div className="project-title-row">
-              <h3 className="project-card-title">{project.name}</h3>
-              {project.coAuthored && (
-                <span className="project-coauthor-badge" title={`Co-authored with ${project.coAuthored}`}>
-                  Co-authored
-                </span>
-              )}
-            </div>
+            <h3 className="project-card-title">{project.name}</h3>
             <p className="project-card-tagline">{project.tagline}</p>
           </div>
 
-          {/* GitHub Stars Badge */}
-          <div className="project-card-star-badge" title={project.starsNote || `${project.stars} GitHub Stars`}>
+          {/* GitHub Stars (Muted GitHub style) */}
+          <div className="project-card-star-count-wrap" title={`${project.stars.toLocaleString()} GitHub Stars`}>
             <StarIcon />
             <span className="project-star-count">{formatStars(project.stars)}</span>
-            {project.starsNote && (
-              <span className="project-star-note">
-                {project.starsNote.includes('upstream') ? 'upstream' : 'co-owned'}
-              </span>
-            )}
           </div>
         </div>
 

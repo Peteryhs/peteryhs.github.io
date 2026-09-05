@@ -44,8 +44,38 @@
   letter-spacing: var(--font-letter-spacing, -0.01em);
 }
 
+html.dark,
+:root.dark {
+  color-scheme: dark;
+  --paper: #161618;
+  --ink: #f2eee8;
+  --muted: #a69f94;
+  --line: rgba(242, 238, 232, 0.14);
+  --line-strong: rgba(242, 238, 232, 0.32);
+  --hover: rgba(92, 74, 56, 0.7);
+  --hover-active: #6e5741;
+
+  --cursor-bg: rgba(22, 22, 24, 0.94);
+  --cursor-border: rgba(255, 255, 255, 0.14);
+  --cursor-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.5),
+    0 8px 20px -2px rgba(0, 0, 0, 0.35);
+
+  --bento-bg: var(--paper);
+  --bento-border: rgba(255, 255, 255, 0.12);
+  --bento-border-hover: rgba(255, 255, 255, 0.26);
+  --bento-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --bento-shadow-hover: 0 14px 36px -4px rgba(0, 0, 0, 0.6),
+    0 -20px 80px -20px rgba(255, 255, 255, 0.08) inset;
+  --bento-spotlight: radial-gradient(
+    450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.07),
+    transparent 80%
+  );
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not(.light),
+  :root:not(.light) {
     color-scheme: dark;
     --paper: #161618;
     --ink: #f2eee8;
@@ -1456,18 +1486,15 @@ main {
 }
 
 .project-card {
-  position: relative;
   padding: 1.55rem 1.75rem;
   border-radius: 20px;
   background: var(--bento-bg);
   border: 1.75px solid var(--bento-border);
   box-shadow: var(--bento-shadow);
-  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 260ms ease,
-    border-color 260ms ease;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 240ms ease,
+    border-color 240ms ease;
   min-height: 100%;
-  isolation: isolate;
-  overflow: visible;
 }
 
 .project-card:hover {
@@ -1476,86 +1503,7 @@ main {
   box-shadow: var(--bento-shadow-hover);
 }
 
-/* Ambient Back Glow (radiates soft themed color bloom outward beyond edges) */
-.project-card-ambient {
-  position: absolute;
-  inset: -10px;
-  border-radius: 28px;
-  background: var(--project-edge-gradient);
-  filter: blur(28px);
-  opacity: 0.18;
-  pointer-events: none;
-  z-index: -1;
-  transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter 320ms ease;
-}
-
-.project-card:hover .project-card-ambient {
-  opacity: 0.42;
-  filter: blur(34px);
-}
-
-/* Radiant Perimeter Edge Stroke */
-.project-card-border-glow {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.75px;
-  pointer-events: none;
-  z-index: 1;
-  background: var(--project-edge-gradient);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.48;
-  transition: opacity 280ms ease;
-}
-
-.project-card:hover .project-card-border-glow {
-  opacity: 1;
-}
-
-/* Inward Spreading Gradient Bleed from edges (vignetted softly toward center) */
-.project-card-edge-bleed {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 1;
-  background: var(--project-edge-gradient);
-  opacity: 0.14;
-  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, transparent 30%, black 92%);
-  mask-image: radial-gradient(ellipse at 50% 50%, transparent 30%, black 92%);
-  transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.project-card:hover .project-card-edge-bleed {
-  opacity: 0.28;
-}
-
-/* Interactive Spotlight tinted with project brand color */
-.project-card-spotlight {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 1;
-  background: radial-gradient(
-    520px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    var(--project-spotlight-tint, rgba(224, 206, 172, 0.32)),
-    transparent 78%
-  );
-  opacity: 0;
-  transition: opacity 200ms ease;
-}
-
-.project-card:hover .project-card-spotlight {
-  opacity: 1;
-}
-
 .project-card-inner {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1592,20 +1540,6 @@ main {
   letter-spacing: var(--font-letter-spacing, -0.01em);
 }
 
-.project-coauthor-badge {
-  display: inline-flex;
-  align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 0.16rem 0.5rem;
-  border-radius: 999px;
-  background: var(--hover);
-  color: var(--muted);
-  border: 1px solid var(--line);
-  letter-spacing: 0.02em;
-}
-
 .project-card-tagline {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 0.88rem;
@@ -1615,44 +1549,36 @@ main {
   line-height: 1.4;
 }
 
-.project-card-star-badge {
+.project-card-star-count-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.28rem 0.65rem;
-  border-radius: 999px;
-  background: var(--paper);
-  border: 1.5px solid var(--line-strong);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  gap: 0.32rem;
+  color: var(--muted);
   flex-shrink: 0;
   cursor: default;
-  transition: transform 180ms ease, border-color 180ms ease;
+  transition: color 180ms ease;
 }
 
-.project-card:hover .project-card-star-badge {
-  border-color: var(--ink);
-  transform: scale(1.03);
+.project-card:hover .project-card-star-count-wrap {
+  color: var(--ink);
 }
 
 .project-star-svg {
-  color: #f59e0b;
+  color: #656d76;
+  opacity: 0.85;
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.project-card:hover .project-star-svg {
+  opacity: 1;
 }
 
 .project-star-count {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
   font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: 0.02em;
-}
-
-.project-star-note {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.68rem;
   font-weight: 600;
-  color: var(--muted);
-  opacity: 0.8;
-  margin-left: 0.1rem;
+  color: inherit;
+  letter-spacing: -0.01em;
 }
 
 .project-card-description {
@@ -1779,23 +1705,106 @@ main {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .project-card-ambient {
-    opacity: 0.24;
+/* ==========================================================================
+   Magic UI Animated Theme Toggler & View Transitions
+   ========================================================================== */
+
+.theme-toggle-floating-wrap {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1.5px solid var(--line-strong);
+  color: var(--ink);
+  box-shadow: var(--bento-shadow);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease, color 200ms ease;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--ink);
+  box-shadow: var(--bento-shadow-hover);
+  background: var(--hover);
+}
+
+.theme-toggle-svg {
+  display: block;
+  color: currentColor;
+}
+
+@media (max-width: 600px) {
+  .theme-toggle-floating-wrap {
+    top: 1rem;
+    right: 1rem;
   }
-  .project-card:hover .project-card-ambient {
-    opacity: 0.52;
+  .theme-toggle-btn {
+    width: 36px;
+    height: 36px;
   }
-  .project-card-edge-bleed {
-    opacity: 0.18;
-  }
-  .project-card:hover .project-card-edge-bleed {
-    opacity: 0.36;
-  }
-  .project-card-border-glow {
-    opacity: 0.58;
-  }
-  .project-card:hover .project-card-border-glow {
-    opacity: 1;
-  }
+}
+
+/* View Transitions circular reveal */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 99999;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 99999;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 1;
+}
+
+/* Dark mode class overrides for interactive grid and compass elements */
+html.dark .compass-north-needle-solid {
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.22));
+}
+
+html.dark .compass-north-needle-accent {
+  filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.12));
+}
+
+html.dark .compass-true-north-line {
+  stroke-opacity: 0.2;
+}
+
+html.dark .interactive-grid-square.is-active,
+html.dark .interactive-grid-square:hover {
+  fill: rgba(110, 87, 65, 0.75);
+  stroke: rgba(242, 238, 232, 0.25);
+}
+
+html.dark .snake-head-square {
+  stroke: rgba(255, 255, 255, 0.55) !important;
+}
+
+html.dark .snake-milestone-text {
+  fill: rgba(120, 142, 220, 0.82);
+  stroke: var(--bg, #161513);
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.72));
 }

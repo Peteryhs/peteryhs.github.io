@@ -41,7 +41,7 @@ export const topics: Topic[] = [
     items: [
       {
         title: 'Electronics',
-        text: 'Technology does incredible things, but they are also flawed. I want to understand them, and improve them for myself and others.',
+        text: 'Technology does incredible things, but it is also flawed. I want to understand it, and improve it for myself and others.',
         tag: '2018',
       },
       {

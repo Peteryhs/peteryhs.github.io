@@ -13,6 +13,7 @@ import {
   type CursorFollowerRef,
   type CursorInfo,
 } from './components/CursorFollower'
+import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 import { DemoIcon } from './components/DemoIcon'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
@@ -305,13 +306,14 @@ export default function App() {
 
   return (
     <main>
+      <AnimatedThemeToggler />
       <CursorFollower ref={cursorRef} activeInfo={cursorInfo} />
 
       <header className="intro" id="top">
         <div className="intro-container">
           <BlurFade delay={0.06} yOffset={12}>
             <p className="intro-sentence">
-              Hi <DemoIcon kind="wave" />, I am{' '}
+              Hi <span className="intro-wave-hand" role="img" aria-label="waving hand">👋</span>, I am{' '}
               {word(
                 'about',
                 <>
@@ -337,7 +339,13 @@ export default function App() {
               {word(
                 'waterloo',
                 <>
-                  Univ of Waterloo <DemoIcon kind="university" />
+                  University of Waterloo{' '}
+                  <img
+                    src="/waterloo-crest.png"
+                    alt=""
+                    className="intro-waterloo-icon"
+                    aria-hidden="true"
+                  />
                 </>,
                 {
                   text: 'University famous for its co-op program in Waterloo, ON',

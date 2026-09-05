@@ -327,8 +327,9 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
         <p className="bento-lang-primary">Chinese and English</p>
         <div className="bento-streak-box">
           <p className="bento-lang-secondary">Currently learning Spanish via Duolingo</p>
-          <div className="bento-streak-row">
-            <span>I hold an</span>
+          <div className="bento-streak-row" aria-label="I have a 1k plus Duolingo streak">
+            <span>I have a</span>
+            {' '}
             <span
               ref={fireRef}
               className="bento-streak-badge-group"
@@ -338,7 +339,8 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
               <span className="bento-streak-count">1k+</span>
               <FlameStreakIcon />
             </span>
-            <span>Streak</span>
+            {' '}
+            <span>streak</span>
           </div>
         </div>
       </div>

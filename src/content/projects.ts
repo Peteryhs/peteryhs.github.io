@@ -1,22 +1,12 @@
-export interface ProjectTheme {
-  primary: string
-  secondary: string
-  edgeGradient: string
-  spotlightTint: string
-}
-
 export interface ProjectItem {
   slug: string
   name: string
   tagline: string
   stars: number
-  starsNote?: string
   repo: string
-  coAuthored?: string
   description: string
   stats: Record<string, string | number>
   notes?: string
-  theme: ProjectTheme
   links: {
     github: string
     marketplace?: string[]
@@ -30,17 +20,10 @@ export const projectsData: ProjectItem[] = [
     tagline: 'Autonomous tool routing for the self-hosted AI platform',
     stars: 28,
     repo: 'ShaoRou459/OpenWebUI-Agentic-Tooling',
-    theme: {
-      primary: '#10b981',
-      secondary: '#6366f1',
-      edgeGradient:
-        'linear-gradient(135deg, rgba(16, 185, 129, 0.6) 0%, rgba(6, 182, 212, 0.25) 45%, rgba(99, 102, 241, 0.55) 100%)',
-      spotlightTint: 'rgba(16, 185, 129, 0.22)',
-    },
     description:
       'A plugin suite that turns OpenWebUI from a chat interface into an autonomous agent. It auto-routes queries to dedicated tools like image generation, vision, code execution, and a custom-built deep research agent. 1,000+ combined community deployments to servers across two marketplace listings.',
     stats: {
-      'Deployments': '1,000+',
+      'Combined Downloads': '1,064+',
       'Auto Tool Selector': '767 dl',
       'Exa Router': '297 dl',
       Releases: '6',
@@ -58,23 +41,13 @@ export const projectsData: ProjectItem[] = [
     name: 'AI Detector, Probably',
     tagline: 'Custom AI-text detector, reproduced and extended from published research',
     stars: 5,
-    starsNote: 'co-owned repo, hosted under anaqvi02',
     repo: 'anaqvi02/we-have-pangram-at-home',
-    coAuthored: 'Peter Shao, Ali Naqvi',
-    theme: {
-      primary: '#3898ec',
-      secondary: '#f97316',
-      edgeGradient:
-        'linear-gradient(135deg, rgba(56, 152, 236, 0.68) 0%, rgba(56, 152, 236, 0.18) 36%, rgba(249, 115, 22, 0.18) 64%, rgba(249, 115, 22, 0.68) 100%)',
-      spotlightTint: 'rgba(56, 152, 236, 0.22)',
-    },
     description:
       'A custom AI-text detector built from only public data, extending the Pangram classifier approach as a first-ever language model training project with significantly less cost. Reaches 93.4% on a benchmark of 4,000 unseen essays and 89% on the RAID benchmark built from untrained generators, trained end to end on a single H100.',
     stats: {
-      'ROC-AUC (Essays)': '93.4%',
-      'ROC-AUC (RAID)': '89.0%',
+      'Unseen Essays': '93.4%',
+      'RAID Benchmark': '89.0%',
       'In-Domain Validation': '99.88%',
-      'Train Time (1x H100)': '90 min',
     },
     notes:
       'Adversarial attacks cost ~8 ROC-AUC points and roughly double false positives (12% to 27% at 80% recall), expected without adversarial training.',
@@ -88,19 +61,11 @@ export const projectsData: ProjectItem[] = [
     tagline: 'Hybrid homelab fleet, home origin + cloud edge',
     stars: 15,
     repo: 'Peteryhs/Server',
-    theme: {
-      primary: '#f59e0b',
-      secondary: '#2563eb',
-      edgeGradient:
-        'linear-gradient(135deg, rgba(245, 158, 11, 0.64) 0%, rgba(245, 158, 11, 0.2) 40%, rgba(37, 99, 235, 0.18) 65%, rgba(37, 99, 235, 0.58) 100%)',
-      spotlightTint: 'rgba(245, 158, 11, 0.22)',
-    },
     description:
-      'A hybrid homelab fleet, one home origin server and one public edge gateway, running 20+ self-hosted containers for family and friends across ~13TB of storage. The residential network exposes zero ports: traffic arrives through the edge gateway with TLS passthrough and CrowdSec threat blocking, the result of 4 years of iteration on its 5th stable build.',
+      'A hybrid homelab fleet featuring one origin server and one edge VPS. Running 20+ self-hosted containers across 13TB of storage for family and friends. Custom-built edge network using Cloudflare, a blind proxy, and CrowdSec to ensure data safety.',
     stats: {
       Storage: '13 TB',
       Containers: '20+',
-      'Tailnet Nodes': '5',
       Evolution: '4 Yrs · Build v5',
     },
     links: {
@@ -112,21 +77,11 @@ export const projectsData: ProjectItem[] = [
     name: 'Contributions to Hermes Agent',
     tagline: 'Security and UX work on a 240k-star AI agent framework',
     stars: 240822,
-    starsNote: 'upstream project, not mine',
     repo: 'NousResearch/hermes-agent',
-    theme: {
-      primary: '#8b5cf6',
-      secondary: '#38bdf8',
-      edgeGradient:
-        'linear-gradient(135deg, rgba(139, 92, 246, 0.64) 0%, rgba(99, 102, 241, 0.2) 45%, rgba(56, 189, 248, 0.55) 100%)',
-      spotlightTint: 'rgba(139, 92, 246, 0.22)',
-    },
     description:
-      'A contributor to Hermes Agent, an open-source AI agent framework with 240,000+ GitHub stars. Shipped a security fix that stops secret environment variables from leaking in terminal output, with more PRs under review for desktop launcher reliability and dashboard design.',
+      'A contributor to Hermes Agent, one of the most popular open-source AI agent frameworks. My PRs focus on data security, reliability, and UI/UX design. Upstream code I shipped stops secrets from leaking through terminal output.',
     stats: {
-      'PRs Submitted': '4',
-      'Commits Upstream': '1',
-      'Upstream Stars': '240k+',
+      'Pull Requests Upstream': '4',
     },
     links: {
       github: 'https://github.com/NousResearch/hermes-agent',

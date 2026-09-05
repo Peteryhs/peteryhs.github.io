@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useMotionValueEvent, useScroll } from 'motion/react'
 import { BlurFade } from './BlurFade'
 import { CompassRose } from './CompassRose'
 
@@ -12,7 +13,7 @@ const trueNorthItems: TrueNorthItem[] = [
   {
     year: '2018',
     title: 'Electronics',
-    body: 'Technology does incredible things, but they are also flawed. I want to understand them, and improve them for myself and others.',
+    body: 'Technology does incredible things, but it is also flawed. I want to understand it, and improve it for myself and others.',
   },
   {
     year: '2022',
@@ -26,11 +27,19 @@ const trueNorthItems: TrueNorthItem[] = [
   },
 ]
 
+function fallbackAngleForYear(year: string) {
+  if (year === '2018') return -65
+  if (year === '2022') return -90
+  if (year === '2023') return -118
+  return 0
+}
+
 function TrueNorthCard({
   children,
   className = '',
   onMouseEnter,
   onMouseLeave,
+  onMouseMove,
   onClick,
   innerRef,
   dataYear,
@@ -39,6 +48,7 @@ function TrueNorthCard({
   className?: string
   onMouseEnter?: (e: MouseEvent<HTMLElement>) => void
   onMouseLeave?: (e: MouseEvent<HTMLElement>) => void
+  onMouseMove?: (e: MouseEvent<HTMLElement>) => void
   onClick?: () => void
   innerRef?: React.Ref<HTMLElement>
   dataYear?: string
@@ -49,6 +59,7 @@ function TrueNorthCard({
     const y = e.clientY - rect.top
     e.currentTarget.style.setProperty('--mouse-x', `${x}px`)
     e.currentTarget.style.setProperty('--mouse-y', `${y}px`)
+    onMouseMove?.(e)
   }
 
   return (
@@ -70,10 +81,14 @@ function TrueNorthCard({
 export function TrueNorthTimeline({
   filterKey,
   onHoverYear,
+  onManualHoverYear,
+  onLeaveYear,
   registerCardRef,
 }: {
   filterKey?: 'electronics' | 'systems' | 'ml'
   onHoverYear?: (year: string) => void
+  onManualHoverYear?: (year: string) => void
+  onLeaveYear?: () => void
   registerCardRef?: (year: string, el: HTMLElement | null) => void
 }) {
   const items = filterKey
@@ -98,15 +113,18 @@ export function TrueNorthTimeline({
           yOffset={10}
           inViewMargin="-50px"
         >
-          <div
-            className="truenorth-timeline-item"
-            onMouseEnter={() => onHoverYear?.(item.year)}
-          >
+          <div className="truenorth-timeline-item">
             {/* Horizontal branch stem connecting timeline spine to card */}
             <div className="truenorth-stem" aria-hidden="true" />
 
             {/* Year Node Badge on Timeline Spine */}
-            <div className="truenorth-year-node" aria-label={`Year ${item.year}`}>
+            <div
+              className="truenorth-year-node"
+              aria-label={`Year ${item.year}`}
+              onMouseEnter={() => onHoverYear?.(item.year)}
+              onMouseMove={() => onManualHoverYear?.(item.year)}
+              onMouseLeave={onLeaveYear}
+            >
               <span className="truenorth-year-text">{item.year}</span>
             </div>
 
@@ -116,6 +134,7 @@ export function TrueNorthTimeline({
               dataYear={item.year}
               innerRef={(el) => registerCardRef?.(item.year, el)}
               onMouseEnter={() => onHoverYear?.(item.year)}
+              onMouseMove={() => onManualHoverYear?.(item.year)}
               onClick={() => onHoverYear?.(item.year)}
             >
               <h3 className="truenorth-card-title">{item.title}</h3>
@@ -130,17 +149,19 @@ export function TrueNorthTimeline({
 
 export function TrueNorthSection() {
   const [targetAngle, setTargetAngle] = useState(0)
+  const [activeYear, setActiveYear] = useState('2018')
   const compassRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<Record<string, HTMLElement | null>>({})
+  const isManualHoverRef = useRef(false)
+  const pointerPositionRef = useRef({ x: -1, y: -1 })
+  const rafRef = useRef<number | null>(null)
+  const { scrollY } = useScroll()
 
   const calculateAngleForYear = useCallback((year: string) => {
     const cardEl = cardRefs.current[year]
     const compassEl = compassRef.current
     if (!cardEl || !compassEl) {
-      if (year === '2018') return -65
-      if (year === '2022') return -90
-      if (year === '2023') return -118
-      return 0
+      return fallbackAngleForYear(year)
     }
     const compassRect = compassEl.getBoundingClientRect()
     const cardRect = cardEl.getBoundingClientRect()
@@ -155,30 +176,137 @@ export function TrueNorthSection() {
     return (rad * 180) / Math.PI
   }, [])
 
-  const handleHoverYear = useCallback(
+  const syncCompassToYear = useCallback(
     (year: string) => {
       const angle = calculateAngleForYear(year)
+
       setTargetAngle(angle)
+      setActiveYear(year)
     },
     [calculateAngleForYear]
   )
+
+  const handleHoverYear = useCallback(
+    (year: string) => {
+      syncCompassToYear(year)
+    },
+    [syncCompassToYear]
+  )
+
+  const handleManualHoverYear = useCallback(
+    (year: string) => {
+      isManualHoverRef.current = true
+      syncCompassToYear(year)
+    },
+    [syncCompassToYear]
+  )
+
+  const getClosestVisibleYear = useCallback(() => {
+    const viewportTargetY = window.innerHeight * 0.52
+    let bestYear = activeYear
+    let bestDistance = Infinity
+
+    trueNorthItems.forEach((item) => {
+      const el =
+        cardRefs.current[item.year] ??
+        document.querySelector<HTMLElement>(`.truenorth-card[data-year="${item.year}"]`)
+      if (!el) return
+
+      const rect = el.getBoundingClientRect()
+      const visibleTop = Math.max(rect.top, 0)
+      const visibleBottom = Math.min(rect.bottom, window.innerHeight)
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+
+      if (visibleHeight < Math.min(rect.height * 0.22, 42)) return
+
+      const cardCenter = rect.top + rect.height / 2
+      const distance = Math.abs(cardCenter - viewportTargetY)
+
+      if (distance < bestDistance) {
+        bestDistance = distance
+        bestYear = item.year
+      }
+    })
+
+    return bestYear
+  }, [activeYear])
+
+  const isPointerOverManualTarget = useCallback(() => {
+    const { x, y } = pointerPositionRef.current
+
+    if (x < 0 || y < 0) return false
+
+    const hoverTarget = document.elementFromPoint(x, y)
+    return Boolean(hoverTarget?.closest('.truenorth-card, .truenorth-year-node'))
+  }, [])
+
+  const syncCompassToScroll = useCallback(() => {
+    if (isManualHoverRef.current && isPointerOverManualTarget()) return
+
+    isManualHoverRef.current = false
+    syncCompassToYear(getClosestVisibleYear())
+  }, [getClosestVisibleYear, isPointerOverManualTarget, syncCompassToYear])
+
+  const handleLeaveYear = useCallback(() => {
+    isManualHoverRef.current = false
+    syncCompassToScroll()
+  }, [syncCompassToScroll])
+
+  useMotionValueEvent(scrollY, 'change', () => {
+    if (rafRef.current !== null) return
+
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null
+      syncCompassToScroll()
+    })
+  })
 
   const registerCardRef = useCallback((year: string, el: HTMLElement | null) => {
     cardRefs.current[year] = el
   }, [])
 
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      pointerPositionRef.current = { x: event.clientX, y: event.clientY }
+    }
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
+
+    return () => window.removeEventListener('pointermove', handlePointerMove)
+  }, [])
+
+  useEffect(() => {
+    syncCompassToYear(activeYear)
+
+    const handleResize = () => {
+      if (isManualHoverRef.current) {
+        syncCompassToYear(activeYear)
+        return
+      }
+
+      syncCompassToScroll()
+    }
+    window.addEventListener('resize', handleResize)
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [activeYear, syncCompassToScroll, syncCompassToYear])
+
   // Auto-snap needle to visible card as user scrolls through True North
   useEffect(() => {
+    const queueScrollSync = () => {
+      if (rafRef.current !== null) return
+
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null
+        syncCompassToScroll()
+      })
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const year = entry.target.getAttribute('data-year')
-            if (year) {
-              setTargetAngle(calculateAngleForYear(year))
-            }
-          }
-        })
+        if (entries.some((entry) => entry.isIntersecting)) {
+          queueScrollSync()
+        }
       },
       {
         rootMargin: '-15% 0px -25% 0px',
@@ -190,8 +318,22 @@ export function TrueNorthSection() {
       if (el) observer.observe(el)
     })
 
-    return () => observer.disconnect()
-  }, [calculateAngleForYear])
+    window.addEventListener('scroll', queueScrollSync, { passive: true })
+    document.addEventListener('scroll', queueScrollSync, { passive: true, capture: true })
+    const scrollSyncInterval = window.setInterval(queueScrollSync, 180)
+    queueScrollSync()
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', queueScrollSync)
+      document.removeEventListener('scroll', queueScrollSync, { capture: true })
+      window.clearInterval(scrollSyncInterval)
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+    }
+  }, [syncCompassToScroll])
 
   return (
     <div className="truenorth-section-outer">
@@ -229,6 +371,8 @@ export function TrueNorthSection() {
           {/* Timeline Section */}
           <TrueNorthTimeline
             onHoverYear={handleHoverYear}
+            onManualHoverYear={handleManualHoverYear}
+            onLeaveYear={handleLeaveYear}
             registerCardRef={registerCardRef}
           />
         </div>
