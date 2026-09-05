@@ -1,6 +1,7 @@
-import { type MouseEvent } from 'react'
+import { type MouseEvent, useState } from 'react'
 import { BlurFade } from './BlurFade'
 import { Backlight } from './Backlight'
+import { SunSystemsOrbit } from './SunSystemsOrbit'
 import { projectsData, type ProjectItem } from '../content/projects'
 
 function GithubIcon({ className = '' }: { className?: string }) {
@@ -93,9 +94,11 @@ function getMarketplaceLabel(url: string): string {
 export function ProjectCard({
   project,
   className = '',
+  onHoverChange,
 }: {
   project: ProjectItem
   className?: string
+  onHoverChange?: (isHovered: boolean) => void
 }) {
   const handleMouseMove = (e: MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -109,6 +112,8 @@ export function ProjectCard({
     <article
       className={`bento-card project-card ${className}`}
       onMouseMove={handleMouseMove}
+      onMouseEnter={() => onHoverChange?.(true)}
+      onMouseLeave={() => onHoverChange?.(false)}
     >
       <div className="bento-card-spotlight" aria-hidden="true" />
       <div className="bento-card-content project-card-inner">
@@ -176,27 +181,38 @@ export function ProjectCard({
 const PROJECT_BACKLIGHT_COLORS: Record<string, string> = {
   'openwebui-agentic-tooling': 'rgba(235, 145, 55, 0.32)',
   'ai-detector': 'rgba(60, 180, 160, 0.32)',
-  'sun-systems': 'rgba(240, 175, 45, 0.32)',
+  'sun-systems': 'rgba(240, 175, 45, 0.38)',
   'hermes-contributions': 'rgba(135, 110, 245, 0.32)',
 }
 
 export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null)
+
   return (
-    <div className={`projects-grid ${isExpanded ? 'is-expanded-view' : ''}`}>
-      {projectsData.map((project, idx) => (
-        <BlurFade
-          key={project.slug}
-          delay={isExpanded ? 0.05 + idx * 0.06 : 0.08 + idx * 0.08}
-          duration={0.45}
-          yOffset={10}
-          inViewMargin="-40px"
-        >
-          <Backlight color={PROJECT_BACKLIGHT_COLORS[project.slug]}>
-            <ProjectCard project={project} />
-          </Backlight>
-        </BlurFade>
-      ))}
-    </div>
+    <>
+      <SunSystemsOrbit isActive={hoveredSlug === 'sun-systems'} />
+
+      <div className={`projects-grid ${isExpanded ? 'is-expanded-view' : ''}`}>
+        {projectsData.map((project, idx) => (
+          <BlurFade
+            key={project.slug}
+            delay={isExpanded ? 0.05 + idx * 0.06 : 0.08 + idx * 0.08}
+            duration={0.45}
+            yOffset={10}
+            inViewMargin="-40px"
+          >
+            <Backlight color={PROJECT_BACKLIGHT_COLORS[project.slug]}>
+              <ProjectCard
+                project={project}
+                onHoverChange={(isHovered) => {
+                  setHoveredSlug(isHovered ? project.slug : null)
+                }}
+              />
+            </Backlight>
+          </BlurFade>
+        ))}
+      </div>
+    </>
   )
 }
 
@@ -213,3 +229,4 @@ export function ProjectsSection() {
     </section>
   )
 }
+
