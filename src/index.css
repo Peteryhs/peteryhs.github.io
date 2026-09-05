@@ -1848,10 +1848,10 @@ html.theme-sun-dark main {
 .sun-systems-orbit-positioner {
   position: absolute;
   top: 50%;
-  left: 88vw;
-  transform: translate(-50%, -50%);
-  width: clamp(720px, 75vw, 1280px);
-  height: clamp(720px, 75vw, 1280px);
+  left: 100vw;
+  transform: translate(-56.54%, -50%);
+  width: clamp(900px, 94vw, 1600px);
+  height: clamp(900px, 94vw, 1600px);
   pointer-events: none;
   z-index: 0;
 }
@@ -1926,11 +1926,12 @@ html.theme-sun-dark main {
 
 @media (max-width: 900px) {
   .sun-systems-orbit-positioner {
-    left: 92vw;
-    width: clamp(550px, 95vw, 850px);
-    height: clamp(550px, 95vw, 850px);
+    left: 100vw;
+    transform: translate(-56.54%, -50%);
+    width: clamp(690px, 118vw, 1060px);
+    height: clamp(690px, 118vw, 1060px);
   }
   .sun-systems-dof-blur-edge {
-    width: 28vw;
+    width: 26vw;
   }
 }
