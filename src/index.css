@@ -1802,72 +1802,23 @@ html.dark .snake-milestone-text {
 }
 
 /* ==========================================================================
-   Magic UI Backlight Component
+   Sun Systems Dynamic Site Theme & Background Orbit (Strictly No Glow)
    ========================================================================== */
 
-.backlight-wrapper {
-  position: relative;
-  width: 100%;
-  border-radius: 20px;
+html.theme-sun-dark,
+html.theme-sun-dark body,
+html.theme-sun-dark main {
+  background-color: #09090b !important;
+  --paper: #09090b !important;
+  transition: background-color 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-.backlight-glow {
-  position: absolute;
-  inset: -14px;
-  border-radius: 30px;
-  pointer-events: none;
-  z-index: 0;
-  will-change: opacity, transform;
-  opacity: 0;
-  background: radial-gradient(
-    var(--backlight-size, 480px) circle at var(--backlight-x, 50%) var(--backlight-y, 50%),
-    var(--backlight-color, rgba(235, 175, 95, 0.38)),
-    rgba(230, 160, 80, 0.1) 45%,
-    transparent 75%
-  );
-  filter: blur(52px);
-}
-
-html.dark .backlight-glow,
-:root.dark .backlight-glow {
-  background: radial-gradient(
-    var(--backlight-size, 480px) circle at var(--backlight-x, 50%) var(--backlight-y, 50%),
-    var(--backlight-color, rgba(140, 110, 245, 0.35)),
-    rgba(70, 130, 240, 0.12) 48%,
-    transparent 75%
-  );
-  filter: blur(56px);
-}
-
-.backlight-content {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-}
-
-/* ==========================================================================
-   Sun Systems Cosmic Orbit Atmosphere & Starfield
-   ========================================================================== */
 
 .sun-systems-backdrop-root {
   position: fixed;
   inset: 0;
-  z-index: 4;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
-}
-
-.sun-systems-dark-canvas {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 86% 50%,
-    #110d22 0%,
-    #08070d 48%,
-    #040306 100%
-  );
-  opacity: 0.98;
 }
 
 .sun-systems-starfield {
@@ -1880,19 +1831,17 @@ html.dark .backlight-glow,
   position: absolute;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.9);
   animation: starTwinkle ease-in-out infinite alternate;
 }
 
 @keyframes starTwinkle {
   0% {
-    opacity: 0.2;
-    transform: scale(0.65);
+    opacity: 0.15;
+    transform: scale(0.7);
   }
   100% {
-    opacity: 1;
-    transform: scale(1.35);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 1);
+    opacity: 0.85;
+    transform: scale(1.1);
   }
 }
 
@@ -1904,6 +1853,7 @@ html.dark .backlight-glow,
   width: clamp(720px, 75vw, 1280px);
   height: clamp(720px, 75vw, 1280px);
   pointer-events: none;
+  z-index: 0;
 }
 
 .sun-systems-orbit-svg {
@@ -1914,21 +1864,7 @@ html.dark .backlight-glow,
 
 .sun-systems-orbit-track {
   stroke-dasharray: 6 6;
-  opacity: 0.38;
-}
-
-.sun-systems-center-sun {
-  transform-origin: 130px 130px;
-  animation: sunSolarPulse 3.6s ease-in-out infinite alternate;
-}
-
-@keyframes sunSolarPulse {
-  0% {
-    transform: scale(0.97);
-  }
-  100% {
-    transform: scale(1.04);
-  }
+  opacity: 0.45;
 }
 
 .sun-systems-satellites-orbit-group {
@@ -1958,18 +1894,6 @@ html.dark .backlight-glow,
   100% {
     transform: rotate(-360deg);
   }
-}
-
-.satellite-blue .satellite-cube {
-  filter: drop-shadow(0 0 12px rgba(38, 98, 214, 0.75));
-}
-
-.satellite-red .satellite-cube {
-  filter: drop-shadow(0 0 12px rgba(195, 55, 43, 0.75));
-}
-
-.satellite-green .satellite-cube {
-  filter: drop-shadow(0 0 12px rgba(58, 168, 107, 0.75));
 }
 
 @media (max-width: 900px) {

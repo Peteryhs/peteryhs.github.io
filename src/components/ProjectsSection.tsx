@@ -1,6 +1,5 @@
 import { type MouseEvent, useState } from 'react'
 import { BlurFade } from './BlurFade'
-import { Backlight } from './Backlight'
 import { SunSystemsOrbit } from './SunSystemsOrbit'
 import { projectsData, type ProjectItem } from '../content/projects'
 
@@ -178,13 +177,6 @@ export function ProjectCard({
   )
 }
 
-const PROJECT_BACKLIGHT_COLORS: Record<string, string> = {
-  'openwebui-agentic-tooling': 'rgba(235, 145, 55, 0.32)',
-  'ai-detector': 'rgba(60, 180, 160, 0.32)',
-  'sun-systems': 'rgba(240, 175, 45, 0.38)',
-  'hermes-contributions': 'rgba(135, 110, 245, 0.32)',
-}
-
 export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null)
 
@@ -201,14 +193,12 @@ export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
             yOffset={10}
             inViewMargin="-40px"
           >
-            <Backlight color={PROJECT_BACKLIGHT_COLORS[project.slug]}>
-              <ProjectCard
-                project={project}
-                onHoverChange={(isHovered) => {
-                  setHoveredSlug(isHovered ? project.slug : null)
-                }}
-              />
-            </Backlight>
+            <ProjectCard
+              project={project}
+              onHoverChange={(isHovered) => {
+                setHoveredSlug(isHovered ? project.slug : null)
+              }}
+            />
           </BlurFade>
         ))}
       </div>
