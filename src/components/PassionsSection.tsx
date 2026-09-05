@@ -149,6 +149,12 @@ export function MinecraftExpandedView() {
 export function HobbiesLayout({ isExpanded = false }: { isExpanded?: boolean }) {
   return (
     <div className={`hobbies-mockup-frame ${isExpanded ? 'is-expanded-view' : ''}`}>
+      <div className="hobbies-mountain-wrapper" id="hobbies-mountain" aria-hidden="true">
+        <BlurFade delay={isExpanded ? 0.18 : 0.22} duration={0.45} yOffset={10}>
+          <MinecraftMountain />
+        </BlurFade>
+      </div>
+
       <div className="hobbies-grid-layout">
         {/* Left Column: Photography, Gear Dock, and Minecraft Cards */}
         <div className="hobbies-left-column">
@@ -172,19 +178,12 @@ export function HobbiesLayout({ isExpanded = false }: { isExpanded?: boolean }) 
           </BlurFade>
         </div>
 
-        {/* Right Column: Aceternity-style Folder Badges & Minecraft Mountain */}
+        {/* Right Column: Aceternity-style Folder Badges */}
         <div className="hobbies-right-column">
           {/* 1. Folder Badges Hub (Photos, Minecraft Launcher, GEFA 2024 with Draggable Cards) */}
           <BlurFade delay={isExpanded ? 0.12 : 0.16} duration={0.45} yOffset={10}>
             <div className="hobbies-folders-area" id="hobbies-folders">
               <FolderBadges />
-            </div>
-          </BlurFade>
-
-          {/* 2. Minecraft Mountain Visual Frame */}
-          <BlurFade delay={isExpanded ? 0.18 : 0.22} duration={0.45} yOffset={10}>
-            <div className="hobbies-mountain-wrapper" id="hobbies-mountain">
-              <MinecraftMountain />
             </div>
           </BlurFade>
         </div>

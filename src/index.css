@@ -2509,14 +2509,18 @@ html.dark .gear-device-item.is-active,
 
 .hobbies-mockup-frame {
   width: 100%;
+  position: relative;
+  isolation: isolate;
 }
 
 .hobbies-grid-layout {
   display: grid;
   grid-template-columns: minmax(min(100%, 480px), 58rem) 1fr;
   gap: clamp(2rem, 4vw, 5rem);
-  align-items: start;
+  align-items: stretch;
   width: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 860px) {
@@ -2537,13 +2541,16 @@ html.dark .gear-device-item.is-active,
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: space-between;
   gap: clamp(2.25rem, 3.5vw, 4.5rem);
   width: 100%;
+  min-height: 100%;
 }
 
 @media (max-width: 860px) {
   .hobbies-right-column {
     align-items: center;
+    justify-content: flex-start;
   }
 }
 
@@ -2574,9 +2581,15 @@ html.dark .gear-device-item.is-active,
   .folder-badges-dock {
     flex-direction: row;
     justify-content: center;
-    flex-wrap: wrap;
-    gap: 1.25rem;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: clamp(1rem, 4vw, 2.5rem);
     width: 100%;
+  }
+
+  .folder-badge-item {
+    width: auto;
+    flex: 0 0 auto;
   }
 }
 
@@ -2861,37 +2874,272 @@ html.dark .gear-device-item.is-active,
   margin: 0;
 }
 
-/* Minecraft Mountain Placeholder Frame */
+/* Minecraft Mountain Pixel Scene */
 .hobbies-mountain-wrapper {
-  width: 100%;
-  max-width: clamp(440px, 32vw, 640px);
-  margin-left: auto;
+  position: absolute;
+  right: clamp(-60px, -4.5vw, -15px);
+  bottom: clamp(0rem, 0.5vw, 0.65rem);
+  width: clamp(340px, 32vw, 560px);
+  pointer-events: none;
+  opacity: 0.95;
+  z-index: 0;
+  transition: right 240ms ease, opacity 240ms ease;
 }
 
 .minecraft-mountain-frame {
+  --mountain-grass-top: #65a147;
+  --mountain-dirt: #866043;
+  --mountain-dirt-dark: #684a32;
+  --mountain-stone: #787878;
+  --mountain-stone-light: #949494;
+  --mountain-stone-dark: #5c5c5c;
+  --mountain-snow: #f4f6f8;
+  --mountain-snow-shadow: #d8dee4;
+  --mountain-coal: #3b3b3b;
+  --mountain-iron: #a89484;
+  --mountain-lava-bright: #ffaa00;
+  --mountain-lava-orange: #ff6e00;
+  --mountain-lava-red: #d93800;
+  --mountain-lava-dark: #a62100;
+  --mountain-obsidian: #1e1428;
   width: 100%;
-  border: 1.5px dashed var(--line-strong);
-  border-radius: clamp(16px, 1.4vw, 22px);
-  padding: clamp(2.5rem, 2.5vw, 3.5rem) clamp(1.5rem, 2vw, 2.5rem);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: clamp(130px, 10vw, 180px);
-  background: rgba(34, 34, 34, 0.015);
-  transition: border-color 180ms ease;
+  display: block;
+  color: var(--ink);
+  filter: none; /* strictly no glow or blur */
 }
 
-html.dark .minecraft-mountain-frame {
-  background: rgba(255, 255, 255, 0.02);
+html.dark .minecraft-mountain-frame,
+:root.dark .minecraft-mountain-frame {
+  --mountain-grass-top: #588e3e;
+  --mountain-dirt: #77553b;
+  --mountain-dirt-dark: #573e2a;
+  --mountain-stone: #686868;
+  --mountain-stone-light: #828282;
+  --mountain-stone-dark: #4e4e4e;
+  --mountain-snow: #e6eaf0;
+  --mountain-snow-shadow: #c2c9d2;
+  --mountain-coal: #2e2e2e;
+  --mountain-iron: #928072;
+  --mountain-lava-bright: #ffaa00;
+  --mountain-lava-orange: #ff6e00;
+  --mountain-lava-red: #d93800;
+  --mountain-lava-dark: #a62100;
+  --mountain-obsidian: #180f21;
 }
 
-.mountain-placeholder-text {
-  font-family: "Minecraft", "Press Start 2P", monospace;
-  font-size: clamp(0.72rem, 0.75vw, 0.95rem);
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  opacity: 0.75;
-  text-align: center;
+@media (prefers-color-scheme: dark) {
+  html:not(.light) .minecraft-mountain-frame,
+  :root:not(.light) .minecraft-mountain-frame {
+    --mountain-grass-top: #588e3e;
+    --mountain-dirt: #77553b;
+    --mountain-dirt-dark: #573e2a;
+    --mountain-stone: #686868;
+    --mountain-stone-light: #828282;
+    --mountain-stone-dark: #4e4e4e;
+    --mountain-snow: #e6eaf0;
+    --mountain-snow-shadow: #c2c9d2;
+    --mountain-coal: #2e2e2e;
+    --mountain-iron: #928072;
+    --mountain-lava-bright: #ffaa00;
+    --mountain-lava-orange: #ff6e00;
+    --mountain-lava-red: #d93800;
+    --mountain-lava-dark: #a62100;
+    --mountain-obsidian: #180f21;
+  }
+}
+
+.minecraft-mountain-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  shape-rendering: crispEdges;
+}
+
+.minecraft-mountain-block {
+  shape-rendering: crispEdges;
+}
+
+.minecraft-mountain-grass-top {
+  fill: var(--mountain-grass-top);
+}
+
+.minecraft-mountain-dirt {
+  fill: var(--mountain-dirt);
+}
+
+.minecraft-mountain-dirt-dark {
+  fill: var(--mountain-dirt-dark);
+}
+
+.minecraft-mountain-stone {
+  fill: var(--mountain-stone);
+}
+
+.minecraft-mountain-stone-light {
+  fill: var(--mountain-stone-light);
+}
+
+.minecraft-mountain-stone-dark {
+  fill: var(--mountain-stone-dark);
+}
+
+.minecraft-mountain-snow {
+  fill: var(--mountain-snow);
+}
+
+.minecraft-mountain-snow-shadow {
+  fill: var(--mountain-snow-shadow);
+}
+
+.minecraft-mountain-coal-ore {
+  fill: var(--mountain-coal);
+}
+
+.minecraft-mountain-iron-ore {
+  fill: var(--mountain-iron);
+}
+
+.minecraft-mountain-lava-bright {
+  fill: var(--mountain-lava-bright);
+}
+
+.minecraft-mountain-lava-orange {
+  fill: var(--mountain-lava-orange);
+}
+
+.minecraft-mountain-lava-red {
+  fill: var(--mountain-lava-red);
+}
+
+.minecraft-mountain-lava-dark {
+  fill: var(--mountain-lava-dark);
+}
+
+.minecraft-mountain-obsidian {
+  fill: var(--mountain-obsidian);
+}
+
+.minecraft-flower-stem {
+  fill: #3f7a38;
+}
+
+.minecraft-flower-yellow .minecraft-flower-petal {
+  fill: #e7c84d;
+}
+
+.minecraft-flower-red .minecraft-flower-petal {
+  fill: #d96558;
+}
+
+.minecraft-flower-white .minecraft-flower-petal {
+  fill: #ece7d7;
+}
+
+.minecraft-flower-center {
+  fill: #f7e9a6;
+}
+
+/* Solid pixel lava ember float */
+.minecraft-lava-ember {
+  shape-rendering: crispEdges;
+  animation: lavaEmberFloat linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.minecraft-lava-ember.ember-bright {
+  fill: #ffcc00;
+}
+
+.minecraft-lava-ember.ember-orange {
+  fill: #ff7700;
+}
+
+.minecraft-lava-ember.ember-red {
+  fill: #e62200;
+}
+
+@keyframes lavaEmberFloat {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-22px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 1400px) {
+  .hobbies-mountain-wrapper {
+    right: clamp(-90px, -7vw, -45px);
+    width: clamp(300px, 34vw, 480px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .hobbies-mountain-wrapper {
+    right: clamp(-120px, -11vw, -65px);
+    width: clamp(280px, 36vw, 420px);
+  }
+}
+
+@media (max-width: 860px) {
+  .hobbies-mockup-frame {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hobbies-grid-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    order: 1;
+  }
+
+  .hobbies-right-column {
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .hobbies-mountain-wrapper {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    order: 2;
+    margin: 2.25rem auto 0;
+    width: min(88vw, 380px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    opacity: 0.95;
+    z-index: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .folder-badges-dock {
+    gap: clamp(0.75rem, 3.5vw, 1.4rem);
+  }
+
+  .hobbies-mountain-wrapper {
+    width: min(92vw, 320px);
+    margin: 1.75rem auto 0;
+  }
 }
 
 /* ==========================================================================
@@ -3028,7 +3276,3 @@ html.dark .hobbies-expanded-photo-img-wrap.is-contain-wrap {
   opacity: 1;
   color: var(--ink);
 }
-
-
-
-
