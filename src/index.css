@@ -1771,14 +1771,6 @@ main {
   z-index: 99999;
 }
 
-.dark::view-transition-old(root) {
-  z-index: 99999;
-}
-
-.dark::view-transition-new(root) {
-  z-index: 1;
-}
-
 /* Dark mode class overrides for interactive grid and compass elements */
 html.dark .compass-north-needle-solid {
   filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.22));
