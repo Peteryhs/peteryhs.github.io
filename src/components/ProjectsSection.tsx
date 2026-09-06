@@ -219,40 +219,26 @@ export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
     <>
       <SunSystemsOrbit isActive={hoveredSlug === 'sun-systems'} />
       <AIDetectorMatrix isActive={hoveredSlug === 'ai-detector'} />
+      <AgenticRoutingTree isActive={hoveredSlug === 'openwebui-agentic-tooling'} />
       <HermesStarsBackdrop isActive={hoveredSlug === 'hermes-contributions'} />
 
       <div className={`projects-grid ${isExpanded ? 'is-expanded-view' : ''}`}>
-        {projectsData.map((project, idx) => {
-          const isAgentic = project.slug === 'openwebui-agentic-tooling'
-          return (
-            <BlurFade
-              key={project.slug}
-              delay={isExpanded ? 0.05 + idx * 0.06 : 0.08 + idx * 0.08}
-              duration={0.45}
-              yOffset={10}
-              inViewMargin="-40px"
-            >
-              {isAgentic ? (
-                <div className="agentic-card-wrapper">
-                  <AgenticRoutingTree isActive={hoveredSlug === 'openwebui-agentic-tooling'} />
-                  <ProjectCard
-                    project={project}
-                    onHoverChange={(isHovered) => {
-                      setHoveredSlug(isHovered ? project.slug : null)
-                    }}
-                  />
-                </div>
-              ) : (
-                <ProjectCard
-                  project={project}
-                  onHoverChange={(isHovered) => {
-                    setHoveredSlug(isHovered ? project.slug : null)
-                  }}
-                />
-              )}
-            </BlurFade>
-          )
-        })}
+        {projectsData.map((project, idx) => (
+          <BlurFade
+            key={project.slug}
+            delay={isExpanded ? 0.05 + idx * 0.06 : 0.08 + idx * 0.08}
+            duration={0.45}
+            yOffset={10}
+            inViewMargin="-40px"
+          >
+            <ProjectCard
+              project={project}
+              onHoverChange={(isHovered) => {
+                setHoveredSlug(isHovered ? project.slug : null)
+              }}
+            />
+          </BlurFade>
+        ))}
       </div>
     </>
   )

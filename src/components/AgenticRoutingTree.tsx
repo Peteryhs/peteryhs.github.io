@@ -102,8 +102,8 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
 
     const buildTree = () => {
       const dpr = window.devicePixelRatio || 1
-      width = canvas.clientWidth > 0 ? canvas.clientWidth : (window.innerWidth * 1.5)
-      height = canvas.clientHeight > 0 ? canvas.clientHeight : 520
+      width = canvas.clientWidth || window.innerWidth
+      height = canvas.clientHeight || window.innerHeight
 
       canvas.width = Math.floor(width * dpr)
       canvas.height = Math.floor(height * dpr)
@@ -113,11 +113,37 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
       edges = []
       nodeMap.clear()
 
-      // Horizontal tier distribution across 1.5x canvas width
-      const x0 = width * 0.12
-      const x1 = width * 0.38
-      const x2 = width * 0.65
-      const x3 = width * 0.90
+      // Multi-tier branching coordinates shifted right while ensuring leaf nodes remain safely inside canvas
+      let x0: number
+      let x1: number
+      let x2: number
+      let x3: number
+
+      if (width >= 1600) {
+        // Super large screens: roots start near 48%, branching across 63% and 78%, leaves cleanly anchored at 93%
+        x0 = width * 0.48
+        x1 = width * 0.63
+        x2 = width * 0.78
+        x3 = width * 0.93
+      } else if (width >= 1200) {
+        // Standard large desktops:
+        x0 = width * 0.42
+        x1 = width * 0.59
+        x2 = width * 0.76
+        x3 = width * 0.92
+      } else if (width >= 860) {
+        // Medium laptops / tablets:
+        x0 = width * 0.35
+        x1 = width * 0.54
+        x2 = width * 0.73
+        x3 = width * 0.92
+      } else {
+        // Mobile / compact screens:
+        x0 = width * 0.15
+        x1 = width * 0.38
+        x2 = width * 0.65
+        x3 = width * 0.90
+      }
 
       // Tier 0: Input Roots
       const t0: Node[] = [
