@@ -2064,24 +2064,32 @@ html.theme-sun-dark main {
    OpenWebUI Agentic Routing Dynamic Tree Animation
    ========================================================================== */
 
+.agentic-card-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .agentic-routing-tree-backdrop {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(150vw, 1500px);
+  height: clamp(380px, 100%, 540px);
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.95) 5%,
-    rgba(0, 0, 0, 0.95) 95%,
+  overflow: visible;
+  mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    rgba(0, 0, 0, 1) 45%,
+    rgba(0, 0, 0, 0.7) 75%,
     transparent 100%
   );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.95) 5%,
-    rgba(0, 0, 0, 0.95) 95%,
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    rgba(0, 0, 0, 1) 45%,
+    rgba(0, 0, 0, 0.7) 75%,
     transparent 100%
   );
 }
