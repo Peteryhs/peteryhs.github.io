@@ -113,36 +113,36 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
       edges = []
       nodeMap.clear()
 
-      // Multi-tier branching coordinates shifted right while ensuring leaf nodes remain safely inside canvas
+      // Multi-tier branching coordinates expanded 1.25x longer horizontally
       let x0: number
       let x1: number
       let x2: number
       let x3: number
 
       if (width >= 1600) {
-        // Super large screens: roots start near 48%, branching across 63% and 78%, leaves cleanly anchored at 93%
-        x0 = width * 0.48
-        x1 = width * 0.63
-        x2 = width * 0.78
-        x3 = width * 0.93
-      } else if (width >= 1200) {
-        // Standard large desktops:
-        x0 = width * 0.42
-        x1 = width * 0.59
+        // Super large screens: 1.25x longer horizontal span (0.38 to 0.95)
+        x0 = width * 0.38
+        x1 = width * 0.57
         x2 = width * 0.76
-        x3 = width * 0.92
-      } else if (width >= 860) {
-        // Medium laptops / tablets:
-        x0 = width * 0.35
-        x1 = width * 0.54
+        x3 = width * 0.95
+      } else if (width >= 1200) {
+        // Standard large desktops: 1.25x longer horizontal span (0.30 to 0.94)
+        x0 = width * 0.30
+        x1 = width * 0.51
         x2 = width * 0.73
-        x3 = width * 0.92
+        x3 = width * 0.94
+      } else if (width >= 860) {
+        // Medium laptops / tablets: 1.25x longer horizontal span (0.22 to 0.94)
+        x0 = width * 0.22
+        x1 = width * 0.46
+        x2 = width * 0.70
+        x3 = width * 0.94
       } else {
-        // Mobile / compact screens:
-        x0 = width * 0.15
-        x1 = width * 0.38
-        x2 = width * 0.65
-        x3 = width * 0.90
+        // Mobile / compact screens: 1.25x longer horizontal span (0.06 to 0.96)
+        x0 = width * 0.06
+        x1 = width * 0.36
+        x2 = width * 0.66
+        x3 = width * 0.96
       }
 
       // Tier 0: Input Roots
