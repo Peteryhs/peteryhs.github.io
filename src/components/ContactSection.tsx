@@ -209,8 +209,8 @@ export function LinkedInContactCard({ standalone = false }: { standalone?: boole
           <AccountItem
             username="Peter Shao"
             url="https://www.linkedin.com/in/peter-shao-ysh/"
-            avatarUrl="https://github.com/Peteryhs.png"
-            fallbackAvatarUrl="/peter-photo.jpg"
+            avatarUrl="/peter-photo.jpg"
+            fallbackAvatarUrl="https://github.com/Peteryhs.png"
             brand="linkedin"
           />
         </div>
@@ -240,8 +240,8 @@ export function EmailContactCard({ standalone = false }: { standalone?: boolean 
           <AccountItem
             username="contact@mail.peteryhs.com"
             url="mailto:contact@mail.peteryhs.com"
-            avatarUrl="https://github.com/Peteryhs.png"
-            fallbackAvatarUrl="/peter-photo.jpg"
+            avatarUrl="/peter-photo.jpg"
+            fallbackAvatarUrl="https://github.com/Peteryhs.png"
             brand="email"
           />
         </div>
