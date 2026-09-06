@@ -103,8 +103,8 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
 
     const buildTree = () => {
       const dpr = window.devicePixelRatio || 1
-      width = canvas.clientWidth || window.innerWidth
-      height = canvas.clientHeight || window.innerHeight
+      width = canvas.clientWidth > 0 ? canvas.clientWidth : window.innerWidth
+      height = canvas.clientHeight > 0 ? canvas.clientHeight : window.innerHeight
 
       canvas.width = Math.floor(width * dpr)
       canvas.height = Math.floor(height * dpr)
