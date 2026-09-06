@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { GlyphMatrix } from './GlyphMatrix'
 
@@ -6,7 +7,9 @@ export interface AIDetectorMatrixProps {
 }
 
 export function AIDetectorMatrix({ isActive }: AIDetectorMatrixProps) {
-  return (
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
     <AnimatePresence>
       {isActive && (
         <motion.div
@@ -28,6 +31,7 @@ export function AIDetectorMatrix({ isActive }: AIDetectorMatrixProps) {
           />
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }

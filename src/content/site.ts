@@ -11,6 +11,9 @@ export type TopicId =
   | 'photography'
   | 'minecraft'
   | 'contact'
+  | 'github'
+  | 'linkedin'
+  | 'email'
 
 export type Topic = {
   id: TopicId
@@ -156,13 +159,34 @@ export const topics: Topic[] = [
     id: 'contact',
     title: 'Contact',
     shortTitle: 'Contact',
-    preview: 'GitHub, LinkedIn, Reddit, or email — drop a note anytime.',
+    preview: 'GitHub, LinkedIn, or email — drop a note anytime.',
     description: 'Let’s connect for collaborations, internships, or interesting ideas.',
     items: [
-      { title: 'GitHub', text: 'github.com/peter — code, tools & active builds.', tag: 'Code' },
+      { title: 'GitHub', text: 'github.com/Peteryhs — code, tools & active builds.', tag: 'Code' },
       { title: 'LinkedIn', text: 'Connect professionally and see past chapters.', tag: 'Network' },
       { title: 'Email', text: 'Drop a line with an idea, question, or opportunity.', tag: 'Direct' },
     ],
+  },
+  {
+    id: 'github',
+    title: 'GitHub',
+    shortTitle: 'GitHub',
+    preview: 'Open-source repositories, active experiments, and hobby code',
+    description: 'Peteryhs & ShaoRou459 on GitHub.',
+  },
+  {
+    id: 'linkedin',
+    title: 'LinkedIn',
+    shortTitle: 'LinkedIn',
+    preview: 'Professional background, hackathons, and engineering co-op',
+    description: 'Peter Shao on LinkedIn.',
+  },
+  {
+    id: 'email',
+    title: 'Email',
+    shortTitle: 'Email',
+    preview: 'Always open to chat about engineering ideas & opportunities',
+    description: 'contact@mail.peteryhs.com',
   },
 ]
 

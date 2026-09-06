@@ -241,9 +241,9 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
       interactive: {
         width: 'auto',
         height: 'auto',
-        borderRadius: 10,
-        x: 14,
-        y: -14, // Exact same vertical center baseline as the text caret
+        borderRadius: 13,
+        x: 16,
+        y: -18,
         borderWidth: 1,
         borderColor: cardBorder,
         backgroundColor: cardBg,

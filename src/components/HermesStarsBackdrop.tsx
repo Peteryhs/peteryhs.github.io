@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { ShootingStars } from './ShootingStars'
 import { StarsBackground } from './StarsBackground'
@@ -7,7 +8,9 @@ export interface HermesStarsBackdropProps {
 }
 
 export function HermesStarsBackdrop({ isActive }: HermesStarsBackdropProps) {
-  return (
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
     <AnimatePresence>
       {isActive && (
         <motion.div
@@ -40,6 +43,7 @@ export function HermesStarsBackdrop({ isActive }: HermesStarsBackdropProps) {
           />
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }

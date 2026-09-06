@@ -19,7 +19,15 @@ import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
 import { CompactProjectsGrid } from './components/CompactProjectsGrid'
 import { PassionsSection, PhotographyExpandedView, MinecraftExpandedView } from './components/PassionsSection'
+import {
+  ContactSection,
+  ContactExpandedView,
+  GithubContactCard,
+  LinkedInContactCard,
+  EmailContactCard,
+} from './components/ContactSection'
 import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
+import { BottomBounceEffect } from './components/BottomBounceEffect'
 import { topicById, type Topic, type TopicId } from './content/site'
 
 const ease = [0.16, 1, 0.3, 1] as const
@@ -153,6 +161,30 @@ function ExpandedSection({ topic }: { topic: Topic }) {
             <MinecraftExpandedView />
           </div>
         )
+      case 'github':
+        return (
+          <div className="expanded-cards-single">
+            <GithubContactCard standalone />
+          </div>
+        )
+      case 'linkedin':
+        return (
+          <div className="expanded-cards-single">
+            <LinkedInContactCard standalone />
+          </div>
+        )
+      case 'email':
+        return (
+          <div className="expanded-cards-single">
+            <EmailContactCard standalone />
+          </div>
+        )
+      case 'contact':
+        return (
+          <div className="expanded-cards-single">
+            <ContactExpandedView />
+          </div>
+        )
       default:
         return (
           <div className="expanded-items-grid">
@@ -237,6 +269,10 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
 
   if (topicId === 'passions') {
     return <PassionsSection />
+  }
+
+  if (topicId === 'contact') {
+    return <ContactSection />
   }
 
   return (
@@ -324,11 +360,13 @@ export default function App() {
   }
 
   return (
-    <main>
+    <>
       <AnimatedThemeToggler />
       <CursorFollower ref={cursorRef} activeInfo={cursorInfo} />
 
-      <header className="intro" id="top">
+      <BottomBounceEffect>
+        <main>
+          <header className="intro" id="top">
         <div className="intro-container">
           <BlurFade delay={0.06} yOffset={12}>
             <p className="intro-sentence">
@@ -460,24 +498,20 @@ export default function App() {
           <BlurFade delay={0.46} yOffset={12}>
             <p className="intro-sentence">
               You can spot me on the internet via{' '}
-              {word('contact', 'GitHub', {
+              {word('github', 'GitHub', {
                 text: 'Open-source repositories, active experiments, and hobby code',
               })}
               ,{' '}
-              {word('contact', 'LinkedIn', {
+              {word('linkedin', 'LinkedIn', {
                 text: 'Professional background, hackathons, and engineering co-op',
               })}
-              ,{' '}
-              {word('contact', 'Reddit', {
-                text: 'Self-hosted infrastructure, keyboards, and hardware communities',
-              })}
               {' '}and{' '}
-              {word('contact', <span className="no-wrap">Email!</span>, {
+              {word('email', <span className="no-wrap">Email!</span>, {
                 text: 'Always open to chat about engineering ideas & opportunities',
               })}
             </p>
           </BlurFade>
-          {showAfter('contact')}
+          {showAfter('contact', 'github', 'linkedin', 'email')}
 
           <BlurFade delay={0.54} yOffset={12}>
             <p className="intro-sentence intro-signoff">See you around!</p>
@@ -492,8 +526,18 @@ export default function App() {
           <LongFormSection topicId="projects" />
           <LongFormSection topicId="passions" />
           <LongFormSection topicId="contact" />
+
+          <footer className="site-footer">
+            <div className="site-footer-inner">
+              <p className="site-footer-text">
+                © {new Date().getFullYear()} Peter Shao. All rights reserved.
+              </p>
+            </div>
+          </footer>
         </div>
       </div>
     </main>
-  )
+  </BottomBounceEffect>
+</>
+)
 }

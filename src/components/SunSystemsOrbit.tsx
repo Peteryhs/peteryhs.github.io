@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
 
 export interface SunSystemsOrbitProps {
@@ -44,7 +45,9 @@ export function SunSystemsOrbit({ isActive }: SunSystemsOrbitProps) {
     return starList
   }, [])
 
-  return (
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
     <AnimatePresence>
       {isActive && (
         <motion.div
@@ -143,6 +146,7 @@ export function SunSystemsOrbit({ isActive }: SunSystemsOrbitProps) {
           <div className="sun-systems-dof-blur-edge" aria-hidden="true" />
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }

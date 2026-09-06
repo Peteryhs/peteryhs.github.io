@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
 
 export interface AgenticRoutingTreeProps {
@@ -363,7 +364,9 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
     }
   }, [isActive])
 
-  return (
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
     <AnimatePresence>
       {isActive && (
         <motion.div
@@ -386,6 +389,7 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
           />
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }

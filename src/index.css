@@ -362,14 +362,14 @@ main {
 }
 
 .cursor-card-content {
-  padding: 7px 13px;
+  padding: 9px 16px;
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
   width: max-content;
-  min-width: 180px;
-  max-width: min(380px, 86vw);
+  min-width: 0;
+  max-width: min(520px, 90vw);
   box-sizing: border-box;
   will-change: opacity;
 }
@@ -377,11 +377,11 @@ main {
 .cursor-text {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 0.81rem;
-  line-height: 1.34;
+  font-size: 1.01rem;
+  line-height: 1.38;
   color: var(--ink);
-  font-weight: 460;
-  letter-spacing: -0.005em;
+  font-weight: 480;
+  letter-spacing: -0.01em;
   text-align: left;
 }
 
@@ -3276,3 +3276,307 @@ html.dark .hobbies-expanded-photo-img-wrap.is-contain-wrap {
   opacity: 1;
   color: var(--ink);
 }
+
+/* ==========================================================================
+   Contact Section & Custom GitHub Card
+   ========================================================================== */
+
+.contact-section {
+  width: 100%;
+  max-width: 58rem;
+  position: relative;
+}
+
+.contact-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.contact-card {
+  padding: 1.35rem 1.75rem;
+}
+
+.contact-card-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.contact-brand-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.contact-brand-title {
+  font-family: var(--font-main) !important;
+  font-size: clamp(1.35rem, 1.8vw, 1.65rem) !important;
+  font-weight: var(--font-heading-weight, 600) !important;
+  color: var(--ink) !important;
+  margin: 0 !important;
+  line-height: 1.15 !important;
+  letter-spacing: var(--font-letter-spacing, -0.015em);
+}
+
+.contact-card-divider {
+  width: 1.5px;
+  height: 1.65rem;
+  background: var(--line-strong);
+  opacity: 0.55;
+  margin: 0 clamp(0.75rem, 1.5vw, 1.5rem);
+  flex-shrink: 0;
+}
+
+.contact-accounts-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.4vw, 2.2rem);
+  flex-wrap: wrap;
+}
+
+.contact-account-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0.65rem;
+  margin: -0.35rem -0.45rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: background 180ms ease, transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.contact-account-link:hover {
+  background: rgba(34, 34, 34, 0.04);
+  transform: translateY(-1px);
+}
+
+html.dark .contact-account-link:hover,
+:root.dark .contact-account-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) .contact-account-link:hover,
+  :root:not(.light) .contact-account-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.contact-account-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid var(--line-strong);
+  background: var(--paper);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease;
+}
+
+.contact-account-link:hover .contact-account-avatar {
+  transform: scale(1.08);
+  border-color: var(--ink);
+}
+
+.contact-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.contact-avatar-fallback {
+  width: 16px;
+  height: 16px;
+  color: var(--ink);
+  opacity: 0.85;
+}
+
+.contact-account-name {
+  font-family: var(--font-main);
+  font-size: clamp(1rem, 1.15vw, 1.12rem);
+  font-weight: 550;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.contact-account-arrow {
+  font-size: 0.88rem;
+  color: var(--muted);
+  opacity: 0.55;
+  transition: transform 180ms ease, opacity 180ms ease, color 180ms ease;
+  margin-left: -0.15rem;
+}
+
+.contact-account-link:hover .contact-account-arrow {
+  transform: translate(2px, -2px);
+  opacity: 1;
+  color: var(--ink);
+}
+
+@media (max-width: 600px) {
+  .contact-card {
+    padding: 1.2rem 1.25rem;
+  }
+
+  .contact-card-divider {
+    display: none;
+  }
+
+  .contact-card-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .contact-accounts-row {
+    width: 100%;
+    gap: 0.85rem;
+  }
+}
+
+/* ==========================================================================
+   Site Footer / Copyright
+   ========================================================================== */
+
+.site-footer {
+  width: 100%;
+  max-width: 58rem;
+  margin-top: 3.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line-strong);
+  opacity: 0.85;
+}
+
+.site-footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.site-footer-text {
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  color: var(--muted);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* ==========================================================================
+   Bottom Overscroll Bounce & Radiating Gradient
+   ========================================================================== */
+
+.bottom-bounce-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  transform-origin: top center;
+}
+
+.bottom-overscroll-gradient {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: clamp(280px, 45vh, 480px);
+  pointer-events: none;
+  z-index: 9999;
+  transform-origin: bottom center;
+  /* Two-layer radiant gradient: Blue (apple) on top, Yellow (snake) at bottom */
+  background:
+    /* Layer 1: Apple Blue radiating upwards */
+    radial-gradient(
+      ellipse 95% 85% at 50% 100%,
+      rgba(70, 92, 175, 0.58) 0%,
+      rgba(88, 111, 198, 0.42) 25%,
+      rgba(96, 125, 215, 0.2) 50%,
+      transparent 76%
+    ),
+    /* Layer 2: Snake Yellow right along the bottom base */
+    radial-gradient(
+      ellipse 85% 42% at 50% 100%,
+      rgba(237, 163, 57, 0.78) 0%,
+      rgba(214, 148, 52, 0.55) 25%,
+      rgba(190, 140, 66, 0.22) 50%,
+      transparent 68%
+    );
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.9) 15%,
+    rgba(0, 0, 0, 0.6) 35%,
+    rgba(0, 0, 0, 0.3) 55%,
+    rgba(0, 0, 0, 0.1) 75%,
+    rgba(0, 0, 0, 0.02) 90%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.9) 15%,
+    rgba(0, 0, 0, 0.6) 35%,
+    rgba(0, 0, 0, 0.3) 55%,
+    rgba(0, 0, 0, 0.1) 75%,
+    rgba(0, 0, 0, 0.02) 90%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+html.dark .bottom-overscroll-gradient,
+:root.dark .bottom-overscroll-gradient {
+  background:
+    /* Layer 1: Apple Blue radiating upwards in dark mode */
+    radial-gradient(
+      ellipse 95% 85% at 50% 100%,
+      rgba(88, 111, 210, 0.52) 0%,
+      rgba(72, 98, 185, 0.38) 25%,
+      rgba(96, 125, 220, 0.16) 50%,
+      transparent 76%
+    ),
+    /* Layer 2: Snake Yellow right along the bottom base in dark mode */
+    radial-gradient(
+      ellipse 85% 42% at 50% 100%,
+      rgba(242, 172, 64, 0.72) 0%,
+      rgba(214, 148, 52, 0.48) 25%,
+      rgba(190, 140, 66, 0.18) 50%,
+      transparent 68%
+    );
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) .bottom-overscroll-gradient,
+  :root:not(.light) .bottom-overscroll-gradient {
+    background:
+      radial-gradient(
+        ellipse 95% 85% at 50% 100%,
+        rgba(88, 111, 210, 0.52) 0%,
+        rgba(72, 98, 185, 0.38) 25%,
+        rgba(96, 125, 220, 0.16) 50%,
+        transparent 76%
+      ),
+      radial-gradient(
+        ellipse 85% 42% at 50% 100%,
+        rgba(242, 172, 64, 0.72) 0%,
+        rgba(214, 148, 52, 0.48) 25%,
+        rgba(190, 140, 66, 0.18) 50%,
+        transparent 68%
+      );
+  }
+}
+
+
+
+
+
+
