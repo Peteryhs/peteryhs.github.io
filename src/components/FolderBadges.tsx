@@ -270,7 +270,7 @@ function SingleFolderBadge({
 
   return (
     <div
-      className={`folder-badge-item ${isOpen ? 'is-open' : ''}`}
+      className={`folder-badge-item folder-badge-${folder.id} ${isOpen ? 'is-open' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

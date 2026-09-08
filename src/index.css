@@ -2594,6 +2594,10 @@ html.dark .gear-device-item.is-active,
     width: auto;
     flex: 0 0 auto;
   }
+
+  .folder-badge-item:not(.folder-badge-minecraft) {
+    display: none !important;
+  }
 }
 
 .folder-badge-item {
