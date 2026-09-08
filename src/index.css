@@ -1839,6 +1839,10 @@ main {
   mix-blend-mode: normal;
 }
 
+::view-transition-image-pair(root) {
+  isolation: auto;
+}
+
 ::view-transition-old(root) {
   z-index: 1;
 }

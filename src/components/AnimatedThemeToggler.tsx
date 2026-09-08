@@ -53,10 +53,12 @@ export function AnimatedThemeToggler({ className = '' }: { className?: string })
       y = rect.top + rect.height / 2
     }
 
-    const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    )
+    const endRadius = Math.ceil(
+      Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      )
+    ) + 30
 
     const transition = startViewTransition.call(document, () => {
       flushSync(() => {
@@ -70,7 +72,7 @@ export function AnimatedThemeToggler({ className = '' }: { className?: string })
 
     try {
       await transition.ready
-      document.documentElement.animate(
+      const anim = document.documentElement.animate(
         {
           clipPath: [
             `circle(0px at ${x}px ${y}px)`,
@@ -79,10 +81,12 @@ export function AnimatedThemeToggler({ className = '' }: { className?: string })
         },
         {
           duration: 480,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          easing: 'ease-in-out',
+          fill: 'both',
           pseudoElement: '::view-transition-new(root)',
         }
       )
+      await anim.finished
     } catch {
       // Ignore transition animation errors if aborted
     }
