@@ -352,7 +352,7 @@ main {
   border-style: solid;
   overflow: hidden;
   box-sizing: border-box;
-  will-change: width, height, transform, border-radius;
+  will-change: transform;
 }
 
 .cursor-state-interactive {
@@ -1265,6 +1265,7 @@ main {
   pointer-events: auto;
   z-index: 0;
   overflow: hidden;
+  contain: strict;
   mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
 }
@@ -2054,6 +2055,8 @@ html.theme-sun-dark main {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  contain: strict;
+  will-change: opacity;
 }
 
 .ai-detector-matrix-canvas {
@@ -2062,6 +2065,7 @@ html.theme-sun-dark main {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  contain: strict;
 }
 
 /* ==========================================================================

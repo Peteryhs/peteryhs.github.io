@@ -268,6 +268,8 @@ export function InteractiveGridPattern({
   const [snakeStatus, setSnakeStatus] = useState<'alive' | 'disappearing' | 'restarting'>('alive')
   const [snakeGenKey, setSnakeGenKey] = useState(0)
   const isResettingRef = useRef(false)
+  const [isInView, setIsInView] = useState(true)
+  const cardObstaclesRef = useRef<Set<string>>(new Set())
 
   // Scroll tracking: Fades in when entering About Me, stays visible, fades out when leaving About Me
   const { scrollYProgress } = useScroll({
@@ -316,7 +318,7 @@ export function InteractiveGridPattern({
   }, [width, height])
 
   // Compute exact cells covered by the existing cards/tiles so the snake never goes underneath
-  const getCardObstacles = useCallback((): Set<string> => {
+  const refreshObstacles = useCallback((): Set<string> => {
     const obstacles = new Set<string>()
     const container = containerRef.current
     const section = sectionRef.current
@@ -327,7 +329,6 @@ export function InteractiveGridPattern({
 
     cards.forEach((card) => {
       const r = card.getBoundingClientRect()
-      // Map pixel rectangle to grid cells with zero clipping
       const startCol = Math.max(0, Math.floor((r.left - gridRect.left) / width))
       const endCol = Math.min(dimensions.cols - 1, Math.floor((r.right - gridRect.left) / width))
       const startRow = Math.max(0, Math.floor((r.top - gridRect.top) / height))
@@ -340,8 +341,51 @@ export function InteractiveGridPattern({
       }
     })
 
+    cardObstaclesRef.current = obstacles
     return obstacles
   }, [dimensions.cols, dimensions.rows, width, height, sectionRef])
+
+  const getCardObstacles = useCallback((): Set<string> => {
+    if (cardObstaclesRef.current.size === 0) {
+      return refreshObstacles()
+    }
+    return cardObstaclesRef.current
+  }, [refreshObstacles])
+
+  // Pause autonomous game loop when scrolled out of view or tab is hidden
+  useEffect(() => {
+    const el = sectionRef?.current || containerRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const visible = entry.isIntersecting
+        setIsInView(visible)
+        if (visible) {
+          refreshObstacles()
+        }
+      },
+      { rootMargin: '120px 0px 120px 0px' }
+    )
+
+    observer.observe(el)
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setIsInView(false)
+      } else {
+        const rect = el.getBoundingClientRect()
+        const isCurrentlyInView = rect.bottom > 0 && rect.top < window.innerHeight
+        setIsInView(isCurrentlyInView)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [sectionRef, refreshObstacles])
 
   // Spawn apple strictly inside open, visible areas outside existing tiles/cards
   const spawnApple = useCallback(
@@ -373,7 +417,7 @@ export function InteractiveGridPattern({
   // Ensure apple and snake stay inside valid open bounds when dimensions update
   useEffect(() => {
     if (dimensions.cols > 4 && dimensions.rows > 4) {
-      const cardObstacles = getCardObstacles()
+      const cardObstacles = refreshObstacles()
       const curApple = appleRef.current
       if (
         curApple.x < 1 ||
@@ -387,11 +431,11 @@ export function InteractiveGridPattern({
         setApple(newApple)
       }
     }
-  }, [dimensions.cols, dimensions.rows, spawnApple, getCardObstacles])
+  }, [dimensions.cols, dimensions.rows, spawnApple, refreshObstacles])
 
   // Stable Autonomous Snake Game Loop with guaranteed sequential milestones
   useEffect(() => {
-    if (shouldReduceMotion) return
+    if (shouldReduceMotion || !isInView) return
 
     const tickInterval = 175 // Smooth, retro-arcade pace
 
@@ -572,7 +616,7 @@ export function InteractiveGridPattern({
     }, tickInterval)
 
     return () => clearInterval(interval)
-  }, [dimensions.cols, dimensions.rows, width, height, spawnApple, getCardObstacles, shouldReduceMotion])
+  }, [dimensions.cols, dimensions.rows, width, height, spawnApple, getCardObstacles, shouldReduceMotion, isInView])
 
   const handleMouseEnterSquare = useCallback((key: string) => {
     if (leaveTimerRef.current) {

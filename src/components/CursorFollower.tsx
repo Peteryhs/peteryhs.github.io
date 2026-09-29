@@ -57,15 +57,15 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
     const mouseX = useMotionValue(-100)
     const mouseY = useMotionValue(-100)
 
-    // Ultra-responsive, critically-damped spring tracking (high stiffness, low mass, zero overshoot)
-    const springConfig = { damping: 38, stiffness: 950, mass: 0.1 }
+    // Ultra-responsive, critically-damped spring tracking with halved mass & trailing latency
+    const springConfig = { damping: 52, stiffness: 1400, mass: 0.05 }
     const smoothX = useSpring(mouseX, springConfig)
     const smoothY = useSpring(mouseY, springConfig)
 
-    // Subtle card velocity tilt
+    // Subtle card velocity tilt halved again from [-2.5, 2.5] down to [-1.25, 1.25]
     const xVelocity = useMotionValue(0)
-    const smoothVx = useSpring(xVelocity, { damping: 28, stiffness: 450 })
-    const cardTilt = useTransform(smoothVx, [-800, 800], [-2.5, 2.5])
+    const smoothVx = useSpring(xVelocity, { damping: 36, stiffness: 600 })
+    const cardTilt = useTransform(smoothVx, [-800, 800], [-1.25, 1.25])
 
     // Reactive theme detection synced with theme toggler and class mutations
     const [isDark, setIsDark] = useState<boolean>(checkIsDark)
@@ -144,7 +144,9 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
         } else {
           mouseX.set(e.clientX)
           mouseY.set(e.clientY)
-          xVelocity.set((dx / dt) * 1000)
+          if (displayedInfo) {
+            xVelocity.set((dx / dt) * 1000)
+          }
         }
 
         lastX = e.clientX
@@ -175,7 +177,6 @@ export const CursorFollower = forwardRef<CursorFollowerRef, CursorFollowerProps>
             target.closest('h2') ||
             target.closest('h3') ||
             target.closest('h4') ||
-            target.closest('article') ||
             target.closest('.intro p') ||
             target.closest('.longform-section p'),
         )

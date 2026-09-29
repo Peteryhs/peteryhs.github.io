@@ -325,14 +325,12 @@ export function TrueNorthSection() {
 
     window.addEventListener('scroll', queueScrollSync, { passive: true })
     document.addEventListener('scroll', queueScrollSync, { passive: true, capture: true })
-    const scrollSyncInterval = window.setInterval(queueScrollSync, 180)
     queueScrollSync()
 
     return () => {
       observer.disconnect()
       window.removeEventListener('scroll', queueScrollSync)
       document.removeEventListener('scroll', queueScrollSync, { capture: true })
-      window.clearInterval(scrollSyncInterval)
       if (rafRef.current !== null) {
         window.cancelAnimationFrame(rafRef.current)
         rafRef.current = null
