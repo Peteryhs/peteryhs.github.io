@@ -9,7 +9,9 @@ import { useEffect, useState } from 'react'
  * returns for this profile, and the mark links back to the webring.
  */
 
-const API_URL = 'https://uwaterloo.network/api/webring?user=peter-shao'
+// Their apex host 307-redirects API requests to www, and a cross-origin fetch cannot follow a
+// redirect without a CORS header on the redirect itself, so the widget must call www directly.
+const API_URL = 'https://www.uwaterloo.network/api/webring?user=peter-shao'
 const HOME_URL = 'https://www.uwaterloo.network?ref=peter-shao'
 const ICON_VIEW_BOX = '946.032 1501.62 166.4 164.8'
 const ICON_PATH =
