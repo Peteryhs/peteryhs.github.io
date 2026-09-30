@@ -3587,7 +3587,88 @@ html.dark .bottom-overscroll-gradient,
 }
 
 
+/* ==========================================================================
+   Webring badge (footer)
+   The hosted embed draws a 56px widget with text-glyph arrows. This is the
+   local, vector version: it inherits the theme tokens, so one element covers
+   light and dark mode, and it sits at the size of the footer text.
+   ========================================================================== */
 
+.webring-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
 
+.webring-badge:hover {
+  opacity: 1;
+}
 
+.webring-badge svg {
+  display: block;
+}
 
+.webring-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.webring-arrow svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.webring-arrow:hover:not(:disabled) {
+  color: var(--ink);
+  transform: scale(1.15);
+}
+
+.webring-arrow:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.webring-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.webring-mark {
+  display: flex;
+  align-items: center;
+  color: inherit;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.webring-mark svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.webring-mark:hover {
+  color: var(--ink);
+  transform: scale(1.08);
+}
+
+.webring-mark:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

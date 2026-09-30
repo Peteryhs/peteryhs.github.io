@@ -14,6 +14,7 @@ import {
   type CursorInfo,
 } from './components/CursorFollower'
 import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
+import { WebringBadge } from './components/WebringBadge'
 import { DemoIcon } from './components/DemoIcon'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
@@ -532,6 +533,7 @@ export default function App() {
               <p className="site-footer-text">
                 © {new Date().getFullYear()} Peter Shao. All rights reserved.
               </p>
+              <WebringBadge />
             </div>
           </footer>
         </div>
