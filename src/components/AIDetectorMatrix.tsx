@@ -1,5 +1,4 @@
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'motion/react'
 import { GlyphMatrix } from './GlyphMatrix'
 
 export interface AIDetectorMatrixProps {
@@ -9,29 +8,19 @@ export interface AIDetectorMatrixProps {
 export function AIDetectorMatrix({ isActive }: AIDetectorMatrixProps) {
   if (typeof document === 'undefined') return null
 
+  // Retain the canvas and its atlas between hovers; CSS reverses interrupted fades.
   return createPortal(
-    <AnimatePresence>
-      {isActive && (
-        <motion.div
-          className="ai-detector-matrix-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          aria-hidden="true"
-        >
-          {/* High-performance Fullscreen Glyph Matrix Layer */}
-          <GlyphMatrix
-            glyphs="01·•+*/\<>=-_~:;{}[]#%^&!?010101"
-            cellSize={18}
-            mutationRate={0.028}
-            interval={90}
-            color="var(--ink)"
-            className="ai-detector-matrix-canvas"
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>,
-    document.body
+    <div className={`ai-detector-matrix-backdrop ${isActive ? 'is-active' : ''}`} aria-hidden="true">
+      <GlyphMatrix
+        active={isActive}
+        glyphs="01·•+*/\\<>=-_~:;{}[]#%^&!?010101"
+        cellSize={18}
+        mutationRate={0.028}
+        interval={90}
+        color="var(--ink)"
+        className="ai-detector-matrix-canvas"
+      />
+    </div>,
+    document.body,
   )
 }

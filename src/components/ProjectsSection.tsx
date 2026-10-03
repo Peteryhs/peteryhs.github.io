@@ -6,6 +6,7 @@ import { AIDetectorMatrix } from './AIDetectorMatrix'
 import { AgenticRoutingTree } from './AgenticRoutingTree'
 import { HermesStarsBackdrop } from './HermesStarsBackdrop'
 import { projectsData, type ProjectItem } from '../content/projects'
+import { useGitHubStars } from '../hooks/useGitHubStars'
 
 function GithubIcon({ className = '' }: { className?: string }) {
   return (
@@ -103,6 +104,10 @@ export function ProjectCard({
   className?: string
   onHoverChange?: (isHovered: boolean) => void
 }) {
+  const stars = useGitHubStars(project.repo)
+  const starLabel = stars.count === null
+    ? stars.status === 'loading' ? 'Loading GitHub stars' : 'GitHub stars unavailable'
+    : `${stars.count.toLocaleString()} GitHub stars${stars.status === 'cached' ? ` · Last checked ${new Date(stars.updatedAt!).toLocaleString()}` : ''}`
   const handleMouseMove = (e: MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
@@ -120,6 +125,10 @@ export function ProjectCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={() => onHoverChange?.(true)}
       onMouseLeave={() => onHoverChange?.(false)}
+      onFocusCapture={() => onHoverChange?.(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onHoverChange?.(false)
+      }}
     >
       <div className="bento-card-spotlight" aria-hidden="true" />
       <div className="bento-card-content project-card-inner">
@@ -159,10 +168,12 @@ export function ProjectCard({
           </div>
 
           {/* GitHub Stars (Muted GitHub style) */}
-          <div className="project-card-star-count-wrap" title={`${project.stars.toLocaleString()} GitHub Stars`}>
+          <a className="project-card-star-count-wrap" href={`${project.links.github}/stargazers`}
+            target="_blank" rel="noopener noreferrer" title={starLabel} aria-label={starLabel}
+            aria-busy={stars.status === 'loading'}>
             <StarIcon />
-            <span className="project-star-count">{formatStars(project.stars)}</span>
-          </div>
+            <span className="project-star-count">{stars.count === null ? stars.status === 'loading' ? '…' : '—' : formatStars(stars.count)}</span>
+          </a>
         </div>
 
         {/* Narrative Description */}

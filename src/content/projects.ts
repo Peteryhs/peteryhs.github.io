@@ -2,7 +2,6 @@ export interface ProjectItem {
   slug: string
   name: string
   tagline: string
-  stars: number
   repo: string
   description: string
   stats: Record<string, string | number>
@@ -18,7 +17,6 @@ export const projectsData: ProjectItem[] = [
     slug: 'openwebui-agentic-tooling',
     name: 'OpenWebUI Agentic Tooling Suite',
     tagline: 'Autonomous tool routing for the self-hosted AI platform',
-    stars: 28,
     repo: 'ShaoRou459/OpenWebUI-Agentic-Tooling',
     description:
       'A plugin suite that turns OpenWebUI from a chat interface into an autonomous agent. It auto-routes queries to dedicated tools like image generation, vision, code execution, and a custom-built deep research agent. 1,000+ combined community deployments to servers across two marketplace listings.',
@@ -40,7 +38,6 @@ export const projectsData: ProjectItem[] = [
     slug: 'ai-detector',
     name: 'AI Detector, Probably',
     tagline: 'Custom AI-text detector, reproduced and extended from published research',
-    stars: 5,
     repo: 'anaqvi02/we-have-pangram-at-home',
     description:
       'A custom AI-text detector built from only public data, extending the Pangram classifier approach as a first-ever language model training project with significantly less cost. Reaches 93.4% on a benchmark of 4,000 unseen essays and 89% on the RAID benchmark built from untrained generators, trained end to end on a single H100.',
@@ -59,7 +56,6 @@ export const projectsData: ProjectItem[] = [
     slug: 'sun-systems',
     name: 'Sun Systems',
     tagline: 'Hybrid homelab fleet, home origin + cloud edge',
-    stars: 15,
     repo: 'Peteryhs/Server',
     description:
       'A hybrid homelab fleet featuring one origin server and one edge VPS. Running 20+ self-hosted containers across 13TB of storage for family and friends. Custom-built edge network using Cloudflare, a blind proxy, and CrowdSec to ensure data safety.',
@@ -75,8 +71,7 @@ export const projectsData: ProjectItem[] = [
   {
     slug: 'hermes-contributions',
     name: 'Contributions to Hermes Agent',
-    tagline: 'Security and UX work on a 240k-star AI agent framework',
-    stars: 240822,
+    tagline: 'Security and UX work on the open-source AI agent framework',
     repo: 'NousResearch/hermes-agent',
     description:
       'A contributor to Hermes Agent, one of the most popular open-source AI agent frameworks. My PRs focus on data security, reliability, and UI/UX design. Upstream code I shipped stops secrets from leaking through terminal output.',

@@ -15,7 +15,7 @@ import {
 } from './components/CursorFollower'
 import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 import { WebringBadge } from './components/WebringBadge'
-import { DemoIcon } from './components/DemoIcon'
+import { IconLabel } from './components/DemoIcon'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
 import { CompactProjectsGrid } from './components/CompactProjectsGrid'
@@ -59,10 +59,20 @@ function TopicWord({
 
   return (
     <span className="topic-wrap">
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={0}
         className={`topic-word ${expanded ? 'is-active' : ''}`}
         aria-expanded={expanded}
+        aria-controls={`topic-${id}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            e.stopPropagation()
+            onHover(null)
+            onSelect(id)
+          }
+        }}
         onClick={(e) => {
           e.stopPropagation()
           onHover(null)
@@ -92,7 +102,7 @@ function TopicWord({
         onBlur={() => onHover(null)}
       >
         {children}
-      </button>
+      </span>
     </span>
   )
 }
@@ -202,6 +212,7 @@ function ExpandedSection({ topic }: { topic: Topic }) {
 
   return (
     <motion.section
+      id={`topic-${topic.id}`}
       className={`expanded-section expanded-section-${topic.id}`}
       aria-label={topic.title}
       initial={{ opacity: 0, height: 0, filter: 'blur(10px)', y: -6 }}
@@ -397,13 +408,15 @@ export default function App() {
               {word(
                 'waterloo',
                 <>
-                  University of Waterloo{' '}
-                  <img
-                    src="/waterloo-crest.png"
-                    alt=""
-                    className="intro-waterloo-icon"
-                    aria-hidden="true"
-                  />
+                  University of{' '}
+                  <span className="intro-icon-label">
+                    Waterloo<img
+                      src="/waterloo-crest.png"
+                      alt=""
+                      className="intro-waterloo-icon"
+                      aria-hidden="true"
+                    />
+                  </span>
                 </>,
                 {
                   text: 'University famous for its co-op program in Waterloo, ON',
@@ -413,7 +426,7 @@ export default function App() {
               {word(
                 'compeng',
                 <>
-                  CompEng <DemoIcon kind="engineering" />
+                  <IconLabel kind="engineering">CompEng</IconLabel>
                 </>,
                 {
                   text: "First year computer engineering, class of '31",
@@ -430,7 +443,7 @@ export default function App() {
               {word(
                 'systems',
                 <>
-                  distributed systems <DemoIcon kind="systems" />
+                  distributed <IconLabel kind="systems">systems</IconLabel>
                 </>,
                 {
                   text: 'Homelab clusters, edge networking, and high-availability systems',
@@ -440,7 +453,7 @@ export default function App() {
               {word(
                 'ml',
                 <>
-                  ML <DemoIcon kind="machine-learning" />
+                  <IconLabel kind="machine-learning">ML</IconLabel>
                 </>,
                 {
                   text: 'Fine-tuning open weights, model optimization, & fast inference',
@@ -450,7 +463,7 @@ export default function App() {
               {word(
                 'electronics',
                 <span className="no-wrap">
-                  electronics <DemoIcon kind="electronics" />.
+                  <IconLabel kind="electronics">electronics</IconLabel>.
                 </span>,
                 {
                   text: 'Embedded firmware, microcontrollers, and custom hardware',
@@ -466,16 +479,16 @@ export default function App() {
               {word(
                 'projects',
                 <>
-                  projects <DemoIcon kind="projects" />
+                  <IconLabel kind="projects">projects</IconLabel>
                 </>,
                 {
                   text: 'Everyday utilities, low-latency infrastructure, and ML prototypes',
                 },
               )}
-              , from everyday utilities <DemoIcon kind="utilities" />, to
-              infrastructure <DemoIcon kind="infrastructure" /> and{' '}
+              , from everyday <IconLabel kind="utilities">utilities</IconLabel>, to{' '}
+              <IconLabel kind="infrastructure">infrastructure</IconLabel> and{' '}
               <span className="no-wrap">
-                research <DemoIcon kind="research" />.
+                <IconLabel kind="research">research</IconLabel>.
               </span>
             </p>
           </BlurFade>

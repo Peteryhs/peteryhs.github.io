@@ -1,5 +1,6 @@
 import { motion, useReducedMotion, type Variants } from 'motion/react'
 import type { ReactNode } from 'react'
+import { useRef } from 'react'
 
 interface BlurFadeProps {
   children: ReactNode
@@ -28,6 +29,7 @@ export function BlurFade({
   blur = '6px',
 }: BlurFadeProps) {
   const shouldReduceMotion = useReducedMotion()
+  const elementRef = useRef<HTMLDivElement>(null)
 
   const defaultVariants: Variants = {
     hidden: {
@@ -46,6 +48,7 @@ export function BlurFade({
 
   return (
     <motion.div
+      ref={elementRef}
       initial="hidden"
       animate={inView ? undefined : 'visible'}
       whileInView={inView ? 'visible' : undefined}
@@ -56,9 +59,17 @@ export function BlurFade({
         duration: shouldReduceMotion ? 0 : duration,
         ease: [0.16, 1, 0.3, 1],
       }}
-      style={{
-        willChange: 'transform, opacity, filter',
-        transform: 'translate3d(0, 0, 0)',
+      onAnimationStart={() => {
+        if (elementRef.current && !shouldReduceMotion) elementRef.current.style.willChange = 'transform, opacity, filter'
+      }}
+      onAnimationComplete={() => {
+        const element = elementRef.current
+        if (!element) return
+        element.style.willChange = 'auto'
+        if (!variant) {
+          element.style.filter = 'none'
+          element.style.transform = 'none'
+        }
       }}
       className={className}
     >

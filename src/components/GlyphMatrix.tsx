@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 
 export interface GlyphMatrixProps extends React.HTMLAttributes<HTMLCanvasElement> {
+  /** Pause updates without discarding the canvas or glyph atlas. */
+  active?: boolean
   /** Characters to randomly pick from */
   glyphs?: string
   /** Cell size in px (also font size) */
@@ -91,12 +93,12 @@ function resolveCSSColor(color: string): { r: number; g: number; b: number; a: n
 }
 
 /**
- * GlyphMatrix — high-performance animated grid of subtly shifting glyphs.
- * Uses a pre-rendered GPU sprite atlas and dirty-cell partial redraws so tick updates
- * take <0.1ms of CPU time instead of re-rasterizing thousands of glyphs every frame.
+ * Glyphs are rasterized once into an atlas, then only mutated cells are repainted.
+ * Hover changes pause/resume the renderer without reallocating its buffers.
  */
 export function GlyphMatrix({
-  glyphs = '01·•+*/\\<>=_~:;{}[]#%^&!?010101',
+  active = true,
+  glyphs = '01·•+*/\\\\<>=_~:;{}[]#%^&!?010101',
   cellSize = 16,
   mutationRate = 0.03,
   interval = 80,
@@ -107,226 +109,186 @@ export function GlyphMatrix({
   ...props
 }: GlyphMatrixProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const rgbaRef = useRef(resolveCSSColor(color))
-
-  // Watch for theme changes or color prop changes to update RGBA
-  useEffect(() => {
-    const update = () => {
-      rgbaRef.current = resolveCSSColor(color)
-    }
-    update()
-
-    // Observe changes on <html> (dark/light mode class toggles)
-    const observer = new MutationObserver(() => update())
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-
-    return () => observer.disconnect()
-  }, [color])
+  const rendererRef = useRef<{ setActive: (value: boolean) => void } | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx) return
 
-    const ctx = canvas.getContext('2d', { willReadFrequently: false })
-    if (!ctx) return
-
-    // Extract unique characters for the atlas
-    const charList = Array.from(new Set(glyphs.length > 0 ? glyphs : '01'))
-    const uniqueChars = charList.length > 0 ? charList : ['0', '1']
-
+    const chars = Array.from(new Set(glyphs || '01'))
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const colorScheme = window.matchMedia('(prefers-color-scheme: dark)')
+    let enabled = false
+    let disposed = false
+    let sizeDirty = true
+    let colorDirty = true
+    let frame = 0
+    let timer = 0
     let cols = 0
     let rows = 0
     let total = 0
-    let tileW = 16
-    let tileH = 16
-    let dW = 0
-    let dH = 0
-
-    // Memory-efficient typed arrays for cell state
-    let charIndices: Uint16Array = new Uint16Array(0)
-    let baseTiers: Uint8Array = new Uint8Array(0)
-
+    let width = 0
+    let height = 0
+    let tileSize = 0
     let atlas: HTMLCanvasElement | null = null
-    let raf = 0
-    let last = 0
-    let stopped = false
+    let atlasKey = ''
+    const atlases = new Map<string, HTMLCanvasElement>()
+    let charIndices = new Uint16Array(0)
+    let tiers = new Uint8Array(0)
 
-    // Check for prefers-reduced-motion
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    const resizeAndInit = () => {
-      // Cap DPR to 2 to avoid huge pixel buffers on high-density displays
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      const w = canvas.clientWidth || window.innerWidth
-      const h = canvas.clientHeight || window.innerHeight
-
-      dW = Math.round(w * dpr)
-      dH = Math.round(h * dpr)
-      canvas.width = dW
-      canvas.height = dH
-
-      tileW = Math.max(10, Math.round(cellSize * dpr))
-      tileH = tileW
-
-      cols = Math.ceil(dW / tileW)
-      rows = Math.ceil(dH / tileH)
-      total = cols * rows
-
-      // Font size scaled to device pixels
-      const fontSize = Math.max(9 * dpr, Math.round(tileH * 0.68))
-
-      // Generate offscreen sprite atlas
-      const { r, g, b, a: colorAlpha } = rgbaRef.current
-      atlas = buildGlyphAtlas(uniqueChars, tileW, tileH, r, g, b, colorAlpha, fontSize)
-
-      // Initialize cell buffers
-      charIndices = new Uint16Array(total)
-      baseTiers = new Uint8Array(total)
-
-      for (let i = 0; i < total; i++) {
-        charIndices[i] = Math.floor(Math.random() * uniqueChars.length)
-        // 12% probability of a blank cell for natural matrix breathing room
-        baseTiers[i] = Math.random() < 0.12 ? 0 : 1 + Math.floor(Math.random() * (NUM_TIERS - 1))
-      }
-
-      drawAll()
+    const cancel = () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+      frame = 0
+      timer = 0
     }
+    const canPaint = () => enabled && !disposed && !document.hidden
 
-    /**
-     * Initial full draw of all cells (runs once on mount/resize).
-     */
-    const drawAll = () => {
-      if (!ctx || !atlas || total === 0) return
-      ctx.clearRect(0, 0, dW, dH)
-
-      for (let i = 0; i < total; i++) {
-        const col = i % cols
-        const row = Math.floor(i / cols)
-        const fade = fadeBottom > 0 ? Math.max(0, 1 - (row / rows) * fadeBottom) : 1
-        const effectiveTier = Math.round(baseTiers[i] * fade)
-
-        if (effectiveTier > 0) {
-          const destX = col * tileW
-          const destY = row * tileH
-          ctx.drawImage(
-            atlas,
-            charIndices[i] * tileW,
-            effectiveTier * tileH,
-            tileW,
-            tileH,
-            destX,
-            destY,
-            tileW,
-            tileH
-          )
-        }
+    const drawCell = (i: number, erase: boolean) => {
+      if (!atlas) return
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const x = col * tileSize
+      const y = row * tileSize
+      if (erase) ctx.clearRect(x, y, tileSize, tileSize)
+      const fade = fadeBottom > 0 ? Math.max(0, 1 - (row / rows) * fadeBottom) : 1
+      const tier = Math.round(tiers[i] * fade)
+      if (tier > 0) {
+        ctx.drawImage(atlas, charIndices[i] * tileSize, tier * tileSize,
+          tileSize, tileSize, x, y, tileSize, tileSize)
       }
     }
+    const randomizeCell = (i: number) => {
+      charIndices[i] = Math.floor(Math.random() * chars.length)
+      tiers[i] = Math.random() < 0.12 ? 0 : 1 + Math.floor(Math.random() * (NUM_TIERS - 1))
+    }
 
-    /**
-     * Partial redraw: only dirty/mutated cells are cleared and redrawn.
-     * Takes ~0.05ms of CPU time instead of re-rendering thousands of cells.
-     */
-    const tick = (t: number) => {
-      if (stopped) return
+    const paint = () => {
+      frame = 0
+      if (!canPaint()) return
+      let redraw = false
 
-      if (t - last >= interval) {
-        last = t
-
-        if (total > 0 && atlas) {
-          const mutations = Math.max(2, Math.floor(total * mutationRate))
-
-          for (let n = 0; n < mutations; n++) {
-            const i = Math.floor(Math.random() * total)
-            const newChar = Math.floor(Math.random() * uniqueChars.length)
-            const newTier = Math.random() < 0.12 ? 0 : 1 + Math.floor(Math.random() * (NUM_TIERS - 1))
-
-            charIndices[i] = newChar
-            baseTiers[i] = newTier
-
-            const col = i % cols
-            const row = Math.floor(i / cols)
-            const destX = col * tileW
-            const destY = row * tileH
-
-            // Erase only the mutated cell's bounding box
-            ctx.clearRect(destX, destY, tileW, tileH)
-
-            const fade = fadeBottom > 0 ? Math.max(0, 1 - (row / rows) * fadeBottom) : 1
-            const effectiveTier = Math.round(newTier * fade)
-
-            if (effectiveTier > 0) {
-              ctx.drawImage(
-                atlas,
-                newChar * tileW,
-                effectiveTier * tileH,
-                tileW,
-                tileH,
-                destX,
-                destY,
-                tileW,
-                tileH
-              )
-            }
-          }
+      if (sizeDirty) {
+        sizeDirty = false
+        // A subtle backdrop does not need a full-resolution Retina pixel buffer.
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+        const cssWidth = canvas.clientWidth
+        const cssHeight = canvas.clientHeight
+        const nextWidth = Math.round(cssWidth * dpr)
+        const nextHeight = Math.round(cssHeight * dpr)
+        // Keep the initial draw bounded even on ultrawide/4K displays.
+        const effectiveCellSize = Math.max(cellSize, Math.sqrt(cssWidth * cssHeight / 8500))
+        const nextTileSize = Math.max(10, Math.round(effectiveCellSize * dpr))
+        if (width !== nextWidth || height !== nextHeight || tileSize !== nextTileSize) {
+          width = nextWidth
+          height = nextHeight
+          tileSize = nextTileSize
+          canvas.width = width
+          canvas.height = height
+          cols = Math.ceil(width / tileSize)
+          rows = Math.ceil(height / tileSize)
+          total = cols * rows
+          charIndices = new Uint16Array(total)
+          tiers = new Uint8Array(total)
+          for (let i = 0; i < total; i++) randomizeCell(i)
+          colorDirty = true
+          redraw = true
         }
       }
 
-      raf = requestAnimationFrame(tick)
-    }
-
-    resizeAndInit()
-
-    // If reduced motion is requested, render once and do not tick
-    if (!prefersReducedMotion) {
-      raf = requestAnimationFrame(tick)
-    }
-
-    // Debounced resize handler to avoid layout churn
-    let resizeTimer: number | null = null
-    const handleResize = () => {
-      if (resizeTimer !== null) clearTimeout(resizeTimer)
-      resizeTimer = window.setTimeout(() => {
-        if (!stopped) {
-          resizeAndInit()
+      if (colorDirty) {
+        colorDirty = false
+        const { r, g, b, a } = resolveCSSColor(color)
+        const nextKey = `${tileSize}:${r},${g},${b},${a}`
+        if (nextKey !== atlasKey) {
+          atlasKey = nextKey
+          atlas = atlases.get(nextKey) ?? buildGlyphAtlas(chars, tileSize, tileSize, r, g, b, a, Math.round(tileSize * 0.68))
+          atlases.set(nextKey, atlas)
+          if (atlases.size > 3) atlases.delete(atlases.keys().next().value!)
+          redraw = true
         }
-      }, 100)
-    }
-    window.addEventListener('resize', handleResize, { passive: true })
+      }
+      if (redraw) {
+        ctx.clearRect(0, 0, width, height)
+        for (let i = 0; i < total; i++) drawCell(i, false)
+      } else if (!reducedMotion.matches && total > 0) {
+        const mutations = Math.ceil(total * Math.max(0, Math.min(1, mutationRate)))
+        for (let n = 0; n < mutations; n++) {
+          const i = Math.floor(Math.random() * total)
+          randomizeCell(i)
+          drawCell(i, true)
+        }
+      }
 
-    // Pause animation when tab is in background to save battery and CPU
-    const handleVisibility = () => {
-      if (document.hidden) {
-        cancelAnimationFrame(raf)
-      } else if (!stopped && !prefersReducedMotion) {
-        last = performance.now()
-        raf = requestAnimationFrame(tick)
+      // Wake only when a glyph update is due, and align the paint to a frame.
+      if (!reducedMotion.matches && canPaint()) {
+        timer = window.setTimeout(() => {
+          timer = 0
+          if (canPaint()) frame = requestAnimationFrame(paint)
+        }, Math.max(40, interval))
       }
     }
-    document.addEventListener('visibilitychange', handleVisibility)
+
+    const queuePaint = () => {
+      if (!canPaint() || frame) return
+      window.clearTimeout(timer)
+      timer = 0
+      frame = requestAnimationFrame(paint)
+    }
+    rendererRef.current = {
+      setActive(value) {
+        enabled = value
+        if (value) queuePaint()
+        else cancel()
+      },
+    }
+    const onResize = () => {
+      sizeDirty = true
+      queuePaint()
+    }
+    const onTheme = () => {
+      colorDirty = true
+      queuePaint()
+    }
+    const onVisibility = () => {
+      if (document.hidden) cancel()
+      else queuePaint()
+    }
+    const onMotion = () => {
+      cancel()
+      queuePaint()
+    }
+
+    const resizeObserver = new ResizeObserver(onResize)
+    resizeObserver.observe(canvas)
+    const themeObserver = new MutationObserver(onTheme)
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    colorScheme.addEventListener('change', onTheme)
+    reducedMotion.addEventListener('change', onMotion)
+    document.addEventListener('visibilitychange', onVisibility)
 
     return () => {
-      stopped = true
-      cancelAnimationFrame(raf)
-      if (resizeTimer !== null) clearTimeout(resizeTimer)
-      window.removeEventListener('resize', handleResize)
-      document.removeEventListener('visibilitychange', handleVisibility)
+      disposed = true
+      cancel()
+      rendererRef.current = null
+      resizeObserver.disconnect()
+      themeObserver.disconnect()
+      colorScheme.removeEventListener('change', onTheme)
+      reducedMotion.removeEventListener('change', onMotion)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [glyphs, cellSize, mutationRate, interval, fadeBottom, color])
+
+  useEffect(() => {
+    rendererRef.current?.setActive(active)
+  }, [active, glyphs, cellSize, mutationRate, interval, fadeBottom, color])
 
   return (
     <canvas
       ref={canvasRef}
       className={className}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'block',
-        pointerEvents: 'none',
-        ...style,
-      }}
+      style={{ width: '100%', height: '100%', display: 'block', pointerEvents: 'none', ...style }}
       aria-hidden="true"
       {...props}
     />
