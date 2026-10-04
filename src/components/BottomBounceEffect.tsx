@@ -3,9 +3,7 @@ import { motion, useMotionValue, useSpring, useTransform } from 'motion/react'
 
 const PULL_SCALE = 72
 const RESISTANCE = 0.42
-const RELEASE_DELAY = 70
-const MAX_COAST = 180
-const GESTURE_GAP = 160
+const RELEASE_DELAY = 140
 
 export function BottomBounceEffect({ children }: { children: ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -23,15 +21,10 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     let maxScroll = 0
     let releaseTimer = 0
     let enabled = false
-    let lastDrivenAt = 0
-    let lastWheelAt = -Infinity
-    let peakForce = 0
-    let returning = false
 
     const release = () => {
       window.clearTimeout(releaseTimer)
       distance = 0
-      returning = true
       pullTarget.set(0)
     }
     const updateAvailability = () => {
@@ -53,13 +46,12 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       if (!enabled || event.defaultPrevented || event.ctrlKey) return
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? root.clientHeight : 1
       const delta = event.deltaY * unit
-      if (!Number.isFinite(delta)) return
-      if (delta <= 0) {
+      if (!Number.isFinite(delta) || delta === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+      if (delta < 0) {
         release()
-        lastWheelAt = -Infinity
         return
       }
-      if (Math.abs(event.deltaX) > Math.abs(event.deltaY) || window.scrollY < maxScroll - 2) return
+      if (window.scrollY < maxScroll - 2) return
 
       // Leave independently scrolling controls in charge of their own gestures.
       for (const target of event.composedPath()) {
@@ -68,33 +60,16 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       }
 
       if (event.cancelable) event.preventDefault()
-      const now = performance.now()
-      if (now - lastWheelAt >= GESTURE_GAP) {
-        returning = false
-        peakForce = 0
-      }
-      lastWheelAt = now
-      // Ignore decaying momentum once the return begins.
-      if (returning) return
-      if (delta < 1) return
       if (distance === 0) {
-        lastDrivenAt = now
         const visiblePull = Math.max(0, springPull.get())
         distance = (PULL_SCALE / RESISTANCE) * Math.expm1(visiblePull / PULL_SCALE)
-      }
-      peakForce = Math.max(peakForce, delta)
-      // Maintained or increasing force can pull indefinitely; fading force cannot
-      // keep extending the return timer for the whole trackpad momentum tail.
-      if (delta >= 4 && delta >= peakForce * 0.9) lastDrivenAt = now
-      if (now - lastDrivenAt >= MAX_COAST) {
-        release()
-        return
       }
       distance += delta
       // Logarithmic resistance keeps growing with force, without a stretch ceiling.
       pullTarget.set(PULL_SCALE * Math.log1p(distance * RESISTANCE / PULL_SCALE))
       window.clearTimeout(releaseTimer)
-      releaseTimer = window.setTimeout(release, Math.min(RELEASE_DELAY, MAX_COAST - (now - lastDrivenAt)))
+      // Scroll speed does not signal release. Wait for an actual pause in input.
+      releaseTimer = window.setTimeout(release, RELEASE_DELAY)
     }
 
     updateAvailability()
