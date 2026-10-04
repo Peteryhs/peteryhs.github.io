@@ -1,17 +1,19 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react'
 
-const MAX_PULL = 72
+const PULL_SCALE = 72
 const RESISTANCE = 0.42
-const RELEASE_DELAY = 100
+const RELEASE_DELAY = 70
+const MAX_COAST = 180
+const GESTURE_GAP = 160
 
 export function BottomBounceEffect({ children }: { children: ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const pullTarget = useMotionValue(0)
-  const springPull = useSpring(pullTarget, { stiffness: 420, damping: 38, mass: 0.8 })
+  const springPull = useSpring(pullTarget, { stiffness: 420, damping: 32, mass: 0.8, restDelta: 0.2, restSpeed: 4 })
   const translateY = useTransform(springPull, (pull) => -pull)
-  const gradientOpacity = useTransform(springPull, [0, 8, MAX_PULL], [0, 0.08, 0.55])
-  const gradientScaleY = useTransform(springPull, [0, MAX_PULL], [0.8, 1])
+  const gradientOpacity = useTransform(springPull, [0, 8, PULL_SCALE], [0, 0.08, 0.55])
+  const gradientScaleY = useTransform(springPull, [0, PULL_SCALE], [0.8, 1])
 
   useEffect(() => {
     const pointer = window.matchMedia('(hover: hover) and (pointer: fine)')
@@ -21,10 +23,15 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     let maxScroll = 0
     let releaseTimer = 0
     let enabled = false
+    let lastDrivenAt = 0
+    let lastWheelAt = -Infinity
+    let peakForce = 0
+    let returning = false
 
     const release = () => {
       window.clearTimeout(releaseTimer)
       distance = 0
+      returning = true
       pullTarget.set(0)
     }
     const updateAvailability = () => {
@@ -46,8 +53,10 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       if (!enabled || event.defaultPrevented || event.ctrlKey) return
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? root.clientHeight : 1
       const delta = event.deltaY * unit
+      if (!Number.isFinite(delta)) return
       if (delta <= 0) {
         release()
+        lastWheelAt = -Infinity
         return
       }
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY) || window.scrollY < maxScroll - 2) return
@@ -59,16 +68,33 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       }
 
       if (event.cancelable) event.preventDefault()
-      // Tiny trackpad momentum tails must not keep the page suspended at the edge.
+      const now = performance.now()
+      if (now - lastWheelAt >= GESTURE_GAP) {
+        returning = false
+        peakForce = 0
+      }
+      lastWheelAt = now
+      // Ignore decaying momentum once the return begins.
+      if (returning) return
       if (delta < 1) return
       if (distance === 0) {
-        const visiblePull = Math.min(MAX_PULL - 1, Math.max(0, springPull.get()))
-        distance = (MAX_PULL * visiblePull) / (RESISTANCE * (MAX_PULL - visiblePull))
+        lastDrivenAt = now
+        const visiblePull = Math.max(0, springPull.get())
+        distance = (PULL_SCALE / RESISTANCE) * Math.expm1(visiblePull / PULL_SCALE)
       }
-      distance = Math.min(1600, distance + Math.min(delta, 180))
-      pullTarget.set((MAX_PULL * distance * RESISTANCE) / (MAX_PULL + distance * RESISTANCE))
+      peakForce = Math.max(peakForce, delta)
+      // Maintained or increasing force can pull indefinitely; fading force cannot
+      // keep extending the return timer for the whole trackpad momentum tail.
+      if (delta >= 4 && delta >= peakForce * 0.9) lastDrivenAt = now
+      if (now - lastDrivenAt >= MAX_COAST) {
+        release()
+        return
+      }
+      distance += delta
+      // Logarithmic resistance keeps growing with force, without a stretch ceiling.
+      pullTarget.set(PULL_SCALE * Math.log1p(distance * RESISTANCE / PULL_SCALE))
       window.clearTimeout(releaseTimer)
-      releaseTimer = window.setTimeout(release, RELEASE_DELAY)
+      releaseTimer = window.setTimeout(release, Math.min(RELEASE_DELAY, MAX_COAST - (now - lastDrivenAt)))
     }
 
     updateAvailability()
