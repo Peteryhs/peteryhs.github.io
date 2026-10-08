@@ -18,7 +18,6 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
     const root = document.documentElement
     let distance = 0
-    let maxScroll = 0
     let releaseTimer = 0
     let enabled = false
 
@@ -28,22 +27,76 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       pullTarget.set(0)
     }
     const updateAvailability = () => {
-      enabled = pointer.matches && !motionPreference.matches
-      root.classList.toggle('has-custom-overscroll', enabled)
+      // Wheel/trackpad pull on desktop, finger drag on touch screens.
+      enabled = !motionPreference.matches
+      // Keep native overscroll on touch so pull-to-refresh at the top still works.
+      root.classList.toggle('has-custom-overscroll', enabled && pointer.matches)
       if (!enabled) {
         release()
         springPull.jump(0)
       }
     }
+    // innerHeight tracks the mobile toolbar collapsing, clientHeight does not.
+    const isAtBottom = () =>
+      window.scrollY + Math.max(window.innerHeight, root.clientHeight) >= root.scrollHeight - 2
     const measure = () => {
-      maxScroll = Math.max(0, root.scrollHeight - root.clientHeight)
-      if (window.scrollY < maxScroll - 2) release()
+      if (!isAtBottom()) release()
     }
     const onScroll = () => {
-      if (window.scrollY < maxScroll - 2 && distance > 0) release()
+      if (distance > 0 && !isAtBottom()) release()
     }
+    const isInsideScroller = (event: Event) => {
+      for (const target of event.composedPath()) {
+        if (!(target instanceof HTMLElement) || target === document.body || target === root) continue
+        if (target.scrollHeight > target.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(target).overflowY)) return true
+      }
+      return false
+    }
+    const applyPull = (delta: number) => {
+      if (distance === 0) {
+        const visiblePull = Math.max(0, springPull.get())
+        distance = (PULL_SCALE / RESISTANCE) * Math.expm1(visiblePull / PULL_SCALE)
+      }
+      distance = Math.max(0, distance + delta)
+      pullTarget.set(PULL_SCALE * Math.log1p(distance * RESISTANCE / PULL_SCALE))
+    }
+
+    // Touch: swiping up past the end of the page stretches it and lights the glow,
+    // and lifting the finger lets it spring back.
+    let touchY: number | null = null
+    let touchPulling = false
+    let touchIgnored = false
+    const onTouchStart = (event: TouchEvent) => {
+      if (!enabled || event.touches.length !== 1) {
+        touchY = null
+        return
+      }
+      touchY = event.touches[0].clientY
+      touchPulling = false
+      touchIgnored = isInsideScroller(event)
+    }
+    const onTouchMove = (event: TouchEvent) => {
+      if (!enabled || touchY === null || touchIgnored || event.touches.length !== 1) return
+      const y = event.touches[0].clientY
+      const delta = touchY - y // positive while the finger moves up (scrolling down)
+      touchY = y
+      const atBottom = isAtBottom()
+      if (!touchPulling) {
+        if (!atBottom || delta <= 0) return
+        touchPulling = true
+      }
+      if (event.cancelable) event.preventDefault()
+      applyPull(delta * 1.4)
+      if (distance <= 0) touchPulling = false
+    }
+    const onTouchEnd = () => {
+      touchY = null
+      if (touchPulling || distance > 0) release()
+      touchPulling = false
+    }
+
     const onWheel = (event: WheelEvent) => {
-      if (!enabled || event.defaultPrevented || event.ctrlKey) return
+      if (!enabled || !pointer.matches || event.defaultPrevented || event.ctrlKey) return
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? root.clientHeight : 1
       const delta = event.deltaY * unit
       if (!Number.isFinite(delta) || delta === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
@@ -51,22 +104,14 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
         release()
         return
       }
-      if (window.scrollY < maxScroll - 2) return
+      if (!isAtBottom()) return
 
       // Leave independently scrolling controls in charge of their own gestures.
-      for (const target of event.composedPath()) {
-        if (!(target instanceof HTMLElement) || target === document.body || target === root) continue
-        if (target.scrollHeight > target.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(target).overflowY)) return
-      }
+      if (isInsideScroller(event)) return
 
       if (event.cancelable) event.preventDefault()
-      if (distance === 0) {
-        const visiblePull = Math.max(0, springPull.get())
-        distance = (PULL_SCALE / RESISTANCE) * Math.expm1(visiblePull / PULL_SCALE)
-      }
-      distance += delta
       // Logarithmic resistance keeps growing with force, without a stretch ceiling.
-      pullTarget.set(PULL_SCALE * Math.log1p(distance * RESISTANCE / PULL_SCALE))
+      applyPull(delta)
       window.clearTimeout(releaseTimer)
       // Scroll speed does not signal release. Wait for an actual pause in input.
       releaseTimer = window.setTimeout(release, RELEASE_DELAY)
@@ -81,6 +126,10 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     window.addEventListener('resize', measure, { passive: true })
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true })
     window.addEventListener('blur', release)
 
     return () => {
@@ -92,6 +141,10 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       window.removeEventListener('resize', measure)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('touchcancel', onTouchEnd)
       window.removeEventListener('blur', release)
     }
   }, [pullTarget, springPull])
