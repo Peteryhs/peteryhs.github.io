@@ -33,6 +33,15 @@ import { topicById, type Topic, type TopicId } from './content/site'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
+/**
+ * Touch browsers fire emulated mouseenter/mousemove before a tap's click. Updating
+ * hover state there can make mobile Safari treat the first tap as a hover and drop
+ * the click, so the cursor preview only runs for a real hovering pointer.
+ */
+const canHover = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(hover: hover) and (pointer: fine)').matches
+
 interface TopicWordProps {
   id: TopicId
   children: ReactNode
@@ -79,6 +88,7 @@ function TopicWord({
           onSelect(id)
         }}
         onMouseEnter={(e) => {
+          if (!canHover()) return
           if (!expanded) {
             onHover(info, e)
           } else {
@@ -86,15 +96,18 @@ function TopicWord({
           }
         }}
         onMouseMove={(e) => {
+          if (!canHover()) return
           if (!expanded) {
             onHover(info, e)
           } else {
             onHover(null)
           }
         }}
-        onMouseLeave={() => onHover(null)}
+        onMouseLeave={() => {
+          if (canHover()) onHover(null)
+        }}
         onFocus={(e) => {
-          if (!expanded) {
+          if (!expanded && canHover()) {
             const rect = e.currentTarget.getBoundingClientRect()
             onHover(info, { clientX: rect.right, clientY: rect.bottom } as any)
           }

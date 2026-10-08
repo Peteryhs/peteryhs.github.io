@@ -296,23 +296,33 @@ main {
 }
 
 .topic-word {
+  /* The underline is painted as a background on the whole clickable box, so it
+     also spans the inline-block icon labels and the profile photo inside a
+     keyword. text-decoration does not propagate into inline-blocks, which left
+     words like "Waterloo", "systems" and "CompEng" un-underlined even though
+     they are tappable. */
+  --topic-underline-color: var(--line-strong);
+  --topic-underline-thickness: 1.5px;
+  --topic-underline-inset: 0.06em;
   display: inline;
   padding: 0.05em 0.28em;
   margin: 0 -0.05em;
   border: 0;
   border-radius: 0.28em;
-  background: transparent;
+  background-color: transparent;
+  background-image: linear-gradient(var(--topic-underline-color), var(--topic-underline-color));
+  background-repeat: no-repeat;
+  background-size: calc(100% - 0.56em) var(--topic-underline-thickness);
+  background-position: 50% calc(100% - var(--topic-underline-inset));
   color: inherit;
   cursor: pointer;
   font: inherit;
   letter-spacing: inherit;
   line-height: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--line-strong);
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 0.18em;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    text-decoration-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
   -webkit-box-decoration-break: clone;
@@ -322,14 +332,22 @@ main {
 .topic-word:hover,
 .topic-word:focus-visible {
   outline: none;
-  background: var(--hover);
-  text-decoration-color: var(--ink);
+  background-color: var(--hover);
+  --topic-underline-color: var(--ink);
 }
 
 .topic-word.is-active {
-  background: var(--hover-active);
-  text-decoration-color: var(--ink);
+  background-color: var(--hover-active);
+  --topic-underline-color: var(--ink);
   box-shadow: 0 0 0 2px var(--line-strong);
+}
+
+@media (hover: none) {
+  /* Sticky :hover after a tap would leave a stale highlight on touch screens. */
+  .topic-word:hover:not(.is-active) {
+    background-color: transparent;
+    --topic-underline-color: var(--line-strong);
+  }
 }
 
 .topic-word:active {
@@ -1449,6 +1467,7 @@ main {
   .intro .topic-word {
     padding: 0.08em 0.05em;
     margin: 0;
+    background-size: calc(100% - 0.1em) var(--topic-underline-thickness);
   }
   .intro .demo-icon {
     width: 0.9em;
