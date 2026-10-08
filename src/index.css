@@ -3596,23 +3596,25 @@ html.has-custom-overscroll {
   pointer-events: none;
   z-index: 5;
   transform-origin: bottom center;
-  /* Two-layer radiant gradient: Blue (apple) on top, Yellow (snake) at bottom */
+  /* Two-layer radiant glow: a warm gold core along the edge (snake) under a wide,
+     airy blue halo (apple). In light mode the gold layer is painted on top and the
+     blue is a clean periwinkle, so the two never mix into a muddy grey-violet. */
   background:
-    /* Layer 1: Apple Blue radiating upwards */
+    /* Layer 1: Snake gold hugging the bottom edge */
     radial-gradient(
-      ellipse 95% 85% at 50% 100%,
-      rgba(70, 92, 175, 0.58) 0%,
-      rgba(88, 111, 198, 0.42) 25%,
-      rgba(96, 125, 215, 0.2) 50%,
-      transparent 76%
+      ellipse 70% 38% at 50% 100%,
+      rgba(255, 172, 48, 1) 0%,
+      rgba(255, 186, 78, 0.78) 30%,
+      rgba(255, 206, 128, 0.32) 60%,
+      transparent 80%
     ),
-    /* Layer 2: Snake Yellow right along the bottom base */
+    /* Layer 2: Apple blue halo radiating upwards */
     radial-gradient(
-      ellipse 85% 42% at 50% 100%,
-      rgba(237, 163, 57, 0.78) 0%,
-      rgba(214, 148, 52, 0.55) 25%,
-      rgba(190, 140, 66, 0.22) 50%,
-      transparent 68%
+      ellipse 110% 95% at 50% 100%,
+      rgba(84, 122, 255, 0.95) 0%,
+      rgba(104, 140, 255, 0.7) 28%,
+      rgba(138, 166, 255, 0.34) 55%,
+      transparent 80%
     );
   -webkit-mask-image: linear-gradient(
     to top,
