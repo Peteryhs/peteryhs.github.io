@@ -10,6 +10,8 @@ const TOUCH_PULL_GAIN = 2.4
 const MOMENTUM_MIN_VELOCITY = 0.6 // px per ms
 const MOMENTUM_KICK = 16 // px of stretch per px/ms of arrival speed
 const MOMENTUM_HOLD = 160
+// How many extra glow heights the halo can gain on a very long pull.
+const GLOW_MAX_GROWTH = 2.1
 
 export function BottomBounceEffect({ children }: { children: ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -17,7 +19,12 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
   const springPull = useSpring(pullTarget, { stiffness: 420, damping: 32, mass: 0.8, restDelta: 0.2, restSpeed: 4 })
   const translateY = useTransform(springPull, (pull) => -pull)
   const gradientOpacity = useTransform(springPull, [0, 8, PULL_SCALE], [0, 0.08, 0.55])
-  const gradientScaleY = useTransform(springPull, [0, PULL_SCALE], [0.8, 1])
+  // The glow keeps reaching further up the screen the harder the page is pulled,
+  // tracking the stretch instead of topping out (soft cap so it never fills the view).
+  const gradientScaleY = useTransform(springPull, (pull) => {
+    const t = Math.max(0, pull) / PULL_SCALE
+    return 0.7 + GLOW_MAX_GROWTH * (1 - Math.exp(-t * 0.9))
+  })
 
   useEffect(() => {
     const pointer = window.matchMedia('(hover: hover) and (pointer: fine)')
