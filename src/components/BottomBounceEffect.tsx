@@ -4,6 +4,12 @@ import { motion, useMotionValue, useSpring, useTransform } from 'motion/react'
 const PULL_SCALE = 72
 const RESISTANCE = 0.42
 const RELEASE_DELAY = 140
+// Touch tuning: a finger drag past the end pulls harder than a wheel tick, and a
+// fast flick that lands on the end gets a small momentum stretch on its own.
+const TOUCH_PULL_GAIN = 2.4
+const MOMENTUM_MIN_VELOCITY = 0.6 // px per ms
+const MOMENTUM_KICK = 16 // px of stretch per px/ms of arrival speed
+const MOMENTUM_HOLD = 160
 
 export function BottomBounceEffect({ children }: { children: ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -42,8 +48,30 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     const measure = () => {
       if (!isAtBottom()) release()
     }
+    // Momentum: a hard flick usually reaches the end after the finger lifts, so no
+    // touchmove is left to pull with. Turn the arrival speed into a short kick.
+    let lastScrollY = window.scrollY
+    let lastScrollT = performance.now()
+    let scrollVelocity = 0
     const onScroll = () => {
-      if (distance > 0 && !isAtBottom()) release()
+      const now = performance.now()
+      const dt = Math.max(1, now - lastScrollT)
+      const instant = (window.scrollY - lastScrollY) / dt
+      scrollVelocity = dt > 120 ? instant : scrollVelocity * 0.4 + instant * 0.6
+      lastScrollY = window.scrollY
+      lastScrollT = now
+      if (distance > 0 && !isAtBottom()) {
+        release()
+        return
+      }
+      if (enabled && !pointer.matches && touchY === null && distance === 0 &&
+        isAtBottom() && scrollVelocity > MOMENTUM_MIN_VELOCITY) {
+        const kick = Math.min(PULL_SCALE * 0.85, scrollVelocity * MOMENTUM_KICK)
+        pullTarget.set(kick)
+        window.clearTimeout(releaseTimer)
+        releaseTimer = window.setTimeout(release, MOMENTUM_HOLD)
+        scrollVelocity = 0
+      }
     }
     const isInsideScroller = (event: Event) => {
       for (const target of event.composedPath()) {
@@ -86,7 +114,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
         touchPulling = true
       }
       if (event.cancelable) event.preventDefault()
-      applyPull(delta * 1.4)
+      applyPull(delta * TOUCH_PULL_GAIN)
       if (distance <= 0) touchPulling = false
     }
     const onTouchEnd = () => {
