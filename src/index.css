@@ -4054,3 +4054,461 @@ html.dark .cmdk-panel {
   .cmdk-overlay { padding-top: 10vh; }
   .cmdk-footer { display: none; }
 }
+
+/* ==========================================================================
+   Project case study pages (#/work/<slug>)
+   Laid out on the same left edge and 58rem column as the home page, so the
+   card → header morph is mostly a move, not a resize.
+   ========================================================================== */
+
+.case-main {
+  min-height: 100vh;
+  padding: 6.5rem clamp(1.5rem, 3.2vw, 4.5rem) 6rem;
+}
+
+.case-page {
+  width: 100%;
+  max-width: 58rem;
+}
+
+/* Back pill: same shape and chrome as the theme toggle, mirrored to the left. */
+.case-back {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 40px;
+  padding: 0 1rem 0 0.8rem;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1.5px solid var(--line-strong);
+  box-shadow: var(--bento-shadow);
+  color: var(--ink);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 200ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.case-back:hover {
+  border-color: var(--ink);
+  transform: translateX(-2px);
+}
+
+.case-back:active { transform: scale(0.96); }
+
+.case-back:focus-visible,
+.case-next-link:focus-visible,
+.project-link-case:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* ---------- hero (the card's twin) ---------- */
+
+.case-hero {
+  position: relative;
+  border-radius: 20px;
+  background: var(--bento-bg);
+  border: 1.75px solid var(--bento-border);
+  box-shadow: var(--bento-shadow);
+}
+
+.case-hero-inner {
+  padding: clamp(1.6rem, 3.4vw, 2.6rem) clamp(1.5rem, 3.4vw, 2.75rem);
+}
+
+.case-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.case-eyebrow-total { opacity: 0.6; }
+
+.case-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: 0;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.case-stars:hover { color: var(--ink); }
+
+.case-title {
+  margin: 0;
+  font-family: var(--font-main);
+  font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-wrap: balance;
+  outline: none;
+}
+
+.case-title-text {
+  display: inline-block;
+}
+
+.case-tagline {
+  margin: 0.8rem 0 0;
+  max-width: 40rem;
+  font-family: var(--font-main);
+  font-size: clamp(1.02rem, 1.5vw, 1.18rem);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.case-stats {
+  margin: 1.6rem 0 0;
+}
+
+.case-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- body ---------- */
+
+.case-body {
+  padding: clamp(2.5rem, 5vw, 3.75rem) 0 0;
+}
+
+.case-lede {
+  margin: 0 0 clamp(2.5rem, 5vw, 3.5rem);
+  max-width: 46rem;
+  font-family: var(--font-main);
+  font-size: clamp(1.2rem, 1.9vw, 1.42rem);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.case-section {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
+  gap: 0.75rem 2.5rem;
+  padding: 2rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.case-section-heading {
+  margin: 0;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.9;
+  color: var(--muted);
+}
+
+.case-section-content {
+  min-width: 0;
+}
+
+.case-paragraph {
+  margin: 0 0 1rem;
+  max-width: 40rem;
+  font-family: var(--font-main);
+  font-size: 1.06rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.case-paragraph:last-child { margin-bottom: 0; }
+
+.case-points {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.case-paragraph + .case-points { margin-top: 1.25rem; }
+
+.case-point {
+  padding: 0.9rem 1rem 0.95rem;
+  border-radius: 14px;
+  background: var(--paper);
+  border: 1.5px solid var(--bento-border);
+  transition: border-color 200ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.case-point:hover {
+  border-color: var(--bento-border-hover);
+  transform: translateY(-1px);
+}
+
+.case-point dt {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.case-point dd {
+  margin: 0;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.case-note {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
+  gap: 0.75rem 2.5rem;
+  margin-top: 0.5rem;
+  padding: 1.4rem 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.case-note-label {
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.9;
+  color: var(--muted);
+}
+
+.case-note p {
+  margin: 0;
+  max-width: 40rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: var(--hover);
+  border: 1.2px solid var(--line);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* ---------- next project ---------- */
+
+.case-next {
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+}
+
+.case-next-link {
+  position: relative;
+  display: grid;
+  gap: 0.3rem;
+  padding: 1.4rem 4rem 1.5rem 1.6rem;
+  border-radius: 20px;
+  background: var(--bento-bg);
+  border: 1.75px solid var(--bento-border);
+  box-shadow: var(--bento-shadow);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), border-color 240ms ease, box-shadow 240ms ease;
+}
+
+.case-next-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--bento-border-hover);
+  box-shadow: var(--bento-shadow-hover);
+}
+
+.case-next-label {
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.case-next-name {
+  font-family: var(--font-main);
+  font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+  line-height: 1.2;
+}
+
+.case-next-tagline {
+  font-family: var(--font-main);
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.case-next-arrow {
+  position: absolute;
+  right: 1.6rem;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  color: var(--muted);
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), color 200ms ease;
+}
+
+.case-next-link:hover .case-next-arrow {
+  color: var(--ink);
+  transform: translateX(4px);
+}
+
+/* "Case study" button on the home cards */
+.project-link-case {
+  margin-left: auto;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.project-link-case:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.project-case-arrow { transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+.project-link-case:hover .project-case-arrow { transform: translateX(2px); }
+
+/* ---------- entrance ---------- */
+
+.case-reveal {
+  animation: case-reveal 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(180ms + var(--i, 0) * 70ms);
+}
+
+@keyframes case-reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 720px) {
+  .case-main {
+    padding: 5rem 1.15rem calc(3rem + env(safe-area-inset-bottom));
+  }
+
+  .case-back {
+    top: 1rem;
+    left: 1rem;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  .case-section,
+  .case-note {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+    padding: 1.6rem 0;
+  }
+
+  .case-points { grid-template-columns: 1fr; }
+
+  .case-next-link { padding: 1.2rem 3.4rem 1.3rem 1.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-reveal { animation: none; }
+}
+
+/* ---------- view transitions ---------- */
+
+/* Names only exist during our own route transitions (the header's are set
+   from JS), so the theme toggle's circular reveal still sees one picture. */
+html[data-vt] .case-back { view-transition-name: case-back; }
+
+/* The card ↔ header surface and title glide; everything else crossfades. */
+::view-transition-group(case-surface),
+::view-transition-group(case-title) {
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Titles keep their natural size, pinned top-left: the box can change shape
+   when a long name rewraps, so stretching to it would distort the text.
+   The size change itself is a uniform scale set from JS (font-size ratio). */
+::view-transition-old(case-title),
+::view-transition-new(case-title) {
+  width: auto;
+  height: auto;
+  inset: 0 auto auto 0;
+  transform-origin: 0 0;
+}
+
+/* Shorter crossfade on the title so the two sizes don't linger on top of
+   each other. */
+::view-transition-old(case-title) {
+  animation: vt-fade-out 240ms ease-out both;
+}
+::view-transition-new(case-title) {
+  animation: vt-fade-in 300ms ease-out 60ms both;
+}
+
+::view-transition-old(case-surface),
+::view-transition-new(case-surface) {
+  height: 100%;
+  width: 100%;
+}
+
+/* Card contents (description, pills, buttons) fade out in place, quickly. */
+/* Contents swap without stretching: the old set leaves fast, the new set
+   arrives once the box has nearly settled. */
+::view-transition-old(case-content),
+::view-transition-new(case-content) {
+  height: 100%;
+  width: auto;
+  object-fit: none;
+  object-position: left top;
+}
+::view-transition-old(case-content) {
+  animation: vt-fade-out 140ms ease-out both;
+}
+::view-transition-new(case-content) {
+  animation: vt-fade-in 300ms ease-out 240ms both;
+}
+::view-transition-group(case-content) {
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: clip;
+}
+
+html[data-vt]::view-transition-old(root) {
+  animation: vt-fade-out 220ms ease-out both;
+}
+html[data-vt]::view-transition-new(root) {
+  animation: vt-fade-in 360ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+/* Project → next project: a short lateral slide. */
+html[data-vt='swap']::view-transition-old(root) {
+  animation: vt-slide-out 260ms ease-in both;
+}
+html[data-vt='swap']::view-transition-new(root) {
+  animation: vt-slide-in 420ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+::view-transition-group(case-back) { animation-duration: 300ms; }
+
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }
+@keyframes vt-slide-out { to { opacity: 0; transform: translateX(-24px); } }
+@keyframes vt-slide-in { from { opacity: 0; transform: translateX(24px); } }

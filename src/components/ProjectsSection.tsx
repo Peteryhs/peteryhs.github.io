@@ -8,8 +8,9 @@ import { HermesStarsBackdrop } from './HermesStarsBackdrop'
 import { projectsData, type ProjectItem } from '../content/projects'
 import { useGitHubStars } from '../hooks/useGitHubStars'
 import { setProjectHover, useIsProjectHovered } from '../hooks/projectHover'
+import { openProject, projectHref } from '../hooks/useRoute'
 
-function GithubIcon({ className = '' }: { className?: string }) {
+export function GithubIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       className={`project-svg-icon ${className}`}
@@ -28,7 +29,7 @@ function GithubIcon({ className = '' }: { className?: string }) {
   )
 }
 
-function StarIcon({ className = '' }: { className?: string }) {
+export function StarIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       className={`project-svg-icon project-star-svg ${className}`}
@@ -43,7 +44,7 @@ function StarIcon({ className = '' }: { className?: string }) {
   )
 }
 
-function ExternalArrowIcon({ className = '' }: { className?: string }) {
+export function ExternalArrowIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       className={`project-svg-icon project-arrow-svg ${className}`}
@@ -62,7 +63,26 @@ function ExternalArrowIcon({ className = '' }: { className?: string }) {
   )
 }
 
-function MarketplaceIcon({ className = '' }: { className?: string }) {
+export function CaseArrowIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      className={`project-svg-icon project-case-arrow ${className}`}
+      viewBox="0 0 24 24"
+      width="13"
+      height="13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  )
+}
+
+export function MarketplaceIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       className={`project-svg-icon ${className}`}
@@ -83,14 +103,14 @@ function MarketplaceIcon({ className = '' }: { className?: string }) {
   )
 }
 
-function formatStars(stars: number): string {
+export function formatStars(stars: number): string {
   if (stars >= 1000) {
     return `${(stars / 1000).toFixed(stars >= 100000 ? 0 : 1)}k`
   }
   return stars.toString()
 }
 
-function getMarketplaceLabel(url: string): string {
+export function getMarketplaceLabel(url: string): string {
   if (url.includes('auto_tool_selecter')) return 'Auto Tool Selector'
   if (url.includes('exa_router')) return 'Exa Router Search'
   return 'Marketplace Tool'
@@ -120,6 +140,7 @@ export function ProjectCard({
   return (
     <article
       id={`project-${project.slug}`}
+      data-project-card={project.slug}
       className={`bento-card project-card ${
         project.slug === 'sun-systems' || project.slug === 'ai-detector' ? 'card-has-hover-logo' : ''
       } ${className}`}
@@ -218,6 +239,19 @@ export function ProjectCard({
               <ExternalArrowIcon />
             </a>
           ))}
+          <a
+            href={projectHref(project.slug)}
+            className="project-link-btn project-link-case"
+            onClick={(event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+              event.preventDefault()
+              openProject(project.slug, event.currentTarget.closest<HTMLElement>('[data-project-card]'))
+            }}
+            aria-label={`Read the ${project.name} case study`}
+          >
+            <span>Case study</span>
+            <CaseArrowIcon />
+          </a>
         </div>
       </div>
     </article>

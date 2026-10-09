@@ -30,6 +30,8 @@ import {
 import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
 import { BottomBounceEffect } from './components/BottomBounceEffect'
 import { CommandPalette, CommandPaletteTrigger } from './components/CommandPalette'
+import { CaseStudyPage } from './components/CaseStudyPage'
+import { useRoute } from './hooks/useRoute'
 import { topicById, type Topic, type TopicId } from './content/site'
 
 const ease = [0.16, 1, 0.3, 1] as const
@@ -322,6 +324,7 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
 }
 
 export default function App() {
+  const route = useRoute()
   const [activeId, setActiveId] = useState<TopicId | null>(null)
   const [cursorInfo, setCursorInfo] = useState<CursorInfo | null>(null)
   const cursorRef = useRef<CursorFollowerRef>(null)
@@ -400,7 +403,15 @@ export default function App() {
       <CursorFollower ref={cursorRef} activeInfo={cursorInfo} />
 
       <BottomBounceEffect>
-        <main>
+        {route.name === 'project' && (
+          <main className="case-main">
+            <CaseStudyPage key={route.slug} slug={route.slug} />
+          </main>
+        )}
+        {/* The home page stays mounted (just hidden) behind a case study, so
+            coming back doesn't replay every entrance animation and the card
+            is there to morph into. */}
+        <main hidden={route.name === 'project'}>
           <header className="intro" id="top">
         <div className="intro-container">
           <BlurFade delay={0.06} yOffset={12}>

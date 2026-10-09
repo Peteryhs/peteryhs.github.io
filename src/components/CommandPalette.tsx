@@ -3,6 +3,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { createPortal } from 'react-dom'
 import { projectsData } from '../content/projects'
 import { topicById, type TopicId } from '../content/site'
+import { getRoute, navigate, openProject } from '../hooks/useRoute'
 
 const EMAIL = 'contact@mail.peteryhs.com'
 const ease = [0.16, 1, 0.3, 1] as const
@@ -23,7 +24,15 @@ interface Command {
 const isMac = () =>
   typeof navigator !== 'undefined' && /mac|iphone|ipad|ipod/i.test(navigator.platform || navigator.userAgent)
 
-const scrollToId = (id: string) => {
+/** Run a home-page action, leaving a case study first if one is open. */
+const onHome = (action: () => void) => {
+  if (getRoute().name === 'home') action()
+  else void navigate({ name: 'home' }).then(() => requestAnimationFrame(action))
+}
+
+const scrollToId = (id: string) => onHome(() => scrollToIdNow(id))
+
+const scrollToIdNow = (id: string) => {
   const el = document.getElementById(id)
   if (!el) return
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -98,7 +107,7 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
   const commands = useMemo<Command[]>(() => {
     const introTopics: TopicId[] = ['about', 'waterloo', 'compeng', 'systems', 'ml', 'electronics', 'projects', 'minecraft', 'photography']
     return [
-      { id: 'top', group: 'Jump to', label: 'Top', keywords: 'home intro start', icon: icons.up, run: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+      { id: 'top', group: 'Jump to', label: 'Top', keywords: 'home intro start', icon: icons.up, run: () => onHome(() => window.scrollTo({ top: 0, behavior: 'smooth' })) },
       { id: 'sec-about', group: 'Jump to', label: 'About', keywords: 'bento profile', icon: icons.hash, run: () => scrollToId('about') },
       { id: 'sec-truenorth', group: 'Jump to', label: 'True North', keywords: 'timeline focus', icon: icons.hash, run: () => scrollToId('truenorth') },
       { id: 'sec-projects', group: 'Jump to', label: 'Projects', keywords: 'work', icon: icons.hash, run: () => scrollToId('projects') },
@@ -112,18 +121,17 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
         hint: 'Expand',
         keywords: `${topicById[id].shortTitle} ${topicById[id].preview}`,
         icon: icons.spark,
-        run: () => onOpenTopic(id),
+        run: () => onHome(() => onOpenTopic(id)),
       })),
 
       ...projectsData.map<Command>((p) => ({
         id: `project-${p.slug}`,
         group: 'Projects',
         label: p.name,
-        hint: p.repo,
-        keywords: `${p.tagline} github repo`,
+        hint: 'Case study',
+        keywords: `${p.tagline} ${p.repo} github repo`,
         icon: icons.box,
-        external: true,
-        run: () => openExternal(p.links.github),
+        run: () => openProject(p.slug),
       })),
 
       { id: 'gh', group: 'Elsewhere', label: 'GitHub', hint: '@Peteryhs', keywords: 'code repos', icon: icons.arrow, external: true, run: () => openExternal('https://github.com/Peteryhs') },

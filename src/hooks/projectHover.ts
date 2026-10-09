@@ -29,3 +29,11 @@ const subscribe = (listener: () => void) => {
 export function useIsProjectHovered(slug: string) {
   return useSyncExternalStore(subscribe, () => active === slug, () => false)
 }
+
+/** Drop any hover immediately, e.g. when the page under the pointer goes away. */
+export function clearProjectHover() {
+  window.clearTimeout(timer)
+  if (active === null) return
+  active = null
+  listeners.forEach((listener) => listener())
+}
