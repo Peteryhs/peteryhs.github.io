@@ -1,17 +1,10 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { animate, motion, useMotionValue, useTransform } from 'motion/react'
+import { WheelGestureTracker } from './wheelGesture'
 
 const PULL_SCALE = 72
 const RESISTANCE = 0.42
 const RELEASE_DELAY = 120
-// Wheel/trackpad: the snap-back must not depend on how hard the page was flung.
-// A hard flick keeps streaming momentum wheel events long after the fingers lift,
-// so we cap how long one gesture can hold the stretch, end it as soon as the
-// deltas start decaying (momentum), and swallow the rest of that momentum tail.
-const WHEEL_MAX_HOLD = 220 // ms from the first pull of a gesture
-const WHEEL_GESTURE_GAP = 140 // ms of silence that ends a wheel gesture
-const MOMENTUM_DECAY_RATIO = 0.6
-const MOMENTUM_DECAY_EVENTS = 3
 // Fixed-duration return so a big stretch comes back in the same time as a small one.
 const RETURN_DURATION = 0.42
 const RETURN_EASE = [0.22, 1, 0.36, 1] as const
@@ -154,17 +147,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       touchPulling = false
     }
 
-    // Wheel gesture bookkeeping.
-    let wheelLastT = -Infinity
-    let wheelGestureStart = 0
-    let wheelPeak = 0
-    let wheelLastDelta = 0
-    let wheelDecayCount = 0
-    let wheelSwallowing = false
-    const endWheelGesture = () => {
-      wheelSwallowing = true
-      release()
-    }
+    const wheel = new WheelGestureTracker()
 
     const onWheel = (event: WheelEvent) => {
       if (!enabled || !pointer.matches || event.defaultPrevented || event.ctrlKey) return
@@ -172,48 +155,23 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       const delta = event.deltaY * unit
       if (!Number.isFinite(delta) || delta === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
       const now = event.timeStamp || performance.now()
-      const gap = now - wheelLastT
-      wheelLastT = now
       if (delta < 0) {
-        wheelSwallowing = false
+        wheel.reset()
         release()
         return
       }
-      if (!isAtBottom()) return
+      if (!isAtBottom()) {
+        wheel.reset()
+        return
+      }
 
       // Leave independently scrolling controls in charge of their own gestures.
       if (isInsideScroller(event)) return
 
       if (event.cancelable) event.preventDefault()
-
-      if (gap > WHEEL_GESTURE_GAP) {
-        // A fresh gesture after a real pause.
-        wheelSwallowing = false
-        wheelGestureStart = now
-        wheelPeak = 0
-        wheelDecayCount = 0
-        wheelLastDelta = 0
-      } else if (wheelSwallowing) {
-        // Still the momentum tail of a gesture that already bounced back. Only a
-        // clear new push (a sharp jump in delta) starts another stretch.
-        const newPush = delta > wheelLastDelta * 2.5 && delta > 20
-        wheelLastDelta = delta
-        if (!newPush) return
-        wheelSwallowing = false
-        wheelGestureStart = now
-        wheelPeak = 0
-        wheelDecayCount = 0
-      }
-
-      // Momentum detection: deltas shrinking steadily below the peak means the
-      // fingers have lifted and the OS is coasting.
-      wheelDecayCount = delta < wheelLastDelta && delta < wheelPeak * MOMENTUM_DECAY_RATIO ? wheelDecayCount + 1 : 0
-      wheelPeak = Math.max(wheelPeak, delta)
-      wheelLastDelta = delta
-      if (wheelDecayCount >= MOMENTUM_DECAY_EVENTS || now - wheelGestureStart > WHEEL_MAX_HOLD) {
-        endWheelGesture()
-        return
-      }
+      const action = wheel.feed(delta, now)
+      if (action === 'release') release()
+      if (action !== 'pull') return
 
       // Logarithmic resistance keeps growing with force, without a stretch ceiling.
       applyPull(delta)
