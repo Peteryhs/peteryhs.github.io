@@ -390,22 +390,26 @@ function Steps({ items, loop }: Extract<CaseBlock, { kind: 'steps' }>) {
 }
 
 function Split({ groups }: Extract<CaseBlock, { kind: 'split' }>) {
+  const depth = Math.max(...groups.map((g) => g.items.length))
   return (
-    <div className="cs-split">
-      {groups.map((g, i) => (
-        <div key={g.label} className={`cs-split-group is-${i === 0 ? 'a' : 'b'}`}>
-          <span className="cs-split-label">{g.label}</span>
-          <div className="cs-split-chips">
-            {g.items.map((item) => (
-              <span key={item} className="cs-chip">{item}</span>
+    <table className="cs-split">
+      <thead>
+        <tr>
+          {groups.map((g) => (
+            <th key={g.label} scope="col">{g.label}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {Array.from({ length: depth }, (_, r) => (
+          <tr key={r}>
+            {groups.map((g) => (
+              <td key={g.label}>{g.items[r] ?? ''}</td>
             ))}
-          </div>
-        </div>
-      ))}
-      <span className="cs-split-merge" aria-hidden="true">
-        balanced corpus
-      </span>
-    </div>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 
