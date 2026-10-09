@@ -10,7 +10,6 @@
 export type WheelAction = 'pull' | 'release' | 'swallow'
 
 export const WHEEL_GESTURE_GAP = 110 // ms of silence that ends a gesture
-export const WHEEL_SAFETY_HOLD = 700 // ms; only reached if a coast goes undetected
 const COAST_RUN = 5 // consecutive smooth non-increasing deltas that mark a coast
 const COAST_MIN_RATIO = 0.7 // each step keeps at least 70% of the previous delta
 const COAST_DROP = 0.9 // and the delta has started falling from the peak
@@ -22,7 +21,6 @@ export class WheelGestureTracker {
   private lastT = -Infinity
   private lastDelta = 0
   private peak = 0
-  private start = 0
   private run = 0
   private swallowing = false
 
@@ -50,20 +48,23 @@ export class WheelGestureTracker {
       return 'swallow'
     }
 
-    const smoothDecay = delta <= prev && delta >= prev * COAST_MIN_RATIO && delta > 0 && gap <= COAST_MAX_INTERVAL
-    this.run = smoothDecay ? this.run + 1 : 0
+    // A coast shrinks every frame. Equal deltas (steady finger, mouse wheel ticks,
+    // or the rounded tail of a coast) neither prove nor disprove it; anything that
+    // grows, jumps down sharply, or arrives off frame cadence is the user's hand.
+    if (delta < prev && delta >= prev * COAST_MIN_RATIO && gap <= COAST_MAX_INTERVAL) this.run += 1
+    else if (delta !== prev || gap > COAST_MAX_INTERVAL) this.run = 0
     this.peak = Math.max(this.peak, delta)
 
-    if ((this.run >= COAST_RUN && delta < this.peak * COAST_DROP) || t - this.start > WHEEL_SAFETY_HOLD) {
+    // No time limit: as long as the user keeps scrolling, the page stays stretched.
+    if (this.run >= COAST_RUN && delta < this.peak * COAST_DROP) {
       this.swallowing = true
       return 'release'
     }
     return 'pull'
   }
 
-  private begin(t: number, delta: number) {
+  private begin(_t: number, delta: number) {
     this.swallowing = false
-    this.start = t
     this.peak = delta
     this.run = 0
   }
