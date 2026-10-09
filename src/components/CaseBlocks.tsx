@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import type { CaseBlock, Figure } from '../content/caseStudies'
+import type { CaseBlock, ChartView, Figure } from '../content/caseStudies'
+import { HardNegativeField } from './HardNegativeField'
 
 /* Visual building blocks for case study pages. They borrow the home page's
    vocabulary: soft bento surfaces, warm stat pills, the dashed IGN badge,
@@ -619,6 +620,116 @@ function Rows({ items }: Extract<CaseBlock, { kind: 'rows' }>) {
   )
 }
 
+const pct = (v: number, d = 1) => `${v.toFixed(d)}%`
+
+function ChartRows({ view, on }: { view: ChartView; on: boolean }) {
+  if (view.mode === 'stack') {
+    return (
+      <div className="cs-chart-rows is-stack">
+        {view.rows.map((row) => {
+          const total = row.values.reduce((a, b) => a + b, 0)
+          return (
+            <div key={`${view.label}-${row.label}`} className="cs-chart-row">
+              <span className="cs-chart-label">
+                {row.label}
+                <span className="cs-chart-sub">{total.toLocaleString('en-US')}</span>
+              </span>
+              <div className="cs-chart-stack">
+                {row.values.map((v, j) => (
+                  <span
+                    key={j}
+                    className={`cs-chart-seg tone-${view.series[j].tone}`}
+                    style={vars({ '--w': on ? v / total : 0 })}
+                  >
+                    <span className="cs-chart-seg-val">{v.toLocaleString('en-US')}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+  return (
+    <div className="cs-chart-rows">
+      {view.rows.map((row, i) => (
+        <div key={i} className="cs-chart-row">
+          <span className="cs-chart-label">
+            {row.label}
+            {row.lowerBetter && <span className="cs-chart-flag">lower is better</span>}
+          </span>
+          <div className="cs-chart-bars">
+            {row.values.map((v, j) => (
+              <div key={j} className={`cs-chart-line tone-${view.series[j].tone} ${row.lowerBetter ? 'is-lower' : ''}`}>
+                <span className="cs-chart-bar" style={vars({ '--w': on ? v / 100 : 0 })} />
+                <span className="cs-chart-val">{pct(v, row.decimals)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ResultsChart({ views }: { views: ChartView[] }) {
+  const [ref, seen] = useInView<HTMLDivElement>()
+  const [active, setActive] = useState(0)
+  const tabs = useRef<(HTMLButtonElement | null)[]>([])
+  const view = views[active]
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+    e.preventDefault()
+    const next = (active + (e.key === 'ArrowRight' ? 1 : -1) + views.length) % views.length
+    setActive(next)
+    tabs.current[next]?.focus()
+  }
+  return (
+    <div ref={ref} className={`cs-chart ${seen ? 'is-on' : ''}`}>
+      <div className="cs-chart-head">
+        <div className="cs-figtabs-bar" role="tablist" aria-label="Results" onKeyDown={onKey}>
+          {views.map((v, i) => (
+            <button
+              key={v.label}
+              ref={(el) => {
+                tabs.current[i] = el
+              }}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              tabIndex={i === active ? 0 : -1}
+              className={`cs-figtab ${i === active ? 'is-active' : ''}`}
+              onClick={() => setActive(i)}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+        {view.series.length > 1 && (
+          <div className="cs-chart-legend" aria-hidden="true">
+            {view.series.map((s) => (
+              <span key={s.name} className={`tone-${s.tone}`}>{s.name}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      <p className="cs-chart-note" role="tabpanel" aria-live="polite">{view.note}</p>
+      <ChartRows view={view} on={seen} />
+      {view.mode === 'bars' && (
+        <div className="cs-chart-axis" aria-hidden="true">
+          <span />
+          <div>
+            {[0, 25, 50, 75, 100].map((t) => (
+              <span key={t} style={vars({ '--t': t / 100 })}>{t}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function CaseBlockView({ block }: { block: CaseBlock }): ReactNode {
   switch (block.kind) {
     case 'text':
@@ -665,5 +776,9 @@ export function CaseBlockView({ block }: { block: CaseBlock }): ReactNode {
       return <Rows {...block} />
     case 'counters':
       return <Counters {...block} />
+    case 'hardNegatives':
+      return <HardNegativeField caption={block.caption} className="is-inline" />
+    case 'chart':
+      return <ResultsChart views={block.views} />
   }
 }

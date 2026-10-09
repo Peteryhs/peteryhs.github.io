@@ -50,6 +50,17 @@ export type CaseBlock =
   | { kind: 'figure'; figure: Figure }
   | { kind: 'figureTabs'; items: (Figure & { label: string })[] }
   | { kind: 'rows'; items: { tag: string; title: string; href: string; meta: string }[] }
+  | { kind: 'hardNegatives'; caption: string }
+  | { kind: 'chart'; views: ChartView[] }
+
+export interface ChartView {
+  label: string
+  note: string
+  /** bars: one bar per series on a 0-100 axis. stack: series split one row (counts). */
+  mode: 'bars' | 'stack'
+  series: { name: string; tone: 'a' | 'b' | 'muted' }[]
+  rows: { label: string; values: number[]; lowerBetter?: boolean; decimals?: number }[]
+}
 
 export interface CaseSection {
   heading: string
@@ -75,6 +86,8 @@ export const WIDE_BLOCKS = new Set<CaseBlock['kind']>([
   'split',
   'rows',
   'counters',
+  'hardNegatives',
+  'chart',
 ])
 
 export const caseStudies: Record<string, CaseStudy> = {
@@ -131,11 +144,6 @@ export const caseStudies: Record<string, CaseStudy> = {
   },
 
   'ai-detector': {
-    hero: {
-      kind: 'hardNegatives',
-      caption:
-        'Hard negatives: human texts that read like AI, each threaded to the AI-written mirror found for it. Training on these pairs is what sharpens the detector. Illustrative layout.',
-    },
     sections: [
       {
         heading: 'Data',
@@ -159,15 +167,6 @@ export const caseStudies: Record<string, CaseStudy> = {
         heading: 'Pipeline',
         blocks: [
           {
-            kind: 'steps',
-            items: [
-              { title: 'Get data', text: 'Fetch and filter the open sources into human and AI corpora.', file: 'download_data_v5.py' },
-              { title: 'Build an index', text: 'Embed the AI corpus with MiniLM-L6-v2 into a usearch index.', file: 'build_index.py' },
-              { title: 'Train', text: 'DeBERTa-v3-large in a curriculum loop with hard-negative mining.', file: 'train.py' },
-              { title: 'Evaluate', text: 'FPR at 95% recall, held-out essays, and the RAID benchmark.', file: 'evaluate.py' },
-            ],
-          },
-          {
             kind: 'figure',
             figure: {
               src: '/case/ai-detector/pipeline.webp',
@@ -181,13 +180,18 @@ export const caseStudies: Record<string, CaseStudy> = {
         ],
       },
       {
-        heading: 'Training loop',
+        heading: 'Hard negatives',
         blocks: [
           {
             kind: 'text',
             paragraphs: [
               'Each round, the model scans held-out human essays and picks the ones it most wants to call AI. Each of those hard negatives is paired with its nearest AI neighbour from the index instead of generating a fresh AI mirror, which keeps the cost down. The best model trained for 3 epochs, roughly 90 minutes on a single H100.',
             ],
+          },
+          {
+            kind: 'hardNegatives',
+            caption:
+              'Each round mines the human essays the model mistakes for AI (blue) and threads each one to its nearest AI neighbour from the index (orange). Illustrative layout.',
           },
           {
             kind: 'steps',
@@ -217,21 +221,76 @@ export const caseStudies: Record<string, CaseStudy> = {
         heading: 'Results',
         blocks: [
           {
-            kind: 'metrics',
-            items: [
-              { display: '99.88%', fraction: 0.9988, label: 'In-domain validation' },
-              { display: '0.934', fraction: 0.934, label: 'ROC-AUC, 4,000 unseen essays' },
-              { display: '0.89', fraction: 0.89, label: 'ROC-AUC, RAID essays', note: 'generators it never saw' },
-              { display: '0.81', fraction: 0.81, label: 'ROC-AUC, RAID attacked', note: 'adversarial text' },
-            ],
-          },
-          {
-            kind: 'figureTabs',
-            items: [
-              { label: 'Essays', src: '/case/ai-detector/essay-results.webp', alt: 'Model performance metrics on the essay benchmark', width: 1200, height: 825, tone: 'light' },
-              { label: 'Confusion', src: '/case/ai-detector/essay-confusion.webp', alt: 'Essay benchmark confusion matrix', width: 1000, height: 867, tone: 'light' },
-              { label: 'RAID', src: '/case/ai-detector/raid-results.webp', alt: 'RAID results, clean versus with attacks', width: 1350, height: 825, tone: 'light' },
-              { label: 'vs Pangram', src: '/case/ai-detector/pangram-vs-ours.webp', alt: 'Recall and false positive rate, Pangram versus ours', width: 1633, height: 891, tone: 'light' },
+            kind: 'chart',
+            views: [
+              {
+                label: 'Overview',
+                note: 'Headline scores, from training data to text the model never saw.',
+                mode: 'bars',
+                series: [{ name: 'Score', tone: 'b' }],
+                rows: [
+                  { label: 'In-domain validation', values: [99.88], decimals: 2 },
+                  { label: 'ROC-AUC, unseen essays', values: [93.4] },
+                  { label: 'ROC-AUC, RAID clean', values: [89.2] },
+                  { label: 'ROC-AUC, RAID attacked', values: [81.0] },
+                ],
+              },
+              {
+                label: 'Essays',
+                note: '4,000 held-out essays, 2,000 per class.',
+                mode: 'bars',
+                series: [{ name: 'Essay benchmark', tone: 'b' }],
+                rows: [
+                  { label: 'Accuracy', values: [85.4] },
+                  { label: 'Precision', values: [87.3] },
+                  { label: 'Recall', values: [83.0] },
+                  { label: 'F1 score', values: [85.1] },
+                  { label: 'ROC-AUC', values: [93.4] },
+                  { label: 'False positive rate', values: [12.1], lowerBetter: true },
+                ],
+              },
+              {
+                label: 'Confusion',
+                note: 'Where the 4,000 essays landed. 3,417 called correctly.',
+                mode: 'stack',
+                series: [
+                  { name: 'Predicted human', tone: 'a' },
+                  { name: 'Predicted AI', tone: 'b' },
+                ],
+                rows: [
+                  { label: 'Actually human', values: [1758, 242] },
+                  { label: 'Actually AI', values: [341, 1659] },
+                ],
+              },
+              {
+                label: 'RAID',
+                note: 'RAID essays from generators it never trained on, clean and with adversarial attacks.',
+                mode: 'bars',
+                series: [
+                  { name: 'Clean', tone: 'a' },
+                  { name: 'With attacks', tone: 'b' },
+                ],
+                rows: [
+                  { label: 'Accuracy', values: [84.1, 76.4] },
+                  { label: 'Precision', values: [87.2, 74.7] },
+                  { label: 'Recall', values: [80.0, 80.0] },
+                  { label: 'F1 score', values: [83.5, 77.3] },
+                  { label: 'ROC-AUC', values: [89.2, 81.0] },
+                ],
+              },
+              {
+                label: 'vs Pangram',
+                note: 'Pangram\u2019s reported numbers (1,992 essays per class) against ours (2,000). Different test sets, so read it as a ballpark.',
+                mode: 'bars',
+                series: [
+                  { name: 'Pangram', tone: 'muted' },
+                  { name: 'Ours', tone: 'b' },
+                ],
+                rows: [
+                  { label: 'Recall', values: [97.5, 83.0] },
+                  { label: 'False positive rate', values: [0.1, 12.1], lowerBetter: true },
+                ],
+              },
             ],
           },
         ],

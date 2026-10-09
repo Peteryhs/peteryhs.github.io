@@ -60,7 +60,7 @@ function buildPairs(): Pair[] {
 
 const rgba = (c: readonly number[], a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a})`
 
-export function HardNegativeField({ caption }: { caption: string }) {
+export function HardNegativeField({ caption, className = '' }: { caption: string; className?: string }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [active, setActive] = useState(false)
@@ -80,6 +80,9 @@ export function HardNegativeField({ caption }: { caption: string }) {
     let dpr = 1
     let hover = -1 // pair under the pointer
     let shown = -1 // pair being drawn (kept while it fades out)
+    let auto = -1 // pair the idle "mining" cycle is showing
+    let autoAt = 0
+    const autoRng = rng(7)
     let lit = 0 // eased 0..1 highlight strength
     let raf = 0
     let visible = false
@@ -213,7 +216,19 @@ export function HardNegativeField({ caption }: { caption: string }) {
     }
 
     const loop = (now: number) => {
-      const target = hover >= 0 ? 1 : 0
+      // Idle: cycle through pairs as if mining them, one every ~2.4s.
+      if (hover < 0 && !reduced && now - start > DRAW_IN) {
+        if (!autoAt) autoAt = now
+        const phase = (now - autoAt) % 2400
+        if (phase < 450 && auto >= 0) auto = -1
+        else if (phase >= 450 && auto < 0) {
+          // Only pairs comfortably inside the frame, so both ends stay visible.
+          do auto = Math.floor(autoRng() * pairs.length)
+          while (pairs[auto].hy < 0.15 || pairs[auto].hy > 0.85 || pairs[auto].ay < 0.12 || pairs[auto].ay > 0.88)
+          shown = auto
+        }
+      } else auto = -1
+      const target = hover >= 0 || auto >= 0 ? 1 : 0
       lit += (target - lit) * 0.18
       draw(now)
       const settling = DRAW_IN && now - start < DRAW_IN
@@ -249,6 +264,8 @@ export function HardNegativeField({ caption }: { caption: string }) {
       if (i !== hover) {
         hover = i
         if (i >= 0) shown = i
+        auto = -1
+        autoAt = 0
         setActive(i >= 0)
         kick()
       }
@@ -282,7 +299,7 @@ export function HardNegativeField({ caption }: { caption: string }) {
   }, [])
 
   return (
-    <figure className="cs-hn">
+    <figure className={`cs-hn ${className}`}>
       <div ref={wrapRef} className={`cs-hn-stage ${active ? 'is-active' : ''}`}>
         <canvas ref={canvasRef} className="cs-hn-canvas" role="img" aria-label={caption} />
         <div className="cs-hn-legend" aria-hidden="true">

@@ -4262,12 +4262,8 @@ html.dark .cmdk-panel {
 .case-note p {
   margin: 0;
   max-width: 40rem;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  background: var(--hover);
-  border: 1.2px solid var(--line);
   font-family: var(--font-main);
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.55;
   color: var(--ink);
 }
@@ -5592,4 +5588,151 @@ html[data-vt='zoom']::view-transition-new(root) { animation: vt-fade-in 260ms ea
   .cs-hn-stage { aspect-ratio: 4 / 3; min-height: 0; border-radius: 16px; }
   .cs-hn-legend { left: auto; top: auto; right: 0.85rem; bottom: 0.75rem; flex-direction: column; align-items: flex-end; gap: 0.35rem; gap: 0.7rem; font-size: 0.68rem; }
   .cs-hn-hint { display: none; }
+}
+
+.cs-hn.is-inline .cs-hn-stage { aspect-ratio: 16 / 7; }
+@media (max-width: 720px) { .cs-hn.is-inline .cs-hn-stage { aspect-ratio: 4 / 3; } }
+
+/* ---------- results chart (horizontal, switchable) ---------- */
+
+.cs-chart {
+  --val-w: 3.8rem;
+  --label-w: 11.5rem;
+  padding: 1.25rem 1.4rem 1.1rem;
+  border-radius: 18px;
+  border: 1.75px solid var(--bento-border);
+  background: var(--bento-bg);
+  box-shadow: var(--bento-shadow);
+}
+.cs-chart .tone-a { --tone: var(--cs-cool); }
+.cs-chart .tone-b { --tone: var(--cs-accent); }
+.cs-chart .tone-muted { --tone: var(--line-strong); }
+
+.cs-chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.25rem; }
+.cs-chart-head .cs-figtabs-bar { margin: 0; }
+.cs-chart-legend { display: flex; gap: 1rem; font-family: var(--font-main); font-size: 0.82rem; color: var(--muted); }
+.cs-chart-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.cs-chart-legend span::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--tone); }
+
+.cs-chart-note {
+  margin: 0.9rem 0 1.1rem;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  color: var(--muted);
+  min-height: 1.4em;
+}
+
+.cs-chart-rows { display: grid; gap: 0.85rem; }
+.cs-chart-row {
+  display: grid;
+  grid-template-columns: var(--label-w) minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  animation: cs-chart-row-in 380ms ease both;
+}
+@keyframes cs-chart-row-in { from { opacity: 0; transform: translateY(4px); } }
+
+.cs-chart-label {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.cs-chart-flag,
+.cs-chart-sub { font-size: 0.74rem; color: var(--muted); letter-spacing: 0.02em; }
+
+.cs-chart-bars {
+  display: grid;
+  gap: 4px;
+  padding: 2px 0;
+  --g: linear-gradient(var(--line), var(--line));
+  background-image: var(--g), var(--g), var(--g), var(--g), var(--g);
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-position:
+    0 0,
+    calc((100% - var(--val-w)) * 0.25) 0,
+    calc((100% - var(--val-w)) * 0.5) 0,
+    calc((100% - var(--val-w)) * 0.75) 0,
+    calc(100% - var(--val-w)) 0;
+}
+.cs-chart .cs-figtab { white-space: nowrap; flex: none; }
+.cs-chart-line { display: flex; align-items: center; gap: 0.5rem; height: 14px; }
+.cs-chart-bars:has(.cs-chart-line + .cs-chart-line) .cs-chart-line { height: 10px; }
+.cs-chart-bar {
+  flex: none;
+  height: 100%;
+  width: max(3px, calc(var(--w) * (100% - var(--val-w))));
+  border-radius: 0 999px 999px 0;
+  background: var(--tone);
+  transition: width 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: cs-chart-grow 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes cs-chart-grow { from { width: 0; } }
+.cs-chart-line.is-lower .cs-chart-bar {
+  background: repeating-linear-gradient(-45deg, var(--tone) 0 3px, color-mix(in srgb, var(--tone) 45%, transparent) 3px 6px);
+}
+.cs-chart-val {
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.cs-chart-stack {
+  display: flex;
+  gap: 3px;
+  height: 34px;
+}
+.cs-chart-seg {
+  flex: none;
+  width: calc(var(--w) * (100% - 3px));
+  display: flex;
+  align-items: center;
+  padding: 0 0.6rem;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--tone);
+  transition: width 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: cs-chart-grow 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.cs-chart-seg-val {
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.cs-chart-axis {
+  display: grid;
+  grid-template-columns: var(--label-w) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 0.6rem;
+}
+.cs-chart-axis > div { position: relative; height: 1rem; margin-right: var(--val-w); }
+.cs-chart-axis > div span {
+  position: absolute;
+  left: calc(var(--t) * 100%);
+  transform: translateX(-50%);
+  font-family: var(--font-main);
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cs-chart-axis > div span:first-child { transform: none; }
+
+@media (max-width: 720px) {
+  .cs-chart { padding: 1rem 0.95rem 0.95rem; --val-w: 3.4rem; }
+  .cs-chart-row { grid-template-columns: 1fr; gap: 0.35rem; }
+  .cs-chart-label { flex-direction: row; align-items: baseline; gap: 0.5rem; }
+  .cs-chart-axis { grid-template-columns: 1fr; }
+  .cs-chart-axis > span { display: none; }
+  .cs-chart-head .cs-figtabs-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -0.95rem; padding-inline: 0.95rem; max-width: calc(100% + 1.9rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-chart-row, .cs-chart-bar, .cs-chart-seg { animation: none !important; transition: none !important; }
 }
