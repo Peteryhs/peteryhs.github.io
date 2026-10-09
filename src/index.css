@@ -5589,8 +5589,8 @@ html[data-vt='zoom']::view-transition-new(root) { animation: vt-fade-in 260ms ea
   .cs-hn-hint { display: none; }
 }
 
-.cs-hn.is-inline .cs-hn-stage { aspect-ratio: 32 / 7; min-height: 170px; }
-@media (max-width: 720px) { .cs-hn.is-inline .cs-hn-stage { aspect-ratio: 8 / 3; min-height: 150px; } }
+.cs-hn.is-inline .cs-hn-stage { aspect-ratio: auto; width: 100%; min-height: 0; height: clamp(170px, 15vw, 220px); }
+@media (max-width: 720px) { .cs-hn.is-inline .cs-hn-stage { height: 160px; } }
 
 /* ---------- results chart (horizontal, switchable) ---------- */
 
@@ -5882,3 +5882,56 @@ html.dark .cs-guard { --bad: #ff7a72; --ban: #c39af2; }
   .cs-guard-label { font-size: 0.82rem; }
   .cs-guard-badge { top: auto; bottom: -0.7rem; }
 }
+
+/* ---------- general polish ---------- */
+
+/* Nothing (the compass, wide canvases) can make the page scroll sideways. */
+html { overflow-x: clip; }
+
+/* Selection in the site's own gold. */
+::selection { background: rgba(184, 134, 58, 0.24); color: inherit; }
+html.dark ::selection { background: rgba(232, 190, 120, 0.3); }
+
+/* Kinder line breaks: no orphaned last words, balanced headings. */
+.case-title, .case-next-name, .project-card-title, .case-section-heading { text-wrap: balance; }
+.case-paragraph, .case-lede, .case-tagline, .case-next-tagline,
+.project-card-description, .project-card-tagline, .cs-step p, .case-note p { text-wrap: pretty; }
+
+/* Numbers don't jitter as counters tick or stars load. */
+.project-stat-value, .project-star-count, .case-stars, .case-eyebrow { font-variant-numeric: tabular-nums; }
+
+/* Anchor jumps and focused headings clear the fixed pills. */
+.case-page [id], .case-section { scroll-margin-top: 5.5rem; }
+
+/* The floating back pill reads cleanly over content scrolling beneath it. */
+.case-back {
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* Consistent keyboard focus for links and buttons on the case pages. */
+.case-page a:focus-visible, .case-page button:focus-visible, .project-link-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+.case-next-link:focus-visible { border-radius: 10px; }
+
+/* Press feedback on touch. */
+@media (hover: none) {
+  .project-link-btn:active, .case-back:active, .cs-figtab:active, .case-next-link:active { transform: scale(0.97); }
+  .project-link-btn, .case-back, .cs-figtab, .case-next-link { transition: transform 120ms ease; }
+}
+
+/* Scrolling chart tabs on phones fade at the edge instead of being cut off. */
+@media (max-width: 720px) {
+  .cs-chart-head .cs-figtabs-bar {
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 1.4rem), transparent);
+            mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 1.4rem), transparent);
+  }
+  .cs-chart-head .cs-figtabs-bar::-webkit-scrollbar { display: none; }
+}
+
+/* Spec lines break between specs, never inside one or before a dot. */
+.cs-hw-spec { white-space: nowrap; }

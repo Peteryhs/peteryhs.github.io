@@ -247,9 +247,9 @@ export function ProjectCard({
               event.preventDefault()
               openProject(project.slug, event.currentTarget.closest<HTMLElement>('[data-project-card]'))
             }}
-            aria-label={`Read the ${project.name} deep dive`}
+            aria-label={`Read the ${project.name} breakdown`}
           >
-            <span>Deep dive</span>
+            <span>Breakdown</span>
             <CaseArrowIcon />
           </a>
         </div>

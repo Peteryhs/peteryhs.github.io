@@ -128,7 +128,7 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
         id: `project-${p.slug}`,
         group: 'Projects',
         label: p.name,
-        hint: 'Deep dive',
+        hint: 'Breakdown',
         keywords: `${p.tagline} ${p.repo} github repo`,
         icon: icons.box,
         run: () => openProject(p.slug),

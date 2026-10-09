@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal, flushSync } from 'react-dom'
 import type { CaseBlock, ChartView, Figure } from '../content/caseStudies'
 import { HardNegativeField } from './HardNegativeField'
@@ -266,7 +266,17 @@ function Hardware({ items }: Extract<CaseBlock, { kind: 'hardware' }>) {
               </span>
             </td>
             <td className="cs-hw-role">{d.role}</td>
-            <td className="cs-hw-specs">{d.specs.join(' · ')}</td>
+            <td className="cs-hw-specs">
+              {d.specs.map((spec, i) => (
+                <Fragment key={spec}>
+                  {i > 0 && ' '}
+                  <span className="cs-hw-spec">
+                    {spec}
+                    {i < d.specs.length - 1 && ' ·'}
+                  </span>
+                </Fragment>
+              ))}
+            </td>
           </tr>
         ))}
       </tbody>
