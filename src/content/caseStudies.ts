@@ -53,6 +53,20 @@ export type CaseBlock =
   | { kind: 'hardNegatives'; caption: string }
   | { kind: 'chart'; views: ChartView[] }
   | { kind: 'crowdsec' }
+  /** Small multiples: one short line per metric across training rounds. */
+  | { kind: 'trend'; xLabels: string[]; caption: string; panels: TrendPanel[] }
+
+export interface TrendPanel {
+  label: string
+  tone: 'a' | 'b' | 'muted'
+  /** Values per x label; formatted with `format`. */
+  values: number[]
+  format: 'loss' | 'pct' | 'k'
+  /** A second, dashed series drawn on the same scale. */
+  secondary?: { label: string; values: number[] }
+  /** Fixed y range; defaults to the data's own range. */
+  range?: [number, number]
+}
 
 export interface ChartView {
   label: string
@@ -90,6 +104,7 @@ export const WIDE_BLOCKS = new Set<CaseBlock['kind']>([
   'hardNegatives',
   'chart',
   'crowdsec',
+  'trend',
 ])
 
 export const caseStudies: Record<string, CaseStudy> = {
@@ -206,16 +221,22 @@ export const caseStudies: Record<string, CaseStudy> = {
             ],
           },
           {
-            kind: 'figure',
-            figure: {
-              src: '/case/ai-detector/training-curve.webp',
-              alt: 'Curriculum training curves: loss, validation accuracy, dataset size and mined samples by epoch',
-              caption: 'Loss falls while the dataset grows with every mining round.',
-              width: 1400,
-              height: 1225,
-              tone: 'dark',
-              size: 'narrow',
-            },
+            kind: 'trend',
+            xLabels: ['Epoch 0', 'Epoch 1', 'Epoch 2'],
+            caption: 'Loss falls while the dataset grows with every mining round.',
+            panels: [
+              { label: 'Train loss', tone: 'a', values: [0.042, 0.009, 0.003], format: 'loss', range: [0, 0.045] },
+              { label: 'Validation loss', tone: 'b', values: [0.015, 0.0075, 0.0067], format: 'loss', range: [0, 0.045] },
+              { label: 'Validation accuracy', tone: 'b', values: [99.69, 99.86, 99.87], format: 'pct', range: [99.6, 99.9] },
+              {
+                label: 'Training set',
+                tone: 'muted',
+                values: [100000, 200000, 300000],
+                format: 'k',
+                range: [0, 300000],
+                secondary: { label: 'mined', values: [0, 100000, 200000] },
+              },
+            ],
           },
         ],
       },

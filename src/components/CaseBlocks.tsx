@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import type { CaseBlock, ChartView, Figure } from '../content/caseStudies'
+import type { CaseBlock, ChartView, Figure, TrendPanel } from '../content/caseStudies'
 import { HardNegativeField } from './HardNegativeField'
 import { CrowdSecFlow } from './CrowdSecFlow'
 
@@ -746,6 +746,64 @@ function ResultsChart({ views }: { views: ChartView[] }) {
   )
 }
 
+const fmtTrend = (v: number, f: TrendPanel['format']) =>
+  f === 'loss' ? String(Number(v.toPrecision(2))) : f === 'pct' ? `${v.toFixed(2)}%` : `${Math.round(v / 1000)}k`
+
+/** One metric as a short line across epochs: start → end, with the curve. */
+function TrendCard({ panel, xLabels, on, index }: { panel: TrendPanel; xLabels: string[]; on: boolean; index: number }) {
+  const [lo, hi] = panel.range ?? [Math.min(...panel.values), Math.max(...panel.values)]
+  const n = panel.values.length
+  const pt = (v: number, i: number) => ({ x: (i / (n - 1)) * 100, y: 100 - ((v - lo) / (hi - lo || 1)) * 100 })
+  const line = (vals: number[]) => vals.map((v, i) => { const p = pt(v, i); return `${p.x},${p.y}` }).join(' ')
+  const first = panel.values[0]
+  const last = panel.values[n - 1]
+  return (
+    <div className={`cs-trend-card tone-${panel.tone}`} style={vars({ '--i': index })}>
+      <div className="cs-trend-label">{panel.label}</div>
+      <div className="cs-trend-values">
+        <span className="cs-trend-from">{fmtTrend(first, panel.format)}</span>
+        <span className="cs-trend-arrow" aria-hidden="true">→</span>
+        <span className="cs-trend-to">{fmtTrend(last, panel.format)}</span>
+      </div>
+      <div className="cs-trend-plot" aria-hidden="true">
+        <svg viewBox="-4 -8 108 116" preserveAspectRatio="none">
+          {panel.secondary && (
+            <polyline className="cs-trend-line is-secondary" points={line(panel.secondary.values)} vectorEffect="non-scaling-stroke" />
+          )}
+          <polyline className="cs-trend-line" points={line(panel.values)} vectorEffect="non-scaling-stroke" />
+        </svg>
+        {panel.values.map((v, i) => {
+          const p = pt(v, i)
+          return <span key={i} className="cs-trend-dot" style={vars({ '--x': `${(p.x + 4) / 1.08}%`, '--y': `${(p.y + 8) / 1.16}%`, '--d': i })} />
+        })}
+      </div>
+      <div className="cs-trend-x" aria-hidden="true">
+        <span>{xLabels[0]}</span>
+        {panel.secondary ? (
+          <span className="cs-trend-key">
+            <i /> {panel.secondary.label} {fmtTrend(panel.secondary.values[n - 1], panel.format)}
+          </span>
+        ) : null}
+        <span>{xLabels[xLabels.length - 1]}</span>
+      </div>
+    </div>
+  )
+}
+
+function TrendBlock({ block }: { block: Extract<CaseBlock, { kind: 'trend' }> }) {
+  const [ref, seen] = useInView<HTMLDivElement>()
+  return (
+    <figure ref={ref} className={`cs-trend ${seen ? 'is-on' : ''}`}>
+      <div className="cs-trend-grid" role="img" aria-label={block.panels.map((p) => `${p.label} ${fmtTrend(p.values[0], p.format)} to ${fmtTrend(p.values[p.values.length - 1], p.format)}`).join('; ')}>
+        {block.panels.map((p, i) => (
+          <TrendCard key={p.label} panel={p} xLabels={block.xLabels} on={seen} index={i} />
+        ))}
+      </div>
+      <figcaption className="cs-figure-caption">{block.caption}</figcaption>
+    </figure>
+  )
+}
+
 export function CaseBlockView({ block }: { block: CaseBlock }): ReactNode {
   switch (block.kind) {
     case 'text':
@@ -796,6 +854,8 @@ export function CaseBlockView({ block }: { block: CaseBlock }): ReactNode {
       return <HardNegativeField caption={block.caption} className="is-inline" />
     case 'chart':
       return <ResultsChart views={block.views} />
+    case 'trend':
+      return <TrendBlock block={block} />
     case 'crowdsec':
       return <CrowdSecFlow />
   }
