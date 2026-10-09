@@ -16,6 +16,8 @@ export interface StarBackgroundProps {
   maxTwinkleSpeed?: number
   className?: string
   style?: React.CSSProperties
+  /** When false the twinkle loop stops; stars are kept for the next start. */
+  running?: boolean
 }
 
 export const StarsBackground: React.FC<StarBackgroundProps> = ({
@@ -26,9 +28,11 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
   maxTwinkleSpeed = 1.4,
   className = '',
   style,
+  running = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const starsRef = useRef<StarProps[]>([])
+  const loopRef = useRef<{ start: () => void; stop: () => void } | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -37,12 +41,17 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
     if (!ctx) return
 
     let animationFrameId = 0
-    let stopped = false
+    let stopped = true
+    let lastW = 0
+    let lastH = 0
 
     const initAndResize = () => {
       const dpr = window.devicePixelRatio || 1
       const width = Math.max(window.innerWidth, canvas.clientWidth || 0, document.documentElement.clientWidth || 0)
       const height = Math.max(window.innerHeight, canvas.clientHeight || 0, document.documentElement.clientHeight || 0)
+      if (width === lastW && height === lastH) return
+      lastW = width
+      lastH = height
 
       canvas.width = Math.floor(width * dpr)
       canvas.height = Math.floor(height * dpr)
@@ -95,12 +104,20 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
       animationFrameId = requestAnimationFrame(render)
     }
 
-    render()
+    loopRef.current = {
+      start: () => {
+        if (!stopped) return
+        stopped = false
+        render()
+      },
+      stop: () => {
+        stopped = true
+        cancelAnimationFrame(animationFrameId)
+      },
+    }
 
     const handleResize = () => {
-      requestAnimationFrame(() => {
-        if (!stopped) initAndResize()
-      })
+      requestAnimationFrame(initAndResize)
     }
 
     window.addEventListener('resize', handleResize)
@@ -108,12 +125,17 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
     ro.observe(canvas)
 
     return () => {
-      stopped = true
-      cancelAnimationFrame(animationFrameId)
+      loopRef.current?.stop()
+      loopRef.current = null
       window.removeEventListener('resize', handleResize)
       ro.disconnect()
     }
   }, [starDensity, allStarsTwinkle, twinkleProbability, minTwinkleSpeed, maxTwinkleSpeed])
+
+  useEffect(() => {
+    if (running) loopRef.current?.start()
+    else loopRef.current?.stop()
+  }, [running, starDensity, allStarsTwinkle, twinkleProbability, minTwinkleSpeed, maxTwinkleSpeed])
 
   return (
     <canvas

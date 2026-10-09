@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { useBackdropLoop } from '../hooks/useBackdropLoop'
 
 export interface AgenticRoutingTreeProps {
   isActive: boolean
@@ -62,7 +62,16 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
   const rgbaRef = useRef({ r: 244, g: 244, b: 245 })
 
   // Resolve theme color for the network
+  // Mount once on first hover, then keep the canvas, the tree and the pulses
+  // alive and just fade them. Rebuilding everything per hover was the lag.
+  const [mounted, setMounted] = useState(false)
   useEffect(() => {
+    if (isActive) setMounted(true)
+  }, [isActive])
+  const running = useBackdropLoop(isActive)
+
+  useEffect(() => {
+    if (!isActive) return
     const temp = document.createElement('div')
     temp.style.color = 'var(--ink)'
     document.body.appendChild(temp)
@@ -82,8 +91,11 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
     }
   }, [isActive])
 
+  // Build the tree once per mount (and on resize). Only the frame loop starts
+  // and stops with hover, so pulses resume where they left off.
+  const sceneRef = useRef<{ start: () => void; stop: () => void } | null>(null)
   useEffect(() => {
-    if (!isActive) return
+    if (!mounted) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -347,33 +359,45 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
       raf = requestAnimationFrame(animate)
     }
 
-    raf = requestAnimationFrame(animate)
+    const start = () => {
+      if (!stopped) return
+      stopped = false
+      raf = requestAnimationFrame(animate)
+    }
+    const stop = () => {
+      stopped = true
+      cancelAnimationFrame(raf)
+    }
+    stopped = true
+    sceneRef.current = { start, stop }
 
+    let lastW = canvas.clientWidth
+    let lastH = canvas.clientHeight
     const ro = new ResizeObserver(() => {
-      requestAnimationFrame(() => {
-        if (!stopped) buildTree()
-      })
+      if (canvas.clientWidth === lastW && canvas.clientHeight === lastH) return
+      lastW = canvas.clientWidth
+      lastH = canvas.clientHeight
+      requestAnimationFrame(buildTree)
     })
     ro.observe(canvas)
 
     return () => {
-      stopped = true
-      cancelAnimationFrame(raf)
+      stop()
+      sceneRef.current = null
       ro.disconnect()
     }
-  }, [isActive])
+  }, [mounted])
 
-  if (typeof document === 'undefined') return null
+  useEffect(() => {
+    if (running) sceneRef.current?.start()
+    else sceneRef.current?.stop()
+  }, [running, mounted])
+
+  if (typeof document === 'undefined' || !mounted) return null
 
   return (
-    <AnimatePresence>
-      {isActive && (
-        <motion.div
-          className="agentic-routing-tree-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        <div
+          className={`agentic-routing-tree-backdrop hover-backdrop${isActive ? ' is-active' : ''}`}
           aria-hidden="true"
         >
           <canvas
@@ -386,9 +410,7 @@ export function AgenticRoutingTree({ isActive }: AgenticRoutingTreeProps) {
               pointerEvents: 'none',
             }}
           />
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
   )
 }
 

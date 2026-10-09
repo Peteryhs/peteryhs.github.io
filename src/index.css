@@ -2215,6 +2215,24 @@ html.theme-sun-dark main {
   pointer-events: none;
 }
 
+/* Hover backdrops stay mounted after the first hover and just fade.
+   Fade length matches BACKDROP_FADE_MS in hooks/useBackdropLoop.ts. */
+.hover-backdrop {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 360ms;
+}
+
+.hover-backdrop.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s;
+}
+
 /* ==========================================================================
    Hermes Aceternity Shooting Stars & Stars Background Animation
    ========================================================================== */

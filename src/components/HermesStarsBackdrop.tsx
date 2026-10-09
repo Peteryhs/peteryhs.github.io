@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'motion/react'
+import { useBackdropLoop } from '../hooks/useBackdropLoop'
 import { ShootingStars } from './ShootingStars'
 import { StarsBackground } from './StarsBackground'
 
@@ -8,42 +9,44 @@ export interface HermesStarsBackdropProps {
 }
 
 export function HermesStarsBackdrop({ isActive }: HermesStarsBackdropProps) {
-  if (typeof document === 'undefined') return null
+  // Mount once on first hover and keep the starfield; later hovers only fade
+  // it in and restart the loops, instead of regenerating every star.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    if (isActive) setMounted(true)
+  }, [isActive])
+  const running = useBackdropLoop(isActive)
+
+  if (typeof document === 'undefined' || !mounted) return null
 
   return createPortal(
-    <AnimatePresence>
-      {isActive && (
-        <motion.div
-          className="hermes-stars-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          aria-hidden="true"
-        >
-          {/* Aceternity Stars Background (Twinkling Deep Field) */}
-          <StarsBackground
-            starDensity={0.0002}
-            allStarsTwinkle={true}
-            twinkleProbability={0.8}
-            minTwinkleSpeed={0.5}
-            maxTwinkleSpeed={1.2}
-          />
+    <div
+      className={`hermes-stars-backdrop hover-backdrop${isActive ? ' is-active' : ''}`}
+      aria-hidden="true"
+    >
+      {/* Aceternity Stars Background (Twinkling Deep Field) */}
+      <StarsBackground
+        starDensity={0.0002}
+        allStarsTwinkle={true}
+        twinkleProbability={0.8}
+        minTwinkleSpeed={0.5}
+        maxTwinkleSpeed={1.2}
+        running={running}
+      />
 
-          {/* Aceternity Shooting Stars Layer */}
-          <ShootingStars
-            minSpeed={14}
-            maxSpeed={34}
-            minDelay={800}
-            maxDelay={2600}
-            starColor="#f3e8ff"
-            trailColor="#a855f7"
-            starWidth={16}
-            starHeight={1.5}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>,
+      {/* Aceternity Shooting Stars Layer */}
+      <ShootingStars
+        minSpeed={14}
+        maxSpeed={34}
+        minDelay={800}
+        maxDelay={2600}
+        starColor="#f3e8ff"
+        trailColor="#a855f7"
+        starWidth={16}
+        starHeight={1.5}
+        running={running}
+      />
+    </div>,
     document.body
   )
 }
