@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { projectsData, type ProjectItem } from '../content/projects'
+import { caseStudies, WIDE_BLOCKS, type CaseBlock } from '../content/caseStudies'
+import { CaseBlockView, FigureView } from './CaseBlocks'
 import { goHome, openProject, projectHref } from '../hooks/useRoute'
 import { useGitHubStars } from '../hooks/useGitHubStars'
 import {
@@ -45,7 +47,34 @@ export function CaseStudyPage({ slug }: { slug: string }) {
   const index = projectsData.findIndex((p) => p.slug === slug)
   const project = projectsData[index]
   const next = projectsData[(index + 1) % projectsData.length]
+  const study = caseStudies[project.slug] ?? { sections: [] }
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
+
+  // Reveal sections as they scroll in; their components animate off the
+  // same is-visible class (rails draw, meters fill, packets start moving).
+  useEffect(() => {
+    const root = bodyRef.current
+    if (!root) return
+    const targets = root.querySelectorAll<HTMLElement>('.case-reveal')
+    if (!('IntersectionObserver' in window)) {
+      targets.forEach((t) => t.classList.add('is-visible'))
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            io.unobserve(entry.target)
+          }
+        })
+      },
+      { rootMargin: '0px 0px -12% 0px', threshold: 0.01 },
+    )
+    targets.forEach((t) => io.observe(t))
+    return () => io.disconnect()
+  }, [project.slug])
 
   useEffect(() => {
     document.title = `${project.name} · ${CASE_TITLE_SUFFIX}`
@@ -132,38 +161,47 @@ export function CaseStudyPage({ slug }: { slug: string }) {
         </div>
       </header>
 
-      <div className="case-body">
+      <div className="case-body" ref={bodyRef}>
+        {study.cover && (
+          <div className="case-cover case-reveal" style={{ ['--i' as string]: 0 }}>
+            <FigureView figure={study.cover} />
+          </div>
+        )}
         <p className="case-lede case-reveal" style={{ ['--i' as string]: 0 }}>
           {project.description}
         </p>
 
-        {project.caseStudy.map((section, i) => (
-          <section key={section.heading} className="case-section case-reveal" style={{ ['--i' as string]: i + 1 }}>
-            <h2 className="case-section-heading">{section.heading}</h2>
-            <div className="case-section-content">
-              {section.body?.map((paragraph) => (
-                <p key={paragraph.slice(0, 32)} className="case-paragraph">
-                  {paragraph}
-                </p>
-              ))}
-              {section.bullets && (
-                <dl className="case-points">
-                  {section.bullets.map((point) => (
-                    <div key={point.title ?? point.text} className="case-point">
-                      {point.title && <dt>{point.title}</dt>}
-                      <dd>{point.text}</dd>
-                    </div>
+        {study.sections.map((section, i) => {
+          // Consecutive text-like blocks share the right-hand column; visual
+          // blocks break out to the full width.
+          const groups: { wide: boolean; blocks: CaseBlock[] }[] = []
+          section.blocks.forEach((block) => {
+            const wide = WIDE_BLOCKS.has(block.kind)
+            const last = groups[groups.length - 1]
+            if (last && !last.wide && !wide) last.blocks.push(block)
+            else groups.push({ wide, blocks: [block] })
+          })
+          return (
+            <section key={section.heading} className="case-section case-reveal" style={{ ['--i' as string]: i + 1 }}>
+              <h2 className="case-section-heading">{section.heading}</h2>
+              {groups.map((group, gi) => (
+                <div
+                  key={gi}
+                  className={group.wide ? 'case-section-wide' : 'case-section-content'}
+                >
+                  {group.blocks.map((block, bi) => (
+                    <CaseBlockView key={bi} block={block} />
                   ))}
-                </dl>
-              )}
-            </div>
-          </section>
-        ))}
+                </div>
+              ))}
+            </section>
+          )
+        })}
 
         {project.notes && (
           <aside
             className="case-note case-reveal"
-            style={{ ['--i' as string]: project.caseStudy.length + 1 }}
+            style={{ ['--i' as string]: study.sections.length + 1 }}
           >
             <span className="case-note-label">Caveat</span>
             <p>{project.notes}</p>
