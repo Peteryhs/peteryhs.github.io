@@ -1,9 +1,21 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { motion, useMotionValue, useSpring, useTransform } from 'motion/react'
+import { animate, motion, useMotionValue, useTransform } from 'motion/react'
 
 const PULL_SCALE = 72
 const RESISTANCE = 0.42
-const RELEASE_DELAY = 140
+const RELEASE_DELAY = 120
+// Wheel/trackpad: the snap-back must not depend on how hard the page was flung.
+// A hard flick keeps streaming momentum wheel events long after the fingers lift,
+// so we cap how long one gesture can hold the stretch, end it as soon as the
+// deltas start decaying (momentum), and swallow the rest of that momentum tail.
+const WHEEL_MAX_HOLD = 220 // ms from the first pull of a gesture
+const WHEEL_GESTURE_GAP = 140 // ms of silence that ends a wheel gesture
+const MOMENTUM_DECAY_RATIO = 0.6
+const MOMENTUM_DECAY_EVENTS = 3
+// Fixed-duration return so a big stretch comes back in the same time as a small one.
+const RETURN_DURATION = 0.42
+const RETURN_EASE = [0.22, 1, 0.36, 1] as const
+const PULL_SPRING = { type: 'spring', stiffness: 420, damping: 32, mass: 0.8, restDelta: 0.2, restSpeed: 4 } as const
 // Touch tuning: a finger drag past the end pulls harder than a wheel tick, and a
 // fast flick that lands on the end gets a small momentum stretch on its own.
 const TOUCH_PULL_GAIN = 2.4
@@ -15,8 +27,7 @@ const GLOW_MAX_GROWTH = 2.1
 
 export function BottomBounceEffect({ children }: { children: ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const pullTarget = useMotionValue(0)
-  const springPull = useSpring(pullTarget, { stiffness: 420, damping: 32, mass: 0.8, restDelta: 0.2, restSpeed: 4 })
+  const springPull = useMotionValue(0)
   const translateY = useTransform(springPull, (pull) => -pull)
   const gradientOpacity = useTransform(springPull, [0, 8, PULL_SCALE], [0, 0.08, 0.55])
   // The glow keeps reaching further up the screen the harder the page is pulled,
@@ -33,6 +44,18 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     let distance = 0
     let releaseTimer = 0
     let enabled = false
+    let pullAnimation: { stop: () => void } | null = null
+    let target = 0
+    const pullTarget = {
+      set(value: number) {
+        if (value === target && pullAnimation) return
+        target = value
+        pullAnimation?.stop()
+        pullAnimation = value === 0
+          ? (springPull.get() === 0 ? null : animate(springPull, 0, { duration: RETURN_DURATION, ease: RETURN_EASE }))
+          : animate(springPull, value, PULL_SPRING)
+      },
+    }
 
     const release = () => {
       window.clearTimeout(releaseTimer)
@@ -46,6 +69,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       root.classList.toggle('has-custom-overscroll', enabled && pointer.matches)
       if (!enabled) {
         release()
+        pullAnimation?.stop()
         springPull.jump(0)
       }
     }
@@ -130,12 +154,28 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       touchPulling = false
     }
 
+    // Wheel gesture bookkeeping.
+    let wheelLastT = -Infinity
+    let wheelGestureStart = 0
+    let wheelPeak = 0
+    let wheelLastDelta = 0
+    let wheelDecayCount = 0
+    let wheelSwallowing = false
+    const endWheelGesture = () => {
+      wheelSwallowing = true
+      release()
+    }
+
     const onWheel = (event: WheelEvent) => {
       if (!enabled || !pointer.matches || event.defaultPrevented || event.ctrlKey) return
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? root.clientHeight : 1
       const delta = event.deltaY * unit
       if (!Number.isFinite(delta) || delta === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+      const now = event.timeStamp || performance.now()
+      const gap = now - wheelLastT
+      wheelLastT = now
       if (delta < 0) {
+        wheelSwallowing = false
         release()
         return
       }
@@ -145,10 +185,39 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       if (isInsideScroller(event)) return
 
       if (event.cancelable) event.preventDefault()
+
+      if (gap > WHEEL_GESTURE_GAP) {
+        // A fresh gesture after a real pause.
+        wheelSwallowing = false
+        wheelGestureStart = now
+        wheelPeak = 0
+        wheelDecayCount = 0
+        wheelLastDelta = 0
+      } else if (wheelSwallowing) {
+        // Still the momentum tail of a gesture that already bounced back. Only a
+        // clear new push (a sharp jump in delta) starts another stretch.
+        const newPush = delta > wheelLastDelta * 2.5 && delta > 20
+        wheelLastDelta = delta
+        if (!newPush) return
+        wheelSwallowing = false
+        wheelGestureStart = now
+        wheelPeak = 0
+        wheelDecayCount = 0
+      }
+
+      // Momentum detection: deltas shrinking steadily below the peak means the
+      // fingers have lifted and the OS is coasting.
+      wheelDecayCount = delta < wheelLastDelta && delta < wheelPeak * MOMENTUM_DECAY_RATIO ? wheelDecayCount + 1 : 0
+      wheelPeak = Math.max(wheelPeak, delta)
+      wheelLastDelta = delta
+      if (wheelDecayCount >= MOMENTUM_DECAY_EVENTS || now - wheelGestureStart > WHEEL_MAX_HOLD) {
+        endWheelGesture()
+        return
+      }
+
       // Logarithmic resistance keeps growing with force, without a stretch ceiling.
       applyPull(delta)
       window.clearTimeout(releaseTimer)
-      // Scroll speed does not signal release. Wait for an actual pause in input.
       releaseTimer = window.setTimeout(release, RELEASE_DELAY)
     }
 
@@ -169,6 +238,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
 
     return () => {
       release()
+      pullAnimation?.stop()
       observer.disconnect()
       root.classList.remove('has-custom-overscroll')
       pointer.removeEventListener('change', updateAvailability)
@@ -182,7 +252,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       window.removeEventListener('touchcancel', onTouchEnd)
       window.removeEventListener('blur', release)
     }
-  }, [pullTarget, springPull])
+  }, [springPull])
 
   return (
     <>
