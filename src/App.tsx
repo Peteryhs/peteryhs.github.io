@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { type ReactNode, useState, useRef, useEffect } from 'react'
+import { type ReactNode, useState, useRef, useEffect, useCallback } from 'react'
 import {
   AboutBentoGrid,
   ProfileCard,
@@ -29,6 +29,7 @@ import {
 } from './components/ContactSection'
 import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
 import { BottomBounceEffect } from './components/BottomBounceEffect'
+import { CommandPalette, CommandPaletteTrigger } from './components/CommandPalette'
 import { topicById, type Topic, type TopicId } from './content/site'
 
 const ease = [0.16, 1, 0.3, 1] as const
@@ -344,6 +345,13 @@ export default function App() {
     }
   }, [activeId])
 
+  // From the command palette: bring the intro into view and expand the topic.
+  const openTopic = useCallback((id: TopicId) => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+    setActiveId(id)
+  }, [])
+
   const handleSelect = (id: TopicId) => {
     setActiveId((prev) => (prev === id ? null : id))
   }
@@ -387,6 +395,8 @@ export default function App() {
   return (
     <>
       <AnimatedThemeToggler />
+      <CommandPaletteTrigger />
+      <CommandPalette onOpenTopic={openTopic} />
       <CursorFollower ref={cursorRef} activeInfo={cursorInfo} />
 
       <BottomBounceEffect>
