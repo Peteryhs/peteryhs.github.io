@@ -52,6 +52,7 @@ export type CaseBlock =
   | { kind: 'rows'; items: { tag: string; title: string; href: string; meta: string }[] }
   | { kind: 'hardNegatives'; caption: string }
   | { kind: 'chart'; views: ChartView[] }
+  | { kind: 'crowdsec' }
 
 export interface ChartView {
   label: string
@@ -88,6 +89,7 @@ export const WIDE_BLOCKS = new Set<CaseBlock['kind']>([
   'counters',
   'hardNegatives',
   'chart',
+  'crowdsec',
 ])
 
 export const caseStudies: Record<string, CaseStudy> = {
@@ -398,15 +400,7 @@ export const caseStudies: Record<string, CaseStudy> = {
               'CrowdSec guards the blind proxy path, so the services holding the most precious data stay safe without Cloudflare in front. Cloudflare Access adds an email check in front of the Vaultwarden admin panel.',
             ],
           },
-          {
-            kind: 'steps',
-            items: [
-              { title: 'Caddy on Casa', text: 'Writes the access logs.' },
-              { title: 'CrowdSec agent', text: 'Reads the logs and flags attackers.' },
-              { title: 'CrowdSec LAPI', text: 'Shares decisions over Tailscale.' },
-              { title: 'Bouncer on VPS', text: 'Drops bad IPs in nftables.' },
-            ],
-          },
+          { kind: 'crowdsec' },
         ],
       },
       {

@@ -141,24 +141,6 @@ export function HardNegativeField({ caption, className = '' }: { caption: string
       ctx.drawImage(threads, 0, 0, w, h)
       ctx.restore()
 
-      // Human curve as a soft glowing spine.
-      ctx.save()
-      ctx.lineWidth = 2.4
-      ctx.lineCap = 'round'
-      ctx.strokeStyle = rgba(BLUE, 0.85)
-      ctx.shadowColor = rgba(BLUE, 0.9)
-      ctx.shadowBlur = 12
-      ctx.setLineDash([10, 7])
-      ctx.lineDashOffset = reduced ? 0 : -now / 60
-      ctx.beginPath()
-      for (let s = 0; s <= 60 * ease; s++) {
-        const [x, y] = curve(s / 60)
-        if (s === 0) ctx.moveTo(x * w, y * h)
-        else ctx.lineTo(x * w, y * h)
-      }
-      ctx.stroke()
-      ctx.restore()
-
       // Dots.
       for (let i = 0; i < pairs.length; i++) {
         const p = pairs[i]

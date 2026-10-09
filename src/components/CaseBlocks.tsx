@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { createPortal, flushSync } from 'react-dom'
 import type { CaseBlock, ChartView, Figure } from '../content/caseStudies'
 import { HardNegativeField } from './HardNegativeField'
+import { CrowdSecFlow } from './CrowdSecFlow'
 
 /* Visual building blocks for case study pages. They borrow the home page's
    vocabulary: soft bento surfaces, warm stat pills, the dashed IGN badge,
@@ -247,22 +248,29 @@ function Timeline({ items }: { items: { when: string; title: string; text?: stri
 
 function Hardware({ items }: Extract<CaseBlock, { kind: 'hardware' }>) {
   return (
-    <div className="cs-hardware">
-      {items.map((d, i) => (
-        <div key={d.name} className="cs-device" style={vars({ '--i': i })}>
-          <DeviceIcon icon={d.icon} />
-          <div className="cs-device-head">
-            <span className="cs-device-name">{d.name}</span>
-            <span className="cs-device-role">{d.role}</span>
-          </div>
-          <div className="cs-device-specs">
-            {d.specs.map((s) => (
-              <span key={s} className="cs-chip">{s}</span>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
+    <table className="cs-split cs-hw-table">
+      <thead>
+        <tr>
+          <th scope="col">Machine</th>
+          <th scope="col">Role</th>
+          <th scope="col">Specs</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((d) => (
+          <tr key={d.name}>
+            <td>
+              <span className="cs-hw-name">
+                <DeviceIcon icon={d.icon} />
+                {d.name}
+              </span>
+            </td>
+            <td className="cs-hw-role">{d.role}</td>
+            <td className="cs-hw-specs">{d.specs.join(' · ')}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 
@@ -327,12 +335,10 @@ function Routes({ items }: Extract<CaseBlock, { kind: 'routes' }>) {
       {items.map((r, ri) => (
         <div key={r.tag} className="cs-route" style={vars({ '--i': ri })}>
           <div className="cs-route-head">
-            <span className="cs-route-tag">{r.tag}</span>
             <span className="cs-route-title">{r.title}</span>
             <span className="cs-route-note">{r.note}</span>
           </div>
           <div className="cs-route-flow">
-            <span className="cs-route-packet" aria-hidden="true" style={vars({ '--d': `${ri * 0.9}s` })} />
             {r.nodes.map((n, i) => (
               <FlowNode key={n.label + i} node={n} link={i < r.nodes.length - 1 ? r.links[i] ?? '' : null} last={i === r.nodes.length - 1} />
             ))}
@@ -780,5 +786,7 @@ export function CaseBlockView({ block }: { block: CaseBlock }): ReactNode {
       return <HardNegativeField caption={block.caption} className="is-inline" />
     case 'chart':
       return <ResultsChart views={block.views} />
+    case 'crowdsec':
+      return <CrowdSecFlow />
   }
 }
