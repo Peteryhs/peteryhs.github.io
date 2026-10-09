@@ -1,4 +1,4 @@
-import { type MouseEvent, useState } from 'react'
+import { type MouseEvent, type ComponentType } from 'react'
 import { BlurFade } from './BlurFade'
 import { SunSystemsOrbit } from './SunSystemsOrbit'
 import { SunSystemsLogo } from './SunSystemsLogo'
@@ -7,6 +7,7 @@ import { AgenticRoutingTree } from './AgenticRoutingTree'
 import { HermesStarsBackdrop } from './HermesStarsBackdrop'
 import { projectsData, type ProjectItem } from '../content/projects'
 import { useGitHubStars } from '../hooks/useGitHubStars'
+import { setProjectHover, useIsProjectHovered } from '../hooks/projectHover'
 
 function GithubIcon({ className = '' }: { className?: string }) {
   return (
@@ -223,15 +224,22 @@ export function ProjectCard({
   )
 }
 
-export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
-  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null)
+function HoverBackdrop({ slug, Backdrop }: { slug: string; Backdrop: ComponentType<{ isActive: boolean }> }) {
+  return <Backdrop isActive={useIsProjectHovered(slug)} />
+}
 
+// Stable per-card handlers so hovering never re-renders the cards.
+const hoverHandlers: Record<string, (isHovered: boolean) => void> = Object.fromEntries(
+  projectsData.map((project) => [project.slug, (isHovered: boolean) => setProjectHover(project.slug, isHovered)])
+)
+
+export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
   return (
     <>
-      <SunSystemsOrbit isActive={hoveredSlug === 'sun-systems'} />
-      <AIDetectorMatrix isActive={hoveredSlug === 'ai-detector'} />
-      <AgenticRoutingTree isActive={hoveredSlug === 'openwebui-agentic-tooling'} />
-      <HermesStarsBackdrop isActive={hoveredSlug === 'hermes-contributions'} />
+      <HoverBackdrop slug="sun-systems" Backdrop={SunSystemsOrbit} />
+      <HoverBackdrop slug="ai-detector" Backdrop={AIDetectorMatrix} />
+      <HoverBackdrop slug="openwebui-agentic-tooling" Backdrop={AgenticRoutingTree} />
+      <HoverBackdrop slug="hermes-contributions" Backdrop={HermesStarsBackdrop} />
 
       <div className={`projects-grid ${isExpanded ? 'is-expanded-view' : ''}`}>
         {projectsData.map((project, idx) => (
@@ -244,9 +252,7 @@ export function ProjectsGrid({ isExpanded = false }: { isExpanded?: boolean }) {
           >
             <ProjectCard
               project={project}
-              onHoverChange={(isHovered) => {
-                setHoveredSlug(isHovered ? project.slug : null)
-              }}
+              onHoverChange={hoverHandlers[project.slug]}
             />
           </BlurFade>
         ))}

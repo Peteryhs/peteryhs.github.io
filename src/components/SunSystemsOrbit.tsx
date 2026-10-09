@@ -1,6 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'motion/react'
 
 export interface SunSystemsOrbitProps {
   isActive: boolean
@@ -45,17 +44,18 @@ export function SunSystemsOrbit({ isActive }: SunSystemsOrbitProps) {
     return starList
   }, [])
 
-  if (typeof document === 'undefined') return null
+  // Mount once on first hover, then keep the scene alive and just fade it with a
+  // CSS class. Re-mounting 70 stars + the SVG rig on every hover was the lag.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    if (isActive) setMounted(true)
+  }, [isActive])
+
+  if (typeof document === 'undefined' || !mounted) return null
 
   return createPortal(
-    <AnimatePresence>
-      {isActive && (
-        <motion.div
-          className="sun-systems-backdrop-root"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        <div
+          className={`sun-systems-backdrop-root${isActive ? ' is-active' : ''}`}
           aria-hidden="true"
         >
           {/* Crisp Starfield Layer (No glow) */}
@@ -144,9 +144,7 @@ export function SunSystemsOrbit({ isActive }: SunSystemsOrbitProps) {
 
           {/* Right-Edge Depth of Field Blur Lens (Out of focus effect) */}
           <div className="sun-systems-dof-blur-edge" aria-hidden="true" />
-        </motion.div>
-      )}
-    </AnimatePresence>,
+        </div>,
     document.body
   )
 }

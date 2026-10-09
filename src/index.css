@@ -1958,6 +1958,27 @@ html.theme-sun-dark main {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  contain: strict;
+  opacity: 0;
+  visibility: hidden;
+  /* Fade out, then stop rendering entirely (visibility flips after the fade). */
+  transition:
+    opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 320ms;
+}
+
+.sun-systems-backdrop-root.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s;
+}
+
+/* Nothing animates while the scene is hidden. */
+.sun-systems-backdrop-root:not(.is-active) *,
+.sun-systems-backdrop-root:not(.is-active) .sun-systems-satellites-orbit-group {
+  animation-play-state: paused;
 }
 
 .sun-systems-starfield {
@@ -1973,14 +1994,13 @@ html.theme-sun-dark main {
   animation: starTwinkle ease-in-out infinite alternate;
 }
 
+/* Opacity only: animating scale on 70 separate dots forced a layer per star. */
 @keyframes starTwinkle {
   0% {
     opacity: 0.15;
-    transform: scale(0.7);
   }
   100% {
     opacity: 0.85;
-    transform: scale(1.1);
   }
 }
 
@@ -2008,6 +2028,7 @@ html.theme-sun-dark main {
 
 .sun-systems-satellites-orbit-group {
   transform-origin: 130px 130px;
+  will-change: transform;
   animation: sunSystemsOrbitRevolve 24s linear infinite;
 }
 
