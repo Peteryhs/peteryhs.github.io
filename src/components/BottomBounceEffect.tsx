@@ -63,8 +63,18 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     let returnStart = 0
     let frame = 0
     let lastFrame = 0
+    // Measured once per gesture: on phones the toolbar collapsing mid-pull changes
+    // the viewport height, and re-measuring every frame made the page jump.
+    let gestureLimit = 0
+    let glowBase = 200
+    let gestureScrollY = 0
 
-    const limit = () => Math.max(160, window.innerHeight * RUBBER_LIMIT)
+    const limit = () => gestureLimit || Math.max(160, root.clientHeight * RUBBER_LIMIT)
+    const beginGesture = () => {
+      gestureLimit = Math.max(160, root.clientHeight * RUBBER_LIMIT)
+      glowBase = glow.offsetHeight || 200
+      gestureScrollY = window.scrollY
+    }
 
     const paint = () => {
       if (shown <= 0.1) {
@@ -74,9 +84,8 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
         return
       }
       wrapper.style.transform = `translate3d(0, ${-shown}px, 0)`
-      const base = glow.offsetHeight || 200
       glow.style.opacity = String(Math.min(1, shown / GLOW_FULL_AT) * GLOW_MAX_OPACITY)
-      glow.style.transform = `scaleY(${1 + (shown * GLOW_REACH) / base})`
+      glow.style.transform = `scaleY(${1 + (shown * GLOW_REACH) / glowBase})`
     }
 
     const tick = (now: number) => {
@@ -94,10 +103,12 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
           raw = 0
           shown = 0
           mode = 'idle'
+          gestureLimit = 0
         }
       } else if (mode === 'input') {
         const target = rubber(raw, limit())
-        shown += (target - shown) * (1 - Math.exp(-dt / SMOOTH_MS))
+        // A finger is tracked 1:1; wheel notches get a short smoothing lag.
+        shown = holding ? target : shown + (target - shown) * (1 - Math.exp(-dt / SMOOTH_MS))
       }
 
       paint()
@@ -121,6 +132,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     }
 
     const addInput = (delta: number) => {
+      if (mode === 'idle') beginGesture()
       if (mode !== 'input') raw = unrubber(shown, limit()) // pick up mid-return
       mode = 'input'
       raw = Math.max(0, raw + delta)
@@ -135,14 +147,25 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       raw = 0
       shown = 0
       holding = false
+      gestureLimit = 0
       wheel.reset()
       paint()
     }
 
+    // Turn off the browser's own overscroll so it never bounces on top of ours.
+    // On touch screens only do that in the lower half of the page, so iOS/Android
+    // pull-to-refresh at the top keeps working.
+    let customOverscroll = false
+    const syncOverscroll = () => {
+      const want = enabled && (finePointer.matches || window.scrollY > (root.scrollHeight - root.clientHeight) / 2)
+      if (want !== customOverscroll) {
+        customOverscroll = want
+        root.classList.toggle('has-custom-overscroll', want)
+      }
+    }
     const updateAvailability = () => {
       enabled = !reducedMotion.matches
-      // Native overscroll stays on touch screens so pull-to-refresh at the top works.
-      root.classList.toggle('has-custom-overscroll', enabled && finePointer.matches)
+      syncOverscroll()
       if (!enabled) reset()
     }
 
@@ -233,8 +256,11 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       scrollVelocity = dt > 120 ? instant : scrollVelocity * 0.4 + instant * 0.6
       lastScrollY = window.scrollY
       lastScrollT = now
+      syncOverscroll()
       const atBottom = isAtBottom()
-      if (mode !== 'idle' && !atBottom && !holding) {
+      // Only a real scroll away from the end cancels the stretch; the mobile
+      // toolbar showing or hiding nudges isAtBottom without the page moving.
+      if (mode !== 'idle' && !holding && window.scrollY < gestureScrollY - 8) {
         reset()
         return
       }
@@ -246,7 +272,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
     }
 
     const onResize = () => {
-      if (mode !== 'idle' && !isAtBottom()) reset()
+      syncOverscroll()
     }
 
     updateAvailability()
