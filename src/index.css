@@ -4442,6 +4442,37 @@ html[data-vt='swap']::view-transition-new(root) {
 
 ::view-transition-group(case-back) { animation-duration: 300ms; }
 
+/* Shared pieces (tagline, eyebrow, stars, pills, buttons, description) each
+   get their own name from JS and one of two classes. Boxes glide and stretch;
+   text glides pinned top-left and is scaled by its font-size ratio in JS. */
+::view-transition-group(*.morph-box),
+::view-transition-group(*.morph-text) {
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(*.morph-text),
+::view-transition-new(*.morph-text) {
+  width: auto;
+  height: auto;
+  inset: 0 auto auto 0;
+  transform-origin: 0 0;
+}
+::view-transition-old(*.morph-text) { animation: vt-fade-out 240ms ease-out both; }
+::view-transition-new(*.morph-text) { animation: vt-fade-in 300ms ease-out 60ms both; }
+::view-transition-old(*.morph-box),
+::view-transition-new(*.morph-box) { height: 100%; }
+::view-transition-old(*.morph-box) { animation: vt-fade-out 200ms ease-out both; }
+/* Description rewraps between card and page, so swap it quickly. */
+::view-transition-old(case-desc) { animation: vt-fade-out 110ms ease-out both; }
+::view-transition-new(case-desc) { animation: vt-fade-in 260ms ease-out 150ms both; }
+
+/* "Next project" → next header: the link grows into the header box while the
+   rest of the page steps aside, then the new body fades in under it. */
+html[data-vt='next']::view-transition-old(root) { animation: vt-fade-out 200ms ease-out both; }
+html[data-vt='next']::view-transition-new(root) { animation: vt-rise-in 460ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both; }
+@keyframes vt-rise-in { from { opacity: 0; transform: translateY(18px); } }
+::view-transition-new(*.morph-box) { animation: vt-fade-in 260ms ease-out 80ms both; }
+
 @keyframes vt-fade-out { to { opacity: 0; } }
 @keyframes vt-fade-in { from { opacity: 0; } }
 @keyframes vt-slide-out { to { opacity: 0; transform: translateX(-24px); } }

@@ -47,20 +47,31 @@ const NAMES = {
 } as const
 
 const named = new Set<HTMLElement>()
-let titleFont = { old: 0, new: 0 }
+/** Font sizes of every text part, old and new, keyed by transition name. */
+let textFonts = new Map<string, { old: number; new: number }>()
+let side: 'old' | 'new' = 'old'
 
 const fontSizeOf = (el: Element | null | undefined) =>
   el ? parseFloat(getComputedStyle(el).fontSize) || 0 : 0
 
-function nameEl(el: Element | null | undefined, name: string) {
+type Kind = 'box' | 'text'
+
+function nameEl(el: Element | null | undefined, name: string, kind?: Kind) {
   if (!(el instanceof HTMLElement)) return
   el.style.viewTransitionName = name
+  if (kind) el.style.setProperty('view-transition-class', `morph-${kind}`)
   named.add(el)
+  if (kind === 'text') {
+    const f = textFonts.get(name) ?? { old: 0, new: 0 }
+    f[side] = fontSizeOf(el)
+    textFonts.set(name, f)
+  }
 }
 
 function clearNames() {
   named.forEach((el) => {
     el.style.viewTransitionName = ''
+    el.style.removeProperty('view-transition-class')
   })
   named.clear()
 }
@@ -70,46 +81,103 @@ const inViewport = (el: Element) => {
   return r.bottom > 0 && r.top < window.innerHeight && r.width > 0
 }
 
+/** Name a part only when it is actually on screen. */
+function part(el: Element | null | undefined, name: string, kind: Kind) {
+  if (el && inViewport(el)) nameEl(el, name, kind)
+}
+
+function partList(els: Iterable<Element>, prefix: string, kind: Kind) {
+  let i = 0
+  for (const el of els) part(el, `${prefix}-${i++}`, kind)
+}
+
 /** Find the home-page card for a project, preferring one on screen. */
 function findCard(slug: string): HTMLElement | null {
   const cards = Array.from(document.querySelectorAll<HTMLElement>(`[data-project-card="${slug}"]`))
   return cards.find(inViewport) ?? null
 }
 
+/** The pieces a card and a case header share: tagline, stars, pills, buttons. */
+function nameHeroParts(hero: Element) {
+  part(hero.querySelector('.case-eyebrow > span'), 'case-eyebrow', 'text')
+  part(hero.querySelector('.case-tagline'), 'case-tagline', 'text')
+  part(hero.querySelector('.case-stars'), 'case-stars', 'box')
+  partList(hero.querySelectorAll('.case-stats .project-stat-pill'), 'case-stat', 'box')
+  part(hero.querySelector('.project-link-github'), 'case-gh', 'box')
+  partList(hero.querySelectorAll('.project-link-marketplace'), 'case-mkt', 'box')
+}
+
 /** Name the case study header, if it's on screen. */
-function nameHero(): number {
+function nameHero(withLede = true) {
   const hero = document.querySelector<HTMLElement>('.case-hero')
-  if (!hero || !inViewport(hero)) return 0
+  if (!hero || !inViewport(hero)) return
   nameEl(hero, NAMES.surface)
   nameEl(hero.querySelector('.case-hero-inner'), NAMES.content)
-  const title = hero.querySelector('.case-title-text')
-  nameEl(title, NAMES.title)
-  return fontSizeOf(title)
+  nameEl(hero.querySelector('.case-title-text'), NAMES.title, 'text')
+  nameHeroParts(hero)
+  if (withLede) part(document.querySelector('.case-lede'), 'case-desc', 'text')
 }
 
 /** Give a card the same transition names as the case study header. */
-function nameCard(card: HTMLElement | null): number {
-  if (!card) return 0
+function nameCard(card: HTMLElement | null) {
+  if (!card) return
   nameEl(card, NAMES.surface)
   nameEl(card.querySelector('.project-card-inner'), NAMES.content)
-  const title = card.querySelector('.project-title-text')
-  nameEl(title, NAMES.title)
-  return fontSizeOf(title)
+  nameEl(card.querySelector('.project-title-text'), NAMES.title, 'text')
+  part(card.querySelector('.project-card-tagline'), 'case-tagline', 'text')
+  part(card.querySelector('.project-card-star-count-wrap'), 'case-stars', 'box')
+  partList(card.querySelectorAll('.project-stats-grid .project-stat-pill'), 'case-stat', 'box')
+  part(card.querySelector('.project-link-github'), 'case-gh', 'box')
+  partList(card.querySelectorAll('.project-link-marketplace'), 'case-mkt', 'box')
+  part(card.querySelector('.project-card-description'), 'case-desc', 'text')
 }
 
-/** Scale the two title snapshots by the real font-size ratio. */
-function animateTitle() {
-  const { old: a, new: b } = titleFont
-  if (!a || !b) return
-  const ratio = b / a
+/** Project → project. The "Next project" link becomes the next header when
+ *  it's on screen; otherwise the header pieces hold still and swap text. */
+function nameSwapOld(nextSlug: string): 'next' | 'hero' {
+  const link = document.querySelector<HTMLAnchorElement>('.case-next-link')
+  if (link && inViewport(link) && link.getAttribute('href')?.endsWith(`/${nextSlug}`)) {
+    nameEl(link, NAMES.surface)
+    nameEl(link.querySelector('.case-next-name'), NAMES.title, 'text')
+    nameEl(link.querySelector('.case-next-tagline'), 'case-tagline', 'text')
+    nameEl(link.querySelector('.case-next-label'), 'case-eyebrow', 'text')
+    return 'next'
+  }
+  const hero = document.querySelector<HTMLElement>('.case-hero')
+  if (hero && inViewport(hero)) {
+    nameEl(hero.querySelector('.case-title-text'), NAMES.title, 'text')
+    nameHeroParts(hero)
+  }
+  return 'hero'
+}
+
+function nameSwapNew(mode: 'next' | 'hero') {
+  const hero = document.querySelector<HTMLElement>('.case-hero')
+  if (!hero) return
+  nameEl(hero.querySelector('.case-title-text'), NAMES.title, 'text')
+  if (mode === 'next') {
+    nameEl(hero, NAMES.surface)
+    nameEl(hero.querySelector('.case-hero-inner'), NAMES.content)
+    part(hero.querySelector('.case-tagline'), 'case-tagline', 'text')
+    part(hero.querySelector('.case-eyebrow > span'), 'case-eyebrow', 'text')
+  } else nameHeroParts(hero)
+}
+
+/** Scale each text snapshot pair by its real font-size ratio. */
+function animateText() {
   const timing = { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' as const }
   const root = document.documentElement
-  titleAnims = [
-    root.animate({ transform: ['scale(1)', `scale(${ratio})`] }, { ...timing, pseudoElement: '::view-transition-old(case-title)' }),
-    root.animate({ transform: [`scale(${1 / ratio})`, 'scale(1)'] }, { ...timing, pseudoElement: '::view-transition-new(case-title)' }),
-  ]
+  textAnims = []
+  textFonts.forEach(({ old: a, new: b }, name) => {
+    if (!a || !b || Math.abs(a - b) < 0.5) return
+    const ratio = b / a
+    textAnims.push(
+      root.animate({ transform: ['scale(1)', `scale(${ratio})`] }, { ...timing, pseudoElement: `::view-transition-old(${name})` }),
+      root.animate({ transform: [`scale(${1 / ratio})`, 'scale(1)'] }, { ...timing, pseudoElement: `::view-transition-new(${name})` }),
+    )
+  })
 }
-let titleAnims: Animation[] = []
+let textAnims: Animation[] = []
 
 const prefersReducedMotion = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -159,14 +227,19 @@ function transitionTo(next: Route): Promise<void> {
   root.dataset.vt =
     from.name === 'home' ? 'open' : next.name === 'home' ? 'close' : 'swap'
 
-  // Old state: the card (opening) or the header (closing) that will morph.
-  // Project → project just slides, with nothing named.
-  titleFont = { old: 0, new: 0 }
+  // Old state: the card (opening), the header (closing), or for project →
+  // project the "Next project" link or the header pieces.
+  textFonts = new Map()
+  side = 'old'
+  let swapMode: 'next' | 'hero' = 'hero'
   if (from.name === 'home' && next.name === 'project') {
     const source = pendingSource && inViewport(pendingSource) ? pendingSource : findCard(next.slug)
-    titleFont.old = nameCard(source)
+    nameCard(source)
   } else if (from.name === 'project' && next.name === 'home') {
-    titleFont.old = nameHero()
+    nameHero()
+  } else if (from.name === 'project' && next.name === 'project') {
+    swapMode = nameSwapOld(next.slug)
+    if (swapMode === 'next') root.dataset.vt = 'next'
   }
   pendingSource = null
 
@@ -176,18 +249,21 @@ function transitionTo(next: Route): Promise<void> {
     clearNames()
     commit()
     committed()
+    side = 'new'
     // New state: the header (opening) or the card we land on (closing).
     if (from.name === 'home' && next.name === 'project') {
-      titleFont.new = nameHero()
+      nameHero()
     } else if (from.name === 'project' && next.name === 'home') {
-      titleFont.new = nameCard(findCard(from.slug))
+      nameCard(findCard(from.slug))
+    } else if (next.name === 'project') {
+      nameSwapNew(swapMode)
     }
   })
 
-  transition.ready.then(animateTitle).catch(() => {})
+  transition.ready.then(animateText).catch(() => {})
   transition.finished.finally(() => {
-    titleAnims.forEach((a) => a.cancel())
-    titleAnims = []
+    textAnims.forEach((a) => a.cancel())
+    textAnims = []
     clearNames()
     delete root.dataset.vt
     committed()
