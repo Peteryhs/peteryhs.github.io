@@ -1,79 +1,228 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { animate, motion, useMotionValue, useTransform } from 'motion/react'
 import { WheelGestureTracker } from './wheelGesture'
 
-const PULL_SCALE = 72
-const RESISTANCE = 0.42
-const RELEASE_DELAY = 120
-// Fixed-duration return so a big stretch comes back in the same time as a small one.
-const RETURN_DURATION = 0.42
-const RETURN_EASE = [0.22, 1, 0.36, 1] as const
-const PULL_SPRING = { type: 'spring', stiffness: 420, damping: 32, mass: 0.8, restDelta: 0.2, restSpeed: 4 } as const
-// Touch tuning: a finger drag past the end pulls harder than a wheel tick, and a
-// fast flick that lands on the end gets a small momentum stretch on its own.
-const TOUCH_PULL_GAIN = 2.4
+/*
+ * Bottom-of-page rubber band, modelled on the iOS edge scroll.
+ *
+ * Every bit of scroll input past the end of the page is added to a raw overscroll
+ * distance. What the page actually moves is that distance run through Apple's
+ * rubber-band curve, so each extra pixel of input moves the page a little less
+ * than the one before: easy at first, increasingly heavy, never a hard stop.
+ * A glow rises from the bottom edge as the page lifts.
+ *
+ * One requestAnimationFrame loop owns all motion. Input only changes the raw
+ * distance; when input stops (fingers lifted, wheel idle, or the trackpad's
+ * momentum coast detected) the page returns in a fixed time, however far it
+ * was pulled.
+ */
+
+const RUBBER_COEFF = 0.55 // Apple's rubber-band constant
+const RUBBER_LIMIT = 0.42 // the stretch approaches 42% of the viewport height
+const WHEEL_GAIN = 1
+const TOUCH_GAIN = 1.15
+const IDLE_MS = 90 // no wheel input for this long means the user has let go
+const RETURN_MS = 460 // fixed return time, independent of how far it was pulled
+const SMOOTH_MS = 40 // display lag that smooths out mouse wheel notches
+const GLOW_FULL_AT = 90 // px of lift at which the glow reaches full strength
+const GLOW_MAX_OPACITY = 0.65
+const GLOW_REACH = 1.25 // glow height gained per px of lift
+// Touch: a fling that lands on the end gets a short kick and comes straight back.
 const MOMENTUM_MIN_VELOCITY = 0.6 // px per ms
-const MOMENTUM_KICK = 16 // px of stretch per px/ms of arrival speed
-const MOMENTUM_HOLD = 160
-// How many extra glow heights the halo can gain on a very long pull.
-const GLOW_MAX_GROWTH = 2.1
+const MOMENTUM_KICK = 140 // raw px per px/ms of arrival speed
+
+const rubber = (raw: number, limit: number) => limit * (1 - 1 / ((raw * RUBBER_COEFF) / limit + 1))
+const unrubber = (offset: number, limit: number) => {
+  const ratio = Math.min(offset / limit, 0.999)
+  return (limit / RUBBER_COEFF) * (1 / (1 - ratio) - 1)
+}
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
+
+type Mode = 'idle' | 'input' | 'return'
 
 export function BottomBounceEffect({ children }: { children: ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const springPull = useMotionValue(0)
-  const translateY = useTransform(springPull, (pull) => -pull)
-  const gradientOpacity = useTransform(springPull, [0, 8, PULL_SCALE], [0, 0.08, 0.55])
-  // The glow keeps reaching further up the screen the harder the page is pulled,
-  // tracking the stretch instead of topping out (soft cap so it never fills the view).
-  const gradientScaleY = useTransform(springPull, (pull) => {
-    const t = Math.max(0, pull) / PULL_SCALE
-    return 0.7 + GLOW_MAX_GROWTH * (1 - Math.exp(-t * 0.9))
-  })
+  const glowRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const pointer = window.matchMedia('(hover: hover) and (pointer: fine)')
-    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const wrapper = wrapperRef.current
+    const glow = glowRef.current
+    if (!wrapper || !glow) return
+
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     const root = document.documentElement
-    let distance = 0
-    let releaseTimer = 0
+    const wheel = new WheelGestureTracker()
+
     let enabled = false
-    let pullAnimation: { stop: () => void } | null = null
-    let target = 0
-    const pullTarget = {
-      set(value: number) {
-        if (value === target && pullAnimation) return
-        target = value
-        pullAnimation?.stop()
-        pullAnimation = value === 0
-          ? (springPull.get() === 0 ? null : animate(springPull, 0, { duration: RETURN_DURATION, ease: RETURN_EASE }))
-          : animate(springPull, value, PULL_SPRING)
-      },
+    let mode: Mode = 'idle'
+    let raw = 0 // overscroll input, before resistance
+    let shown = 0 // px the page is currently lifted
+    let lastInput = 0
+    let holding = false // a finger is down and pulling
+    let returnFrom = 0
+    let returnStart = 0
+    let frame = 0
+    let lastFrame = 0
+
+    const limit = () => Math.max(160, window.innerHeight * RUBBER_LIMIT)
+
+    const paint = () => {
+      if (shown <= 0.1) {
+        wrapper.style.transform = ''
+        glow.style.opacity = '0'
+        glow.style.transform = ''
+        return
+      }
+      wrapper.style.transform = `translate3d(0, ${-shown}px, 0)`
+      const base = glow.offsetHeight || 200
+      glow.style.opacity = String(Math.min(1, shown / GLOW_FULL_AT) * GLOW_MAX_OPACITY)
+      glow.style.transform = `scaleY(${1 + (shown * GLOW_REACH) / base})`
     }
 
-    const release = () => {
-      window.clearTimeout(releaseTimer)
-      distance = 0
-      pullTarget.set(0)
+    const tick = (now: number) => {
+      frame = 0
+      const dt = Math.min(64, now - lastFrame || 16)
+      lastFrame = now
+
+      if (mode === 'input' && !holding && now - lastInput > IDLE_MS) startReturn(now)
+
+      if (mode === 'return') {
+        const p = Math.min(1, (now - returnStart) / RETURN_MS)
+        raw = returnFrom * (1 - easeOutCubic(p))
+        shown = rubber(raw, limit())
+        if (p >= 1) {
+          raw = 0
+          shown = 0
+          mode = 'idle'
+        }
+      } else if (mode === 'input') {
+        const target = rubber(raw, limit())
+        shown += (target - shown) * (1 - Math.exp(-dt / SMOOTH_MS))
+      }
+
+      paint()
+      if (mode !== 'idle') frame = requestAnimationFrame(tick)
     }
-    const updateAvailability = () => {
-      // Wheel/trackpad pull on desktop, finger drag on touch screens.
-      enabled = !motionPreference.matches
-      // Keep native overscroll on touch so pull-to-refresh at the top still works.
-      root.classList.toggle('has-custom-overscroll', enabled && pointer.matches)
-      if (!enabled) {
-        release()
-        pullAnimation?.stop()
-        springPull.jump(0)
+    const run = () => {
+      if (!frame) {
+        lastFrame = performance.now()
+        frame = requestAnimationFrame(tick)
       }
     }
+
+    function startReturn(now = performance.now()) {
+      if (mode === 'idle' || mode === 'return') return
+      holding = false
+      // Start from what is on screen so the return never jumps.
+      returnFrom = unrubber(shown, limit())
+      returnStart = now
+      mode = 'return'
+      run()
+    }
+
+    const addInput = (delta: number) => {
+      if (mode !== 'input') raw = unrubber(shown, limit()) // pick up mid-return
+      mode = 'input'
+      raw = Math.max(0, raw + delta)
+      lastInput = performance.now()
+      run()
+    }
+
+    const reset = () => {
+      if (frame) cancelAnimationFrame(frame)
+      frame = 0
+      mode = 'idle'
+      raw = 0
+      shown = 0
+      holding = false
+      wheel.reset()
+      paint()
+    }
+
+    const updateAvailability = () => {
+      enabled = !reducedMotion.matches
+      // Native overscroll stays on touch screens so pull-to-refresh at the top works.
+      root.classList.toggle('has-custom-overscroll', enabled && finePointer.matches)
+      if (!enabled) reset()
+    }
+
     // innerHeight tracks the mobile toolbar collapsing, clientHeight does not.
     const isAtBottom = () =>
       window.scrollY + Math.max(window.innerHeight, root.clientHeight) >= root.scrollHeight - 2
-    const measure = () => {
-      if (!isAtBottom()) release()
+
+    const isInsideScroller = (event: Event) => {
+      for (const target of event.composedPath()) {
+        if (!(target instanceof HTMLElement) || target === document.body || target === root) continue
+        if (target.scrollHeight > target.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(target).overflowY)) return true
+      }
+      return false
     }
-    // Momentum: a hard flick usually reaches the end after the finger lifts, so no
-    // touchmove is left to pull with. Turn the arrival speed into a short kick.
+
+    // Wheel and trackpad.
+    const onWheel = (event: WheelEvent) => {
+      if (!enabled || event.defaultPrevented || event.ctrlKey) return
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? root.clientHeight : 1
+      const delta = event.deltaY * unit
+      if (!Number.isFinite(delta) || delta === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+
+      if (delta < 0) {
+        wheel.reset()
+        if (mode === 'idle') return
+        // Scrolling back up while lifted lowers the page first, then scrolls normally.
+        if (event.cancelable) event.preventDefault()
+        addInput(delta * WHEEL_GAIN * 2)
+        if (raw === 0) reset()
+        return
+      }
+
+      if (!isAtBottom()) {
+        wheel.reset()
+        return
+      }
+      if (isInsideScroller(event)) return
+      if (event.cancelable) event.preventDefault()
+
+      const action = wheel.feed(delta, event.timeStamp || performance.now())
+      if (action === 'pull') addInput(delta * WHEEL_GAIN)
+      else if (action === 'release') startReturn()
+      // 'swallow': the trackpad is still coasting after the fingers lifted; ignore it.
+    }
+
+    // Touch.
+    let touchY: number | null = null
+    let touchIgnored = false
+    const onTouchStart = (event: TouchEvent) => {
+      if (!enabled || event.touches.length !== 1) {
+        touchY = null
+        return
+      }
+      touchY = event.touches[0].clientY
+      touchIgnored = isInsideScroller(event)
+    }
+    const onTouchMove = (event: TouchEvent) => {
+      if (!enabled || touchY === null || touchIgnored || event.touches.length !== 1) return
+      const y = event.touches[0].clientY
+      const delta = touchY - y // positive while the finger moves up
+      touchY = y
+      if (!holding) {
+        if (!isAtBottom() || delta <= 0) return
+        holding = true
+      }
+      if (event.cancelable) event.preventDefault()
+      addInput(delta * TOUCH_GAIN)
+      if (raw === 0) {
+        holding = false
+        reset()
+      }
+    }
+    const onTouchEnd = () => {
+      touchY = null
+      if (holding) startReturn()
+      holding = false
+    }
+
+    // Scroll: catch flings that land on the end, and drop the stretch if the page
+    // gets scrolled some other way (keyboard, scrollbar, anchor link).
     let lastScrollY = window.scrollY
     let lastScrollT = performance.now()
     let scrollVelocity = 0
@@ -84,144 +233,56 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
       scrollVelocity = dt > 120 ? instant : scrollVelocity * 0.4 + instant * 0.6
       lastScrollY = window.scrollY
       lastScrollT = now
-      if (distance > 0 && !isAtBottom()) {
-        release()
+      const atBottom = isAtBottom()
+      if (mode !== 'idle' && !atBottom && !holding) {
+        reset()
         return
       }
-      if (enabled && !pointer.matches && touchY === null && distance === 0 &&
-        isAtBottom() && scrollVelocity > MOMENTUM_MIN_VELOCITY) {
-        const kick = Math.min(PULL_SCALE * 0.85, scrollVelocity * MOMENTUM_KICK)
-        pullTarget.set(kick)
-        window.clearTimeout(releaseTimer)
-        releaseTimer = window.setTimeout(release, MOMENTUM_HOLD)
+      if (enabled && !finePointer.matches && touchY === null && mode === 'idle' &&
+        atBottom && scrollVelocity > MOMENTUM_MIN_VELOCITY) {
+        addInput(Math.min(scrollVelocity, 4) * MOMENTUM_KICK)
         scrollVelocity = 0
       }
     }
-    const isInsideScroller = (event: Event) => {
-      for (const target of event.composedPath()) {
-        if (!(target instanceof HTMLElement) || target === document.body || target === root) continue
-        if (target.scrollHeight > target.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(target).overflowY)) return true
-      }
-      return false
-    }
-    const applyPull = (delta: number) => {
-      if (distance === 0) {
-        const visiblePull = Math.max(0, springPull.get())
-        distance = (PULL_SCALE / RESISTANCE) * Math.expm1(visiblePull / PULL_SCALE)
-      }
-      distance = Math.max(0, distance + delta)
-      pullTarget.set(PULL_SCALE * Math.log1p(distance * RESISTANCE / PULL_SCALE))
-    }
 
-    // Touch: swiping up past the end of the page stretches it and lights the glow,
-    // and lifting the finger lets it spring back.
-    let touchY: number | null = null
-    let touchPulling = false
-    let touchIgnored = false
-    const onTouchStart = (event: TouchEvent) => {
-      if (!enabled || event.touches.length !== 1) {
-        touchY = null
-        return
-      }
-      touchY = event.touches[0].clientY
-      touchPulling = false
-      touchIgnored = isInsideScroller(event)
-    }
-    const onTouchMove = (event: TouchEvent) => {
-      if (!enabled || touchY === null || touchIgnored || event.touches.length !== 1) return
-      const y = event.touches[0].clientY
-      const delta = touchY - y // positive while the finger moves up (scrolling down)
-      touchY = y
-      const atBottom = isAtBottom()
-      if (!touchPulling) {
-        if (!atBottom || delta <= 0) return
-        touchPulling = true
-      }
-      if (event.cancelable) event.preventDefault()
-      applyPull(delta * TOUCH_PULL_GAIN)
-      if (distance <= 0) touchPulling = false
-    }
-    const onTouchEnd = () => {
-      touchY = null
-      if (touchPulling || distance > 0) release()
-      touchPulling = false
-    }
-
-    const wheel = new WheelGestureTracker()
-
-    const onWheel = (event: WheelEvent) => {
-      if (!enabled || !pointer.matches || event.defaultPrevented || event.ctrlKey) return
-      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? root.clientHeight : 1
-      const delta = event.deltaY * unit
-      if (!Number.isFinite(delta) || delta === 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
-      const now = event.timeStamp || performance.now()
-      if (delta < 0) {
-        wheel.reset()
-        release()
-        return
-      }
-      if (!isAtBottom()) {
-        wheel.reset()
-        return
-      }
-
-      // Leave independently scrolling controls in charge of their own gestures.
-      if (isInsideScroller(event)) return
-
-      if (event.cancelable) event.preventDefault()
-      const action = wheel.feed(delta, now)
-      if (action === 'release') release()
-      if (action !== 'pull') return
-
-      // Logarithmic resistance keeps growing with force, without a stretch ceiling.
-      applyPull(delta)
-      window.clearTimeout(releaseTimer)
-      releaseTimer = window.setTimeout(release, RELEASE_DELAY)
+    const onResize = () => {
+      if (mode !== 'idle' && !isAtBottom()) reset()
     }
 
     updateAvailability()
-    measure()
-    const observer = new ResizeObserver(measure)
-    if (wrapperRef.current) observer.observe(wrapperRef.current)
-    pointer.addEventListener('change', updateAvailability)
-    motionPreference.addEventListener('change', updateAvailability)
-    window.addEventListener('resize', measure, { passive: true })
-    window.addEventListener('scroll', onScroll, { passive: true })
+    finePointer.addEventListener('change', updateAvailability)
+    reducedMotion.addEventListener('change', updateAvailability)
     window.addEventListener('wheel', onWheel, { passive: false })
     window.addEventListener('touchstart', onTouchStart, { passive: true })
     window.addEventListener('touchmove', onTouchMove, { passive: false })
     window.addEventListener('touchend', onTouchEnd, { passive: true })
     window.addEventListener('touchcancel', onTouchEnd, { passive: true })
-    window.addEventListener('blur', release)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize, { passive: true })
+    window.addEventListener('blur', reset)
 
     return () => {
-      release()
-      pullAnimation?.stop()
-      observer.disconnect()
+      reset()
       root.classList.remove('has-custom-overscroll')
-      pointer.removeEventListener('change', updateAvailability)
-      motionPreference.removeEventListener('change', updateAvailability)
-      window.removeEventListener('resize', measure)
-      window.removeEventListener('scroll', onScroll)
+      finePointer.removeEventListener('change', updateAvailability)
+      reducedMotion.removeEventListener('change', updateAvailability)
       window.removeEventListener('wheel', onWheel)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
       window.removeEventListener('touchcancel', onTouchEnd)
-      window.removeEventListener('blur', release)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('blur', reset)
     }
-  }, [springPull])
+  }, [])
 
   return (
     <>
-      <motion.div ref={wrapperRef} className="bottom-bounce-wrapper" style={{ y: translateY }}>
+      <div ref={wrapperRef} className="bottom-bounce-wrapper">
         {children}
-      </motion.div>
-      <motion.div
-        className="bottom-overscroll-gradient"
-        aria-hidden="true"
-        style={{ opacity: gradientOpacity, scaleY: gradientScaleY }}
-      />
+      </div>
+      <div ref={glowRef} className="bottom-overscroll-gradient" aria-hidden="true" style={{ opacity: 0 }} />
     </>
   )
 }
