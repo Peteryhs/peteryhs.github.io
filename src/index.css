@@ -5211,73 +5211,93 @@ html[data-vt='zoom']::view-transition-new(root) { animation: vt-fade-in 260ms ea
 
 /* ---------- router (a small decision tree) ---------- */
 
+/* Every connector is a 2px wire or the bus's own border, all centred on
+   exact column centres, so joints line up with no overlaps. */
 .cs-router {
-  padding: 1.4rem 1.25rem 1.3rem;
+  --wire: 2px;
+  --wire-color: var(--line-strong);
+  --branch-gap: 0.9rem;
+  padding: 1.5rem 1.4rem 1.4rem;
   border-radius: 18px;
   border: 1.75px solid var(--bento-border);
   background: var(--bento-bg);
   box-shadow: var(--bento-shadow);
 }
 
+.cs-wire {
+  display: block;
+  width: var(--wire);
+  height: 1.15rem;
+  background: var(--wire-color);
+  transform-origin: top;
+}
+
 .cs-router-stages {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .cs-router-stage {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 0.25rem;
-  padding-bottom: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.cs-router-stage::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0.25rem;
-  width: 1.75px;
-  height: 1.05rem;
-  background: var(--line-strong);
-  transform-origin: top;
-  transform: scaleY(0);
-  transition: transform 360ms ease;
-  transition-delay: calc(var(--i) * 160ms + 160ms);
-}
-.is-visible .cs-router-stage::after { transform: scaleY(1); }
 
 .cs-router-node {
-  padding: 0.45rem 0.95rem;
+  padding: 0.45rem 1rem;
   border-radius: 999px;
-  border: 1.4px solid var(--line-strong);
+  border: 1.5px solid var(--line-strong);
   background: var(--paper);
   font-family: var(--font-main);
   font-size: 0.92rem;
+  line-height: 1.3;
   color: var(--ink);
+  white-space: nowrap;
 }
 .cs-router-stage:last-child .cs-router-node { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.cs-router-note { font-family: var(--font-main); font-size: 0.78rem; color: var(--muted); }
+.cs-router-note {
+  margin-top: 0.3rem;
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.cs-router-stage:has(.cs-router-note) + .cs-router-stage .cs-wire { margin-top: 0.3rem; }
 
-.cs-router-fan {
-  display: block;
-  width: 100%;
-  height: 2.6rem;
-  margin-top: -0.3rem;
-  overflow: visible;
+.cs-router-fork {
+  position: relative;
+  height: 2.5rem;
 }
-.cs-router-fan path {
-  fill: none;
-  stroke: var(--line-strong);
-  stroke-width: 1.75px;
+.cs-router-stem {
+  position: absolute;
+  left: calc(50% - var(--wire) / 2);
+  top: 0;
+  height: 1.25rem;
 }
-.cs-router-fan {
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path 620ms cubic-bezier(0.65, 0, 0.35, 1) 560ms;
+/* The bus: top edge is the horizontal run, side edges drop into the end columns. */
+.cs-router-bus {
+  position: absolute;
+  top: 1.25rem;
+  bottom: 0;
+  left: calc((100% - (var(--n) - 1) * var(--branch-gap)) / var(--n) / 2 - var(--wire) / 2);
+  right: calc((100% - (var(--n) - 1) * var(--branch-gap)) / var(--n) / 2 - var(--wire) / 2);
+  border: var(--wire) solid var(--wire-color);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
 }
-.is-visible .cs-router-fan { clip-path: inset(0 0 -10% 0); }
+.cs-router-drop {
+  position: absolute;
+  top: 1.25rem;
+  bottom: 0;
+  height: auto;
+  left: calc(
+    (100% - (var(--n) - 1) * var(--branch-gap)) / var(--n) * (var(--k) + 0.5)
+    + var(--k) * var(--branch-gap) - var(--wire) / 2
+  );
+}
 
 .cs-router-branches {
   list-style: none;
@@ -5285,28 +5305,118 @@ html[data-vt='zoom']::view-transition-new(root) { animation: vt-fade-in 260ms ea
   padding: 0;
   display: grid;
   grid-template-columns: repeat(var(--n), minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--branch-gap);
 }
 
 .cs-router-branch {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.9rem 1rem 1rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1rem 0.75rem 0.95rem;
   border-radius: 14px;
   background: var(--paper);
-  border: 1.5px solid var(--bento-border);
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 420ms ease, transform 520ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease;
-  transition-delay: calc(900ms + var(--i) * 90ms), calc(900ms + var(--i) * 90ms), 0s;
+  border: 1.5px solid var(--line-strong);
+  text-align: center;
+  transition: border-color 200ms ease, transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.is-visible .cs-router-branch { opacity: 1; transform: none; }
-.cs-router-branch:hover { border-color: var(--bento-border-hover); }
-.cs-router-branch-name { font-family: var(--font-main); font-size: 0.98rem; color: var(--ink); }
-.cs-router-branch-text { font-family: var(--font-main); font-size: 0.85rem; line-height: 1.45; color: var(--muted); }
-.cs-router-modes { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.3rem; }
-.cs-router-modes .cs-chip { font-size: 0.74rem; padding: 0.12rem 0.5rem; }
+.cs-router-branch:hover { border-color: var(--ink); transform: translateY(-2px); }
+.cs-router-icon { color: var(--ink); opacity: 0.85; }
+.cs-router-branch-name { font-family: var(--font-main); font-size: 0.95rem; line-height: 1.3; color: var(--ink); }
+
+/* Draw-in, top to bottom, once the section is on screen. */
+.cs-router .cs-wire { transform: scaleY(0); transition: transform 260ms ease; }
+.cs-router-stage .cs-wire { transition-delay: calc(var(--i) * 200ms); }
+.cs-router-stem { transition-delay: 560ms !important; }
+.cs-router-drop { transition-delay: 940ms !important; }
+.is-visible .cs-router .cs-wire { transform: scaleY(1); }
+.cs-router-bus { clip-path: inset(0 50% 0 50%); transition: clip-path 420ms cubic-bezier(0.65, 0, 0.35, 1) 760ms; }
+.is-visible .cs-router-bus { clip-path: inset(-4px -4px 0 -4px); }
+.cs-router-node,
+.cs-router-branch { opacity: 0; transition: opacity 360ms ease, border-color 200ms ease, transform 240ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cs-router-stage .cs-router-node { transition-delay: calc(var(--i) * 200ms + 120ms), 0s, 0s; }
+.cs-router-branch { transition-delay: calc(1080ms + var(--i) * 80ms), 0s, 0s; }
+.is-visible .cs-router-node,
+.is-visible .cs-router-branch { opacity: 1; }
+
+/* ---------- counters ---------- */
+
+.cs-counters {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.6fr) minmax(0, 0.7fr);
+  border-radius: 18px;
+  border: 1.75px solid var(--bento-border);
+  background: var(--bento-bg);
+  box-shadow: var(--bento-shadow);
+  overflow: hidden;
+}
+.cs-counters > * { padding: 1.35rem 1.4rem 1.4rem; min-width: 0; }
+.cs-counters > * + * { border-left: 1.5px dashed var(--line); }
+
+.cs-counter-total,
+.cs-counter-releases { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.cs-counter-big {
+  font-family: var(--font-main);
+  font-size: clamp(2.4rem, 4.5vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.cs-counter-big.is-small { font-size: clamp(2rem, 3.6vw, 2.5rem); }
+.cs-counter-label {
+  font-family: var(--font-main);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.cs-counter-split { display: flex; flex-direction: column; justify-content: center; gap: 0.9rem; }
+.cs-counter-bar {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+}
+.cs-counter-seg {
+  flex: 0 0 auto;
+  width: var(--w);
+  border-radius: 999px;
+  background: var(--cs-accent);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(200ms + var(--i) * 260ms);
+}
+.cs-counter-seg.is-b { background: var(--cs-cool); flex: 1 1 auto; width: auto; }
+.cs-counters.is-on .cs-counter-seg { transform: none; }
+
+.cs-counter-parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.cs-counter-part {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto 3rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.cs-counter-part.is-b .cs-host-dot { background: var(--cs-cool); }
+.cs-counter-part-value { font-variant-numeric: tabular-nums; }
+.cs-counter-part-share { font-size: 0.82rem; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+.cs-counter-pips { display: flex; gap: 5px; margin-top: auto; padding-top: 0.6rem; }
+.cs-counter-pips span {
+  flex: 1;
+  max-width: 18px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  transition: background-color 200ms ease;
+}
+.cs-counter-pips span.is-lit { background: var(--ink); }
 
 /* ---------- rows (contact-row style) ---------- */
 
@@ -5405,9 +5515,13 @@ html[data-vt='zoom']::view-transition-new(root) { animation: vt-fade-in 260ms ea
   }
   .cs-device-svg { grid-row: span 2; width: 58px; height: 38px; margin-top: 0.15rem; }
 
-  .cs-router { padding: 1.2rem 0.9rem 1rem; }
-  .cs-router-fan { display: none; }
-  .cs-router-branches { grid-template-columns: 1fr; }
+  .cs-router { padding: 1.2rem 0.8rem 0.9rem; --branch-gap: 0.5rem; }
+  .cs-router-branch { padding: 0.8rem 0.4rem 0.75rem; }
+  .cs-router-branch-name { font-size: 0.82rem; }
+
+  .cs-counters { grid-template-columns: 1fr 1fr; }
+  .cs-counters > * { padding: 1.1rem 1.1rem 1.15rem; }
+  .cs-counter-split { grid-column: 1 / -1; grid-row: 2; border-left: none !important; border-top: 1.5px dashed var(--line); }
 
   .cs-row { grid-template-columns: 1fr auto; gap: 0.3rem 0.8rem; padding: 0.85rem 1rem; }
   .cs-row-divider { display: none; }
@@ -5428,9 +5542,11 @@ html[data-vt='zoom']::view-transition-new(root) { animation: vt-fade-in 260ms ea
   .cs-timeline-body,
   .cs-timeline-dot { opacity: 1 !important; transform: none !important; transition: none !important; }
   .cs-timeline-item::before,
-  .cs-router-stage::after { transform: none !important; transition: none !important; }
+  .cs-router .cs-wire,
+  .cs-counter-seg { transform: none !important; transition: none !important; }
+  .cs-router-bus { clip-path: none !important; transition: none !important; }
+  .cs-router-node, .cs-router-branch { opacity: 1 !important; transition: none !important; }
   .cs-metric-meter span { transform: scaleX(var(--f)) !important; transition: none !important; }
-  .cs-router-fan { clip-path: none !important; transition: none !important; }
   .cs-route-packet { display: none; }
   .cs-steps-loop-path path { animation: none !important; }
 }

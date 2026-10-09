@@ -424,39 +424,173 @@ function Metrics({ items }: Extract<CaseBlock, { kind: 'metrics' }>) {
   )
 }
 
+function BranchIcon({ icon }: { icon: 'code' | 'image' | 'search' }) {
+  const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
+  return (
+    <svg className="cs-router-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      {icon === 'code' && (
+        <g {...p}>
+          <path d="M8.5 7.5L4 12l4.5 4.5M15.5 7.5L20 12l-4.5 4.5M13.2 5.5l-2.4 13" />
+        </g>
+      )}
+      {icon === 'image' && (
+        <g {...p}>
+          <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+          <circle cx="9" cy="10" r="1.6" />
+          <path d="M20.5 15.5l-4.6-4.6L6 19.5" />
+        </g>
+      )}
+      {icon === 'search' && (
+        <g {...p}>
+          <circle cx="10.5" cy="10.5" r="6" />
+          <path d="M15 15l5 5" />
+        </g>
+      )}
+    </svg>
+  )
+}
+
 function Router({ stages, branches }: Extract<CaseBlock, { kind: 'router' }>) {
   const n = branches.length
-  const xs = branches.map((_, i) => ((i + 0.5) / n) * 100)
+  // Inner columns (not the two ends, which the bus's own sides draw) get a drop wire.
+  const inner = branches.slice(1, -1).map((_, k) => k + 1)
   return (
     <div className="cs-router" style={vars({ '--n': n })}>
       <ol className="cs-router-stages">
         {stages.map((s, i) => (
           <li key={s.label} className="cs-router-stage" style={vars({ '--i': i })}>
+            {i > 0 && <span className="cs-wire" aria-hidden="true" />}
             <span className="cs-router-node">{s.label}</span>
             {s.note && <span className="cs-router-note">{s.note}</span>}
           </li>
         ))}
       </ol>
-      <svg className="cs-router-fan" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-        {xs.map((x) => (
-          <path key={x} d={`M50 0 C50 22 ${x} 16 ${x} 40`} vectorEffect="non-scaling-stroke" />
+      <div className="cs-router-fork" aria-hidden="true">
+        <span className="cs-wire cs-router-stem" />
+        <span className="cs-router-bus" />
+        {inner.map((k) => (
+          <span key={k} className="cs-wire cs-router-drop" style={vars({ '--k': k })} />
         ))}
-      </svg>
+      </div>
       <ul className="cs-router-branches">
         {branches.map((b, i) => (
           <li key={b.name} className="cs-router-branch" style={vars({ '--i': i })}>
+            <BranchIcon icon={b.icon} />
             <span className="cs-router-branch-name">{b.name}</span>
-            <span className="cs-router-branch-text">{b.text}</span>
-            {b.modes && (
-              <span className="cs-router-modes">
-                {b.modes.map((m) => (
-                  <span key={m} className="cs-chip">{m}</span>
-                ))}
-              </span>
-            )}
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+function useInView<T extends Element>() {
+  const ref = useRef<T>(null)
+  const [seen, setSeen] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (!('IntersectionObserver' in window)) {
+      setSeen(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSeen(true)
+          io.disconnect()
+        }
+      },
+      { rootMargin: '0px 0px -15% 0px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return [ref, seen] as const
+}
+
+function useCountUp(target: number, active: boolean, delay = 0, duration = 1300) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    if (!active) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setValue(target)
+      return
+    }
+    let raf = 0
+    let start = 0
+    const tick = (t: number) => {
+      if (!start) start = t + delay
+      const p = Math.min(1, Math.max(0, (t - start) / duration))
+      setValue(Math.round(target * (1 - Math.pow(1 - p, 4))))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, active, delay, duration])
+  return value
+}
+
+const fmt = (n: number) => n.toLocaleString('en-US')
+
+function CounterPart({ part, total, index, active }: { part: { value: number; label: string; href?: string }; total: number; index: number; active: boolean }) {
+  const v = useCountUp(part.value, active, 250 + index * 120)
+  const label = part.href ? (
+    <a href={part.href} target="_blank" rel="noopener noreferrer" className="cs-service-link">
+      {part.label}
+      <Arrow className="cs-service-arrow" />
+    </a>
+  ) : (
+    part.label
+  )
+  return (
+    <li className={`cs-counter-part is-${index === 0 ? 'a' : 'b'}`}>
+      <span className="cs-host-dot" aria-hidden="true" />
+      <span className="cs-counter-part-label">{label}</span>
+      <span className="cs-counter-part-value">{fmt(v)}</span>
+      <span className="cs-counter-part-share">{Math.round((part.value / total) * 100)}%</span>
+    </li>
+  )
+}
+
+function Counters({ total, parts, releases }: Extract<CaseBlock, { kind: 'counters' }>) {
+  const [ref, seen] = useInView<HTMLDivElement>()
+  const t = useCountUp(total.value, seen)
+  const r = useCountUp(releases.value, seen, 500, 900)
+  const sum = parts.reduce((acc, p) => acc + p.value, 0)
+  return (
+    <div ref={ref} className={`cs-counters ${seen ? 'is-on' : ''}`}>
+      <div className="cs-counter-total">
+        <span className="cs-counter-big" aria-label={fmt(total.value)}>{fmt(t)}</span>
+        <span className="cs-counter-label">{total.label}</span>
+      </div>
+
+      <div className="cs-counter-split">
+        <div className="cs-counter-bar" aria-hidden="true">
+          {parts.map((p, i) => (
+            <span
+              key={p.label}
+              className={`cs-counter-seg is-${i === 0 ? 'a' : 'b'}`}
+              style={vars({ '--w': `${(p.value / sum) * 100}%`, '--i': i })}
+            />
+          ))}
+        </div>
+        <ul className="cs-counter-parts">
+          {parts.map((p, i) => (
+            <CounterPart key={p.label} part={p} total={sum} index={i} active={seen} />
+          ))}
+        </ul>
+      </div>
+
+      <div className="cs-counter-releases">
+        <span className="cs-counter-big is-small" aria-label={String(releases.value)}>{r}</span>
+        <span className="cs-counter-label">{releases.label}</span>
+        <span className="cs-counter-pips" aria-hidden="true">
+          {Array.from({ length: releases.value }, (_, i) => (
+            <span key={i} className={i < r ? 'is-lit' : ''} />
+          ))}
+        </span>
+      </div>
     </div>
   )
 }
@@ -525,5 +659,7 @@ export function CaseBlockView({ block }: { block: CaseBlock }): ReactNode {
       return <FigureTabs items={block.items} />
     case 'rows':
       return <Rows {...block} />
+    case 'counters':
+      return <Counters {...block} />
   }
 }

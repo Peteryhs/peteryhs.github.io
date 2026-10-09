@@ -40,7 +40,13 @@ export type CaseBlock =
   | { kind: 'steps'; loop?: string; items: { title: string; text: string; file?: string }[] }
   | { kind: 'split'; groups: { label: string; items: string[] }[] }
   | { kind: 'metrics'; items: { display: string; fraction: number; label: string; note?: string }[] }
-  | { kind: 'router'; stages: { label: string; note?: string }[]; branches: { name: string; text: string; modes?: string[] }[] }
+  | { kind: 'router'; stages: { label: string; note?: string }[]; branches: { name: string; icon: 'code' | 'image' | 'search' }[] }
+  | {
+      kind: 'counters'
+      total: { value: number; label: string }
+      parts: { value: number; label: string; href?: string }[]
+      releases: { value: number; label: string }
+    }
   | { kind: 'figure'; figure: Figure }
   | { kind: 'figureTabs'; items: (Figure & { label: string })[] }
   | { kind: 'rows'; items: { tag: string; title: string; href: string; meta: string }[] }
@@ -66,6 +72,7 @@ export const WIDE_BLOCKS = new Set<CaseBlock['kind']>([
   'figureTabs',
   'split',
   'rows',
+  'counters',
 ])
 
 export const caseStudies: Record<string, CaseStudy> = {
@@ -89,40 +96,13 @@ export const caseStudies: Record<string, CaseStudy> = {
             kind: 'router',
             stages: [
               { label: 'User request', note: 'plus the previous 3 turns' },
-              { label: 'Image attached?', note: 'if so, a vision model describes it' },
-              { label: 'Helper model decides', note: 'picks one tool for the turn' },
+              { label: 'Image analysis' },
+              { label: 'Helper model decides' },
             ],
             branches: [
-              { name: 'Code interpreter', text: 'Turns on code execution for the turn, in Jupyter or a basic Python interpreter.' },
-              { name: 'Image generation', text: 'The helper writes the prompt; attached images switch it to editing.' },
-              { name: 'Exa search router', text: 'A router model picks a search mode, then answers from what it found.', modes: ['Crawl', 'Quick', 'Complete'] },
-            ],
-          },
-          {
-            kind: 'figure',
-            figure: {
-              src: '/case/openwebui-agentic-tooling/architecture.webp',
-              alt: 'Full architecture diagram of the Auto Tool Router and Exa Router Search',
-              caption: 'The full architecture, from the repo. Open it to zoom in.',
-              width: 3600,
-              height: 2213,
-              tone: 'dark',
-            },
-          },
-        ],
-      },
-      {
-        heading: 'Capabilities',
-        blocks: [
-          {
-            kind: 'list',
-            items: [
-              { title: 'Autonomous routing', text: 'queries go to the right tool with no manual switching' },
-              { title: 'Agentic search', text: 'multi-step research that adjusts its depth to the query' },
-              { title: 'Image generation & editing', text: 'prompts optimized automatically, image-to-image when one is attached' },
-              { title: 'Code execution', text: 'Jupyter notebooks or a lightweight Python interpreter' },
-              { title: 'Vision for any model', text: 'non-vision models read images through automatic transcription' },
-              { title: 'Live status & debugging', text: 'progress updates during each run, session summaries in the logs' },
+              { name: 'Code interpreter', icon: 'code' },
+              { name: 'Image generation', icon: 'image' },
+              { name: 'Exa search router', icon: 'search' },
             ],
           },
         ],
@@ -132,9 +112,16 @@ export const caseStudies: Record<string, CaseStudy> = {
         blocks: [
           {
             kind: 'text',
-            paragraphs: [
-              'Both parts are published on the OpenWebUI marketplace, where they have passed 1,064 combined downloads (767 for the Auto Tool Selector, 297 for the Exa Router) across 6 releases.',
+            paragraphs: ['Both parts are published on the OpenWebUI marketplace.'],
+          },
+          {
+            kind: 'counters',
+            total: { value: 1064, label: 'Combined downloads' },
+            parts: [
+              { value: 767, label: 'Auto Tool Selector', href: 'https://openwebui.com/posts/auto_tool_selecter_add9aede' },
+              { value: 297, label: 'Exa Router Search', href: 'https://openwebui.com/t/sdjfhsud/exa_router_search' },
             ],
+            releases: { value: 6, label: 'Releases' },
           },
         ],
       },
