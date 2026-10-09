@@ -5537,3 +5537,59 @@ html[data-vt='zoom']::view-transition-new(root) { animation: vt-fade-in 260ms ea
   .cs-steps-loop-path path { animation: none !important; }
 }
 .cs-split tbody tr:last-child td { border-bottom: 0; }
+
+/* ---------- AI Detector live cover: hard-negative field ---------- */
+
+.cs-hn { margin: 0; }
+.cs-hn-stage {
+  position: relative;
+  aspect-ratio: 1366 / 340;
+  min-height: 220px;
+  border-radius: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 90% at 30% 70%, rgba(74, 158, 230, 0.12), transparent 70%),
+    radial-gradient(55% 90% at 82% 35%, rgba(246, 146, 52, 0.1), transparent 70%),
+    #0e0e10;
+  border: 1.75px solid rgba(255, 255, 255, 0.06);
+  box-shadow: var(--bento-shadow);
+}
+.cs-hn-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: pan-y; }
+.cs-hn-legend {
+  position: absolute;
+  left: 1.1rem;
+  top: 0.95rem;
+  display: flex;
+  gap: 0.9rem;
+  font-family: var(--font-main);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+  pointer-events: none;
+}
+.cs-hn-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.cs-hn-legend span::before { content: ""; width: 7px; height: 7px; border-radius: 999px; }
+.cs-hn-legend .is-human::before { background: rgb(74, 158, 230); }
+.cs-hn-legend .is-ai::before { background: rgb(246, 146, 52); }
+.cs-hn-hint {
+  position: absolute;
+  right: 1.1rem;
+  bottom: 0.95rem;
+  font-family: var(--font-main);
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  transition: color 200ms ease;
+}
+.cs-hn-stage.is-active .cs-hn-hint { color: rgba(255, 255, 255, 0.9); }
+.cs-hn-hint-touch { display: none; }
+@media (hover: none) {
+  .cs-hn-hint-fine { display: none; }
+  .cs-hn-hint-touch { display: inline; }
+}
+@media (max-width: 720px) {
+  .cs-hn-stage { aspect-ratio: 4 / 3; min-height: 0; border-radius: 16px; }
+  .cs-hn-legend { left: auto; top: auto; right: 0.85rem; bottom: 0.75rem; flex-direction: column; align-items: flex-end; gap: 0.35rem; gap: 0.7rem; font-size: 0.68rem; }
+  .cs-hn-hint { display: none; }
+}

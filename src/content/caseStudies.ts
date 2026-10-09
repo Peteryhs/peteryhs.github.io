@@ -59,6 +59,8 @@ export interface CaseSection {
 export interface CaseStudy {
   /** Optional cover image shown between the header and the lede. */
   cover?: Figure
+  /** A live, interactive cover drawn in place of an image. */
+  hero?: { kind: 'hardNegatives'; caption: string }
   sections: CaseSection[]
 }
 
@@ -129,12 +131,10 @@ export const caseStudies: Record<string, CaseStudy> = {
   },
 
   'ai-detector': {
-    cover: {
-      src: '/case/ai-detector/banner.webp',
-      alt: 'AI Detector, Probably banner. The background is a portion of the hard-negative human samples and their links to the AI mirrors found for them.',
-      width: 1370,
-      height: 256,
-      tone: 'dark',
+    hero: {
+      kind: 'hardNegatives',
+      caption:
+        'Hard negatives: human texts that read like AI, each threaded to the AI-written mirror found for it. Training on these pairs is what sharpens the detector. Illustrative layout.',
     },
     sections: [
       {

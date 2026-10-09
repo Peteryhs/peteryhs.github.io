@@ -1,3 +1,4 @@
+import { HardNegativeField } from './HardNegativeField'
 import { useEffect, useRef } from 'react'
 import { projectsData, type ProjectItem } from '../content/projects'
 import { caseStudies, WIDE_BLOCKS, type CaseBlock } from '../content/caseStudies'
@@ -162,7 +163,12 @@ export function CaseStudyPage({ slug }: { slug: string }) {
       </header>
 
       <div className="case-body" ref={bodyRef}>
-        {study.cover && (
+        {study.hero?.kind === 'hardNegatives' && (
+          <div className="case-cover case-reveal" style={{ ['--i' as string]: 0 }}>
+            <HardNegativeField caption={study.hero.caption} />
+          </div>
+        )}
+        {!study.hero && study.cover && (
           <div className="case-cover case-reveal" style={{ ['--i' as string]: 0 }}>
             <FigureView figure={study.cover} />
           </div>
