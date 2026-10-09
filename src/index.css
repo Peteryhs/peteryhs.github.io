@@ -4186,8 +4186,6 @@ html.dark .cmdk-panel {
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-top: 1.4rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid var(--line);
 }
 
 /* ---------- body ---------- */
@@ -4210,8 +4208,7 @@ html.dark .cmdk-panel {
   display: grid;
   grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
   gap: 0.75rem 2.5rem;
-  padding: 2rem 0;
-  border-top: 1px solid var(--line);
+  padding: 2.6rem 0;
 }
 
 .case-section-heading {
@@ -4246,7 +4243,6 @@ html.dark .cmdk-panel {
   gap: 0.75rem 2.5rem;
   margin-top: 0.5rem;
   padding: 1.4rem 0 0;
-  border-top: 1px solid var(--line);
 }
 
 .case-note-label {
@@ -4356,7 +4352,7 @@ html.dark .cmdk-panel {
   .case-note {
     grid-template-columns: 1fr;
     gap: 0.6rem;
-    padding: 1.6rem 0;
+    padding: 2rem 0;
   }
 
 
