@@ -4191,11 +4191,11 @@ html.dark .cmdk-panel {
 /* ---------- body ---------- */
 
 .case-body {
-  padding: clamp(2.5rem, 5vw, 3.75rem) 0 0;
+  padding: clamp(1.75rem, 3.5vw, 2.5rem) 0 0;
 }
 
 .case-lede {
-  margin: 0 0 clamp(2.5rem, 5vw, 3.5rem);
+  margin: 0 0 clamp(0.5rem, 1.5vw, 1rem);
   max-width: 46rem;
   font-family: var(--font-main);
   font-size: clamp(1.2rem, 1.9vw, 1.42rem);
@@ -4208,7 +4208,7 @@ html.dark .cmdk-panel {
   display: grid;
   grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
   gap: 0.75rem 2.5rem;
-  padding: 2.6rem 0;
+  padding: 1.75rem 0;
 }
 
 .case-section-heading {
@@ -4267,7 +4267,7 @@ html.dark .cmdk-panel {
 /* ---------- next project ---------- */
 
 .case-next {
-  margin-top: clamp(3rem, 6vw, 4.5rem);
+  margin-top: clamp(2rem, 4vw, 3rem);
 }
 
 .case-next-link {
@@ -4351,8 +4351,8 @@ html.dark .cmdk-panel {
   .case-section,
   .case-note {
     grid-template-columns: 1fr;
-    gap: 0.6rem;
-    padding: 2rem 0;
+    gap: 0.5rem;
+    padding: 1.4rem 0;
   }
 
 
@@ -4505,9 +4505,9 @@ html.dark, :root.dark {
 
 /* Section grid: heading + prose on the right, visuals full width. */
 .case-section-content { grid-column: 2; min-width: 0; }
-.case-section-wide { grid-column: 1 / -1; min-width: 0; margin-top: 0.75rem; }
+.case-section-wide { grid-column: 1 / -1; min-width: 0; margin-top: 0.5rem; }
 .case-section-content + .case-section-wide,
-.case-section-wide + .case-section-wide { margin-top: 1.4rem; }
+.case-section-wide + .case-section-wide { margin-top: 1.1rem; }
 .case-section-wide + .case-section-content { margin-top: 1.2rem; }
 .case-section-heading { grid-column: 1; }
 .case-section > .case-section-wide:nth-child(2) { margin-top: 0.25rem; }
