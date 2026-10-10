@@ -30,7 +30,7 @@ import {
 import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
 import { BottomBounceEffect } from './components/BottomBounceEffect'
 import { CommandPalette, CommandPaletteTrigger } from './components/CommandPalette'
-import { CaseStudyPage } from './components/CaseStudyPage'
+import { CaseStudyPage, CaseBack } from './components/CaseStudyPage'
 import { useRoute } from './hooks/useRoute'
 import { topicById, type Topic, type TopicId } from './content/site'
 
@@ -397,6 +397,7 @@ export default function App() {
 
   return (
     <>
+      {route.name === 'project' && <CaseBack />}
       <AnimatedThemeToggler />
       <CommandPaletteTrigger />
       <CommandPalette onOpenTopic={openTopic} />

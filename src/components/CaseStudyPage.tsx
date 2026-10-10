@@ -44,6 +44,27 @@ function Stars({ project }: { project: ProjectItem }) {
   )
 }
 
+/**
+ * The back pill is rendered at app level, next to the theme toggle and the ⌘K
+ * trigger. The rubber-band bounce moves the page by transforming its wrapper,
+ * and a fixed element inside a transformed element is dragged along with it.
+ */
+export function CaseBack() {
+  return (
+    <a
+      href="#"
+      className="case-back"
+      onClick={(e) => {
+        e.preventDefault()
+        goHome()
+      }}
+    >
+      <BackIcon />
+      <span>All projects</span>
+    </a>
+  )
+}
+
 export function CaseStudyPage({ slug }: { slug: string }) {
   const index = projectsData.findIndex((p) => p.slug === slug)
   const project = projectsData[index]
@@ -98,18 +119,6 @@ export function CaseStudyPage({ slug }: { slug: string }) {
 
   return (
     <article className="case-page" aria-labelledby="case-title">
-      <a
-        href="#"
-        className="case-back"
-        onClick={(e) => {
-          e.preventDefault()
-          goHome()
-        }}
-      >
-        <BackIcon />
-        <span>All projects</span>
-      </a>
-
       <header className="case-hero">
         <div className="case-hero-inner">
           <div className="case-eyebrow">
