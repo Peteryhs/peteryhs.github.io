@@ -231,9 +231,12 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
   // Render grouped, preserving the ranked order within the flat index.
   let lastGroup: Group | null = null
   const rows: ReactNode[] = []
+  // Stagger slot for the blur-fade entrance; only the first screenful waits.
+  let slot = 0
+  const stagger = () => ({ '--cmdk-i': Math.min(slot++, 14) }) as React.CSSProperties
   results.forEach((cmd, i) => {
     if (!query.trim() && cmd.group !== lastGroup) {
-      rows.push(<div key={`g-${cmd.group}`} className="cmdk-group" role="presentation">{cmd.group}</div>)
+      rows.push(<div key={`g-${cmd.group}`} className="cmdk-group" role="presentation" style={stagger()}>{cmd.group}</div>)
       lastGroup = cmd.group
     }
     rows.push(
@@ -244,9 +247,18 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
         aria-selected={i === index}
         data-index={i}
         className={`cmdk-item${i === index ? ' is-selected' : ''}`}
+        style={stagger()}
         onPointerMove={() => i !== index && setIndex(i)}
         onClick={() => runCommand(cmd)}
       >
+        {i === index && (
+          <motion.span
+            className="cmdk-item-highlight"
+            layoutId="cmdk-highlight"
+            transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 42, mass: 0.7 }}
+            aria-hidden="true"
+          />
+        )}
         <span className="cmdk-item-icon">{cmd.icon}</span>
         <span className="cmdk-item-label">{cmd.label}</span>
         {cmd.hint && <span className="cmdk-item-hint">{cmd.hint}</span>}
@@ -260,23 +272,33 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
       <AnimatePresence>
         {open && (
           <motion.div
+            key="cmdk"
             className="cmdk-overlay"
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18, ease }}
+            exit={{ opacity: 1, transition: { duration: 0.24 } }}
             onPointerDown={(e) => e.target === e.currentTarget && close()}
             onWheel={(e) => e.target === e.currentTarget && e.preventDefault()}
           >
+            {/* Scrim is a sibling of the panel, not its parent, so the panel's own
+                backdrop blur still sees the page instead of an isolated layer. */}
+            <motion.div
+              className="cmdk-scrim"
+              aria-hidden="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.22, ease } }}
+              transition={{ duration: 0.3, ease }}
+            />
             <motion.div
               className="cmdk-panel"
               role="dialog"
               aria-modal="true"
               aria-label="Command palette"
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.985 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.985 }}
-              transition={{ duration: 0.22, ease }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.98, filter: 'blur(8px)' }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.985, filter: 'blur(6px)', transition: { duration: 0.2, ease } }}
+              transition={{ duration: 0.45, ease }}
             >
               <div className="cmdk-search">
                 <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
@@ -301,7 +323,7 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
               </div>
 
               <div ref={listRef} id="cmdk-list" className="cmdk-list" role="listbox">
-                {rows.length ? rows : <div className="cmdk-empty">Nothing matches “{query}”</div>}
+                {rows.length ? rows : <div className="cmdk-empty" key="empty">Nothing matches “{query}”</div>}
               </div>
 
               <div className="cmdk-footer" aria-hidden="true">
@@ -319,10 +341,10 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
           <motion.div
             className="cmdk-toast"
             role="status"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.2, ease }}
+            initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: 6, filter: 'blur(6px)' }}
+            transition={{ duration: 0.35, ease }}
           >
             {toast}
           </motion.div>
