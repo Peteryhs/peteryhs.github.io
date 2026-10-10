@@ -22,8 +22,6 @@ export const projectsData: ProjectItem[] = [
       'A plugin suite that turns OpenWebUI from a chat interface into an autonomous agent. It auto-routes queries to dedicated tools like image generation, vision, code execution, and a custom-built deep research agent. 1,000+ combined community deployments to servers across two marketplace listings.',
     stats: {
       'Combined Downloads': '1,064+',
-      'Auto Tool Selector': '767 dl',
-      'Exa Router': '297 dl',
       Releases: '6',
     },
     links: {
