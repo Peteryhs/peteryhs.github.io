@@ -5894,12 +5894,6 @@ html.dark ::selection { background: rgba(232, 190, 120, 0.3); }
 /* Anchor jumps and focused headings clear the fixed pills. */
 .case-page [id], .case-section { scroll-margin-top: 5.5rem; }
 
-/* The floating back pill reads cleanly over content scrolling beneath it. */
-.case-back {
-  background: color-mix(in srgb, var(--paper) 82%, transparent);
-  backdrop-filter: blur(12px) saturate(1.2);
-}
-
 /* Consistent keyboard focus for links and buttons on the case pages. */
 .case-page a:focus-visible, .case-page button:focus-visible, .project-link-btn:focus-visible {
   outline: 2px solid var(--ink);
