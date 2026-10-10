@@ -5988,3 +5988,17 @@ html.dark ::selection { background: rgba(232, 190, 120, 0.3); }
 @media (prefers-reduced-motion: reduce) {
   .cs-trend-line, .cs-trend-dot, .cs-trend-plot svg { transition: none; }
 }
+
+/* Arrowheads stop short of the box they point at. */
+.cs-route-link { margin-right: 5px; }
+@media (max-width: 720px) { .cs-route-link { margin-right: 0; margin-bottom: 5px; } }
+
+/* Tinted boxes stay opaque so wires and request dots disappear under them
+   instead of showing through. */
+.cs-route-node.is-dest,
+.cs-guard-node.is-svc { background: linear-gradient(var(--hover), var(--hover)), var(--paper); }
+
+/* A request dot shrinks into the box it reaches. */
+.cs-guard-dot { transition: opacity 160ms linear; }
+.cs-guard-node[data-hit] { scale: 1.035; }
+.cs-guard-node { transition: border-color 220ms ease, box-shadow 260ms ease, scale 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }

@@ -110,15 +110,30 @@ export function CrowdSecFlow() {
     const loop = [c.caddy, c.agent, c.lapi, c.vps]
     const attempt = [c.web, gate]
 
-    const put = (el: SVGCircleElement | null, p: Pt | null) => {
+    const R = new Map<SVGCircleElement, number>()
+    // f is the eased progress along the path; the last stretch tucks the dot
+    // under the box it reaches, shrinking it as it goes.
+    const put = (el: SVGCircleElement | null, p: Pt | null, f = 0, tuck = true) => {
       if (!el) return
+      if (!R.has(el)) R.set(el, Number(el.getAttribute('r')) || 5)
       if (!p) {
         el.style.opacity = '0'
         return
       }
+      const k = tuck ? Math.min(1, Math.max(0, (1 - f) / 0.12)) : 1
       el.setAttribute('cx', String(p.x))
       el.setAttribute('cy', String(p.y))
-      el.style.opacity = '1'
+      el.setAttribute('r', String(R.get(el)! * (0.35 + 0.65 * k)))
+      el.style.opacity = String(0.25 + 0.75 * k)
+    }
+    let hitNode: NodeId | null = null
+    const pulse = (id: NodeId | null) => {
+      if (id === hitNode) return
+      const prev = hitNode ? nodeRefs.current[hitNode] : null
+      if (prev) delete prev.dataset.hit
+      hitNode = id
+      const next = id ? nodeRefs.current[id] : null
+      if (next) next.dataset.hit = ''
     }
     const span = (t: number, [a, b]: number[]) => (t >= a && t <= b ? ease((t - a) / (b - a)) : null)
 
@@ -135,9 +150,21 @@ export function CrowdSecFlow() {
       const fBan = span(t, T.ban)
       const fBlock = span(t, T.block)
 
-      put(blueRef.current, fPass !== null ? along(main, fPass) : fPass2 !== null ? along(main, fPass2) : null)
-      put(redRef.current, fProbe !== null ? along(probe, fProbe) : fBlock !== null ? along(attempt, fBlock) : null)
-      put(banRef.current, fBan !== null ? along(loop, fBan) : null)
+      const fBlue = fPass ?? fPass2
+      put(blueRef.current, fBlue !== null ? along(main, fBlue) : null, fBlue ?? 0)
+      put(
+        redRef.current,
+        fProbe !== null ? along(probe, fProbe) : fBlock !== null ? along(attempt, fBlock) : null,
+        fProbe ?? 0,
+        fProbe !== null,
+      )
+      put(banRef.current, fBan !== null ? along(loop, fBan) : null, fBan ?? 0)
+      pulse(
+        fBlue !== null && fBlue > 0.94 ? 'svc'
+        : fProbe !== null && fProbe > 0.94 ? 'caddy'
+        : fBan !== null && fBan > 0.94 ? 'vps'
+        : null,
+      )
 
       const p: Phase =
         t < T.pass[1] + 200 ? 'pass'
@@ -164,6 +191,7 @@ export function CrowdSecFlow() {
     return () => {
       io.disconnect()
       cancelAnimationFrame(raf)
+      pulse(null)
     }
   }, [geo])
 
