@@ -170,7 +170,7 @@ export function ProjectCard({
             {project.slug === 'sun-systems' && (
               <span className="project-title-logo-swap" aria-hidden="true">
                 <img
-                  src="/assets/ss-lockup-white.svg"
+                  src={`${import.meta.env.BASE_URL}assets/ss-lockup-white.svg`}
                   alt="Sun Systems"
                   className="project-title-wordmark-img"
                   draggable={false}
@@ -180,7 +180,7 @@ export function ProjectCard({
             {project.slug === 'ai-detector' && (
               <span className="project-title-logo-swap" aria-hidden="true">
                 <img
-                  src="/assets/ai-detector-logo.png"
+                  src={`${import.meta.env.BASE_URL}assets/ai-detector-logo.png`}
                   alt="AI Detector"
                   className="project-title-logo-img"
                   draggable={false}

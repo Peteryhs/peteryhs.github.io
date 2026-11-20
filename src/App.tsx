@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { type ReactNode, useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   AboutBentoGrid,
   ProfileCard,
@@ -8,11 +8,9 @@ import {
   CompEngFocusCard,
 } from './components/AboutBento'
 import { BlurFade } from './components/BlurFade'
-import {
-  CursorFollower,
-  type CursorFollowerRef,
-  type CursorInfo,
-} from './components/CursorFollower'
+import { MagneticCursor } from './components/MagneticCursor'
+import { TopicBlock } from './components/hero/TopicBlock'
+import { ExternalLink, EmailLink } from './components/hero/SocialLink'
 import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 import { WebringBadge } from './components/WebringBadge'
 import { IconLabel } from './components/DemoIcon'
@@ -33,95 +31,9 @@ import { CommandPalette, CommandPaletteTrigger } from './components/CommandPalet
 import { CaseStudyPage, CaseBack } from './components/CaseStudyPage'
 import { useRoute } from './hooks/useRoute'
 import { topicById, type Topic, type TopicId } from './content/site'
+import type { BlockId } from './components/hero/blocks'
 
 const ease = [0.16, 1, 0.3, 1] as const
-
-/**
- * Touch browsers fire emulated mouseenter/mousemove before a tap's click. Updating
- * hover state there can make mobile Safari treat the first tap as a hover and drop
- * the click, so the cursor preview only runs for a real hovering pointer.
- */
-const canHover = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(hover: hover) and (pointer: fine)').matches
-
-interface TopicWordProps {
-  id: TopicId
-  children: ReactNode
-  activeId: TopicId | null
-  onSelect: (id: TopicId) => void
-  onHover: (info: CursorInfo | null, e?: React.MouseEvent) => void
-  customInfo?: Partial<CursorInfo>
-}
-
-function TopicWord({
-  id,
-  children,
-  activeId,
-  onSelect,
-  onHover,
-  customInfo,
-}: TopicWordProps) {
-  const topic = topicById[id]
-  const expanded = activeId === id
-
-  const info: CursorInfo = {
-    text: customInfo?.text || customInfo?.preview || topic.preview,
-  }
-
-  return (
-    <span className="topic-wrap">
-      <span
-        role="button"
-        tabIndex={0}
-        className={`topic-word ${expanded ? 'is-active' : ''}`}
-        aria-expanded={expanded}
-        aria-controls={`topic-${id}`}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            e.stopPropagation()
-            onHover(null)
-            onSelect(id)
-          }
-        }}
-        onClick={(e) => {
-          e.stopPropagation()
-          onHover(null)
-          onSelect(id)
-        }}
-        onMouseEnter={(e) => {
-          if (!canHover()) return
-          if (!expanded) {
-            onHover(info, e)
-          } else {
-            onHover(null)
-          }
-        }}
-        onMouseMove={(e) => {
-          if (!canHover()) return
-          if (!expanded) {
-            onHover(info, e)
-          } else {
-            onHover(null)
-          }
-        }}
-        onMouseLeave={() => {
-          if (canHover()) onHover(null)
-        }}
-        onFocus={(e) => {
-          if (!expanded && canHover()) {
-            const rect = e.currentTarget.getBoundingClientRect()
-            onHover(info, { clientX: rect.right, clientY: rect.bottom } as any)
-          }
-        }}
-        onBlur={() => onHover(null)}
-      >
-        {children}
-      </span>
-    </span>
-  )
-}
 
 function ExpandedSection({ topic }: { topic: Topic }) {
   const renderContent = () => {
@@ -326,8 +238,6 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
 export default function App() {
   const route = useRoute()
   const [activeId, setActiveId] = useState<TopicId | null>(null)
-  const [cursorInfo, setCursorInfo] = useState<CursorInfo | null>(null)
-  const cursorRef = useRef<CursorFollowerRef>(null)
 
   // Click anywhere outside expanded cards to animate them out
   useEffect(() => {
@@ -336,7 +246,7 @@ export default function App() {
     const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement | null
       if (!target) return
-      if (target.closest('.expanded-section') || target.closest('.topic-word')) {
+      if (target.closest('.expanded-section') || target.closest('.topic-block')) {
         return
       }
       setActiveId(null)
@@ -359,30 +269,7 @@ export default function App() {
     setActiveId((prev) => (prev === id ? null : id))
   }
 
-  const handleHover = (info: CursorInfo | null, e?: React.MouseEvent) => {
-    setCursorInfo(info)
-    if (e && info) {
-      cursorRef.current?.syncPosition(e.clientX, e.clientY)
-    }
-  }
-
-  const word = (
-    id: TopicId,
-    children: ReactNode,
-    customInfo?: { text?: string; preview?: string; title?: string; badge?: string },
-  ) => {
-    return (
-      <TopicWord
-        id={id}
-        activeId={activeId}
-        onSelect={handleSelect}
-        onHover={handleHover}
-        customInfo={customInfo}
-      >
-        {children}
-      </TopicWord>
-    )
-  }
+  const block = (id: BlockId) => <TopicBlock id={id} expanded={activeId === id} onSelect={handleSelect} />
 
   const showAfter = (...ids: TopicId[]) => {
     const isMatching = Boolean(activeId && ids.includes(activeId))
@@ -401,7 +288,7 @@ export default function App() {
       <AnimatedThemeToggler />
       <CommandPaletteTrigger />
       <CommandPalette onOpenTopic={openTopic} />
-      <CursorFollower ref={cursorRef} activeInfo={cursorInfo} />
+      <MagneticCursor />
 
       <BottomBounceEffect>
         {route.name === 'project' && (
@@ -415,152 +302,68 @@ export default function App() {
         <main hidden={route.name === 'project'}>
           <header className="intro" id="top">
         <div className="intro-container">
-          <BlurFade delay={0.06} yOffset={12}>
-            <p className="intro-sentence">
-              Hi <span className="intro-wave-hand" role="img" aria-label="waving hand">👋</span>, I am{' '}
-              {word(
-                'about',
-                <>
-                  <span
-                    className="profile-photo"
-                    aria-label="Profile photo"
-                    role="img"
-                  />{' '}
-                  Peter
-                </>,
-                {
-                  text: 'Peter Shao / PeterYHS, Toronto based tech nerd',
-                },
-              )}
-              .
-            </p>
-          </BlurFade>
-          {showAfter('about')}
+          <div className="intro-group">
+            <BlurFade delay={0.06} yOffset={12}>
+              <p className="intro-sentence">
+                Hi <span className="intro-wave-hand" role="img" aria-label="waving hand">👋</span>, I am{' '}
+                <span className="no-wrap">{block('about')}.</span>
+              </p>
+            </BlurFade>
+            {showAfter('about')}
+          </div>
 
-          <BlurFade delay={0.14} yOffset={12}>
-            <p className="intro-sentence">
-              A student at the{' '}
-              {word(
-                'waterloo',
-                <>
-                  University of{' '}
-                  <span className="intro-icon-label">
-                    Waterloo<img
-                      src="/waterloo-crest.png"
-                      alt=""
-                      className="intro-waterloo-icon"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </>,
-                {
-                  text: 'University famous for its co-op program in Waterloo, ON',
-                },
-              )}{' '}
-              studying{' '}
-              {word(
-                'compeng',
-                <>
-                  <IconLabel kind="engineering">CompEng</IconLabel>
-                </>,
-                {
-                  text: "First year computer engineering, class of '31",
-                },
-              )}
-              .
-            </p>
-          </BlurFade>
-          {showAfter('waterloo', 'compeng')}
+          <div className="intro-group">
+            <BlurFade delay={0.14} yOffset={12}>
+              <p className="intro-sentence">
+                A student at the {block('waterloo')} studying{' '}
+                <span className="no-wrap">{block('compeng')}.</span>
+              </p>
+            </BlurFade>
+            {showAfter('waterloo', 'compeng')}
+          </div>
 
-          <BlurFade delay={0.22} yOffset={12}>
-            <p className="intro-sentence">
-              I am passionate about{' '}
-              {word(
-                'systems',
-                <>
-                  distributed <IconLabel kind="systems">systems</IconLabel>
-                </>,
-                {
-                  text: 'Homelab clusters, edge networking, and high-availability systems',
-                },
-              )}
-              ,{' '}
-              {word(
-                'ml',
-                <>
-                  <IconLabel kind="machine-learning">ML</IconLabel>
-                </>,
-                {
-                  text: 'Fine-tuning open weights, model optimization, & fast inference',
-                },
-              )}{' '}
-              and{' '}
-              {word(
-                'electronics',
+          <div className="intro-group">
+            <BlurFade delay={0.22} yOffset={12}>
+              <p className="intro-sentence">
+                I am passionate about <span className="no-wrap">{block('systems')},</span> {block('ml')} and{' '}
+                <span className="no-wrap">{block('electronics')}.</span>
+              </p>
+            </BlurFade>
+            {showAfter('systems', 'ml', 'electronics', 'truenorth')}
+          </div>
+
+          <div className="intro-group">
+            <BlurFade delay={0.3} yOffset={12}>
+              <p className="intro-sentence">
+                I love making <span className="no-wrap">{block('projects')},</span> from everyday <IconLabel kind="utilities">utilities</IconLabel>, to{' '}
+                <IconLabel kind="infrastructure">infrastructure</IconLabel> and{' '}
                 <span className="no-wrap">
-                  <IconLabel kind="electronics">electronics</IconLabel>.
-                </span>,
-                {
-                  text: 'Embedded firmware, microcontrollers, and custom hardware',
-                },
-              )}
-            </p>
-          </BlurFade>
-          {showAfter('systems', 'ml', 'electronics', 'truenorth')}
+                  <IconLabel kind="research">research</IconLabel>.
+                </span>
+              </p>
+            </BlurFade>
+            {showAfter('projects')}
+          </div>
 
-          <BlurFade delay={0.3} yOffset={12}>
-            <p className="intro-sentence">
-              I love making{' '}
-              {word(
-                'projects',
-                <>
-                  <IconLabel kind="projects">projects</IconLabel>
-                </>,
-                {
-                  text: 'Everyday utilities, low-latency infrastructure, and ML prototypes',
-                },
-              )}
-              , from everyday <IconLabel kind="utilities">utilities</IconLabel>, to{' '}
-              <IconLabel kind="infrastructure">infrastructure</IconLabel> and{' '}
-              <span className="no-wrap">
-                <IconLabel kind="research">research</IconLabel>.
-              </span>
-            </p>
-          </BlurFade>
-          {showAfter('projects')}
+          <div className="intro-group">
+            <BlurFade delay={0.38} yOffset={12}>
+              <p className="intro-sentence">
+                Besides that, I love <span className="no-wrap">{block('minecraft')},</span> {block('photography')} and{' '}
+                <span className="no-wrap">creative tinkering.</span>
+              </p>
+            </BlurFade>
+            {showAfter('minecraft', 'photography', 'passions')}
+          </div>
 
-          <BlurFade delay={0.38} yOffset={12}>
-            <p className="intro-sentence">
-              Besides that, I love{' '}
-              {word('minecraft', 'Minecraft', {
-                text: '1.8 PvP Bedwars, modern SMPs, modpacks, & Sun Systems friend servers',
-              })}
-              ,{' '}
-              {word('photography', 'Photography', {
-                text: 'Spontaneous walks, outing recaps, year-in-reviews, & camera gear',
-              })}
-              {' '}and <span className="no-wrap">creative tinkering.</span>
-            </p>
-          </BlurFade>
-          {showAfter('minecraft', 'photography', 'passions')}
-
-          <BlurFade delay={0.46} yOffset={12}>
-            <p className="intro-sentence">
-              You can spot me on the internet via{' '}
-              {word('github', 'GitHub', {
-                text: 'Open-source repositories, active experiments, and hobby code',
-              })}
-              ,{' '}
-              {word('linkedin', 'LinkedIn', {
-                text: 'Professional background, hackathons, and engineering co-op',
-              })}
-              {' '}and{' '}
-              {word('email', <span className="no-wrap">Email!</span>, {
-                text: 'Always open to chat about engineering ideas & opportunities',
-              })}
-            </p>
-          </BlurFade>
-          {showAfter('contact', 'github', 'linkedin', 'email')}
+          <div className="intro-group">
+            <BlurFade delay={0.46} yOffset={12}>
+              <p className="intro-sentence">
+                You can spot me on the internet via <span className="no-wrap"><ExternalLink kind="github" />,</span> <ExternalLink kind="linkedin" /> and{' '}
+                <EmailLink />
+              </p>
+            </BlurFade>
+            {showAfter('contact', 'github', 'linkedin', 'email')}
+          </div>
 
           <BlurFade delay={0.54} yOffset={12}>
             <p className="intro-sentence intro-signoff">See you around!</p>

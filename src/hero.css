@@ -1,0 +1,1292 @@
+/* ==========================================================================
+   Hero: embedded living blocks + magnetic frame cursor
+   --------------------------------------------------------------------------
+   One custom property, --lit (0 or 1), drives every visual state of a block.
+   It flips to 1 on hover (hover-capable pointers only), keyboard focus, and
+   while the block's section is expanded. Everything else is derived from it,
+   so the states can never disagree with each other, and nothing here touches
+   layout: boxes keep identical dimensions at --lit 0 and 1.
+   ========================================================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.intro-sentence {
+  line-height: 1.66;
+}
+
+@media (max-width: 720px) {
+  .intro-sentence {
+    line-height: 1.72;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Block shell                                                                */
+/* -------------------------------------------------------------------------- */
+
+.tb {
+  --lit: 0;
+  --run: paused;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --tb-fill: light-dark(#ebe6db, #27251f);
+  --tb-edge: light-dark(rgb(40 34 24 / 0.2), rgb(255 244 225 / 0.13));
+  --tb-ledge: light-dark(#cdc5b3, #0b0a09);
+  --tb-accent: var(--ink);
+  --tb-lit-edge: var(--tb-accent);
+  --tb-fg: var(--ink);
+  --tb-chev: var(--ink);
+  --tb-shadow: none;
+  --tb-radius: 9px;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
+  box-sizing: border-box;
+  height: 1.52em;
+  margin: 0 0.1em;
+  padding: 0 0.46em;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  isolation: isolate;
+  font: inherit;
+  font-size: 0.88em;
+  font-weight: 500;
+  letter-spacing: inherit;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+
+  color: color-mix(in srgb, var(--tb-fg) calc(var(--lit) * 100%), var(--ink));
+  background: var(--tb-fill);
+  border: 1px solid color-mix(in srgb, var(--tb-lit-edge) calc(var(--lit) * 100%), var(--tb-edge));
+  border-radius: var(--tb-radius);
+  box-shadow: 0 calc(1.5px * (1 - var(--lit))) 0 var(--tb-ledge);
+
+  transition:
+    color 200ms ease-out,
+    border-color 200ms ease-out,
+    border-radius 220ms var(--ease),
+    box-shadow 140ms ease-out,
+    translate 90ms ease-out;
+}
+
+.no-wrap > .tb {
+  margin-right: 0.07em;
+}
+
+.tb:focus-visible {
+  outline: 2px solid var(--tb-accent);
+  outline-offset: 3px;
+}
+
+.tb:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.tb:active {
+  translate: 0 1px;
+  box-shadow: 0 0.5px 0 var(--tb-ledge);
+}
+
+/* The lit state. Hover is gated so touch screens never keep a stuck highlight. */
+.tb:is(:focus-visible, [aria-expanded='true'], [data-copied='true']) {
+  --lit: 1;
+  --run: running;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tb:hover {
+    --lit: 1;
+    --run: running;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Label slot: rest copy and hover copy share one grid cell, so the block is   */
+/* always as wide as the wider of the two and the swap cannot reflow anything. */
+/* -------------------------------------------------------------------------- */
+
+.tb-slot {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+}
+
+.tb-slot > * {
+  grid-area: 1 / 1;
+}
+
+.tb-rest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32em;
+  opacity: calc(1 - var(--lit));
+  translate: 0 calc(var(--lit) * -62%);
+  transition:
+    opacity 180ms ease-out,
+    translate 250ms var(--ease);
+}
+
+.tb-hover {
+  opacity: var(--lit);
+  translate: 0 calc((1 - var(--lit)) * 62%);
+  text-shadow: var(--tb-shadow);
+  transition:
+    opacity 180ms ease-out,
+    translate 250ms var(--ease);
+}
+
+.tb-sizer {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
+.tb-label {
+  display: inline-block;
+}
+
+.tb .demo-icon {
+  flex: none;
+  width: 1.04em;
+  height: 1.1em;
+  margin: 0;
+  vertical-align: baseline;
+}
+
+.tb-photo {
+  flex: none;
+  width: 1.24em;
+  height: 1.24em;
+  border-radius: 50%;
+  background: url('/peter-photo.jpg') center / cover no-repeat;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.14), 0 1px 3px rgb(0 0 0 / 0.18);
+}
+
+.tb-crest {
+  flex: none;
+  width: 1.12em;
+  height: 1.12em;
+  object-fit: contain;
+}
+
+.tb-chevron {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 0.62em;
+  height: 0.62em;
+  color: color-mix(in srgb, var(--tb-chev) calc(var(--lit) * 100%), var(--muted));
+  rotate: 0deg;
+  transition:
+    rotate 320ms var(--ease),
+    color 200ms ease-out;
+}
+
+.tb[aria-expanded='true'] .tb-chevron {
+  rotate: 180deg;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Embedded surface                                                           */
+/* -------------------------------------------------------------------------- */
+
+.tb-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--lit);
+  scale: calc(1.04 - 0.04 * var(--lit));
+  transition:
+    opacity 240ms ease-out,
+    scale 340ms var(--ease);
+}
+
+.tb-surface i,
+.tb-surface svg,
+.tb-surface span {
+  pointer-events: none;
+}
+
+.sf > i,
+.sf > svg,
+.sf > span {
+  position: absolute;
+}
+
+.sf-flank {
+  top: 0;
+  height: 100%;
+  width: auto;
+  overflow: visible;
+}
+
+.sf-l {
+  left: 0;
+}
+
+.sf-r {
+  right: 0;
+}
+
+/* A feathered reading well, centred on the block. */
+.sf-scrim {
+  inset: 0;
+  background: radial-gradient(
+    ellipse var(--scrim-w, 56%) var(--scrim-h, 92%) at 50% 50%,
+    var(--scrim-c) 0,
+    var(--scrim-c) 34%,
+    transparent 100%
+  );
+}
+
+.tb-hover {
+  font-weight: 600;
+}
+
+/* Per-block palette -------------------------------------------------------- */
+
+.tb[data-topic='projects'] {
+  --tb-accent: #39d353;
+  --tb-fg: #ffffff;
+  --tb-chev: rgb(255 255 255 / 0.72);
+  --tb-shadow: 0 1px 2px rgb(3 12 6 / 0.95), 0 0 8px rgb(3 18 9 / 0.95);
+}
+
+.tb[data-topic='compeng'] {
+  --tb-accent: #d9772b;
+  --tb-fg: #1c2127;
+  --tb-chev: #2b3540;
+  --tb-shadow: 0 0 7px #ebe6db, 0 0 2px #ebe6db;
+}
+
+.tb[data-topic='minecraft'] {
+  --tb-accent: #5db234;
+  --tb-fg: #fff6b8;
+  --tb-chev: #fff6b8;
+  --tb-shadow: 1.5px 1.5px 0 #10190a;
+  --tb-radius: 9px;
+  border-radius: calc(9px - 9px * var(--lit));
+}
+
+.tb[data-topic='ml'] {
+  --tb-accent: #8c9cff;
+  --tb-fg: #ffffff;
+  --tb-chev: rgb(255 255 255 / 0.72);
+  --tb-shadow: 0 1px 3px rgb(5 7 22 / 0.95), 0 0 8px rgb(8 10 30 / 0.9);
+}
+
+.tb[data-topic='photography'] {
+  --tb-accent: #f26857;
+  --tb-lit-edge: rgb(255 255 255 / 0.22);
+  --tb-fg: #f6f4f0;
+  --tb-chev: rgb(255 255 255 / 0.62);
+  --tb-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+}
+
+.tb[data-topic='electronics'] {
+  --tb-accent: #d8a93e;
+  --tb-fg: #f3dc98;
+  --tb-chev: #d8a93e;
+  --tb-shadow: 0 1px 2px rgb(2 12 7 / 0.9), 0 0 7px rgb(4 22 13 / 0.9);
+}
+
+.tb[data-topic='waterloo'] {
+  --tb-accent: #f0be3b;
+  --tb-fg: #f5c94d;
+  --tb-chev: #f0be3b;
+  --tb-shadow: 0 1px 2px rgb(8 8 10 / 0.95), 0 0 8px rgb(12 12 15 / 0.9);
+}
+
+.tb[data-topic='about'] {
+  --tb-accent: #e8a24a;
+  --tb-fg: #f3b867;
+  --tb-chev: #e8a24a;
+  --tb-shadow: 0 1px 2px rgb(10 8 5 / 0.9);
+}
+
+.tb[data-topic='systems'] {
+  --tb-accent: #4fe0c0;
+  --tb-fg: #9af5de;
+  --tb-chev: #4fe0c0;
+  --tb-shadow: 0 1px 2px rgb(4 8 8 / 0.95), 0 0 8px rgb(6 12 12 / 0.9);
+}
+
+.tb[data-topic='minecraft'] .tb-hover {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 0.5em;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* External links (tier three): quiet, dashed, no surface                      */
+/* -------------------------------------------------------------------------- */
+
+.sl {
+  --tb-fill: transparent;
+  --tb-edge: light-dark(rgb(34 30 22 / 0.4), rgb(255 244 225 / 0.3));
+  --tb-accent: light-dark(rgb(34 30 22 / 0.7), rgb(255 244 225 / 0.7));
+  --tb-lit-edge: light-dark(rgb(34 30 22 / 0.62), rgb(255 244 225 / 0.6));
+  --tb-radius: 9px;
+  border-style: dashed;
+  box-shadow: none;
+  padding: 0 0.48em;
+  gap: 0.3em;
+}
+
+.sl:is(:focus-visible, [data-copied='true']),
+.sl:active {
+  border-style: solid;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sl:hover {
+    border-style: solid;
+  }
+}
+
+.sl:active {
+  box-shadow: none;
+}
+
+.sl .tb-hover {
+  font-weight: 500;
+}
+
+.sl-glyph {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 0.62em;
+  height: 0.62em;
+  color: var(--muted);
+  transition:
+    translate 220ms var(--ease),
+    color 200ms ease-out;
+}
+
+.sl-arrow {
+  translate: calc(var(--lit) * 1.5px) calc(var(--lit) * -1.5px);
+}
+
+.sl:is(:hover, :focus-visible, [data-copied='true']) .sl-glyph {
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   Surfaces
+   ========================================================================== */
+
+/* GitHub wall of green ---------------------------------------------------- */
+
+.sf-projects {
+  --scrim-c: rgb(4 22 11 / 0.94);
+  background: #0d1117;
+}
+
+.sf-graph {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gc {
+  animation: gcPulse 1.7s ease-in-out infinite;
+}
+
+.gc-2 {
+  animation-delay: -0.57s;
+}
+
+.gc-3 {
+  animation-delay: -1.13s;
+}
+
+@keyframes gcPulse {
+  0%,
+  100% {
+    opacity: 0.42;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Breadboard -------------------------------------------------------------- */
+
+.sf-compeng {
+  --scrim-c: rgb(235 230 219 / 0.97);
+  --scrim-w: 54%;
+  background: #ebe6db;
+}
+
+.sf-half {
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='60' viewBox='0 0 8 60'%3E%3Crect y='4' width='8' height='1.5' fill='%23d8453b'/%3E%3Crect y='54.5' width='8' height='1.5' fill='%233b6fd0'/%3E%3Crect x='3' y='8' width='2' height='2' fill='%2338342d'/%3E%3Crect x='3' y='50' width='2' height='2' fill='%2338342d'/%3E%3Crect x='2.5' y='17.5' width='3' height='3' fill='%232b2823'/%3E%3Crect x='2.5' y='20.1' width='3' height='.5' fill='%23fff' opacity='.55'/%3E%3Crect x='2.5' y='39.5' width='3' height='3' fill='%232b2823'/%3E%3Crect x='2.5' y='42.1' width='3' height='.5' fill='%23fff' opacity='.55'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}
+
+.sf-half-l {
+  left: 0;
+  background-position: left center;
+}
+
+.sf-half-r {
+  right: 0;
+  background-position: right center;
+}
+
+.bb-channel {
+  left: 0;
+  right: 0;
+  top: 44%;
+  height: 12%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgb(110 94 66 / 0.3) 30%,
+    rgb(96 82 58 / 0.4) 58%,
+    rgb(255 255 255 / 0.45) 90%,
+    transparent
+  );
+}
+
+.led-glow {
+  animation: ledBreath 1.2s ease-in-out infinite alternate;
+}
+
+.led-core {
+  animation: ledCore 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes ledBreath {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ledCore {
+  from {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Minecraft --------------------------------------------------------------- */
+
+.sf-minecraft {
+  --scrim-c: rgb(12 20 46 / 0.72);
+  --scrim-w: 54%;
+  --scrim-h: 64%;
+  background: #8cc8ff;
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
+
+.sf-minecraft svg {
+  shape-rendering: crispEdges;
+}
+
+.mc-sky {
+  inset: 0;
+  background: linear-gradient(180deg, #2c5fc4 0 22%, #4f95e6 22% 46%, #8cc8ff 46% 100%);
+}
+
+.mc-track {
+  top: 0;
+  left: 0;
+  display: flex;
+  height: 100%;
+  width: max-content;
+  animation: mcDrift 12s linear infinite;
+}
+
+.mc-track svg {
+  position: static;
+  flex: none;
+  height: 100%;
+  width: auto;
+}
+
+@keyframes mcDrift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.mc-ground {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 33.34%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='20' viewBox='0 0 16 20' shape-rendering='crispEdges'%3E%3Crect width='16' height='20' fill='%238a5a34'/%3E%3Crect width='16' height='6' fill='%235db234'/%3E%3Crect width='16' height='2' fill='%238ee04d'/%3E%3Crect y='6' width='16' height='2' fill='%234b8d2a'/%3E%3Crect x='2' y='10' width='2' height='2' fill='%23734a2a'/%3E%3Crect x='10' y='12' width='2' height='2' fill='%239c6b41'/%3E%3Crect x='6' y='14' width='2' height='2' fill='%23734a2a'/%3E%3Crect x='14' y='16' width='2' height='2' fill='%239c6b41'/%3E%3Crect x='4' y='18' width='2' height='2' fill='%23734a2a'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-position: left bottom;
+}
+
+.xp {
+  animation: xpRise 2.4s ease-in-out infinite;
+}
+
+.xp-b {
+  animation-delay: -1.2s;
+}
+
+@keyframes xpRise {
+  0%,
+  100% {
+    translate: 0 0;
+    opacity: 0.35;
+  }
+  50% {
+    translate: 0 -5px;
+    opacity: 1;
+  }
+}
+
+/* Neural graph ------------------------------------------------------------ */
+
+.sf-ml {
+  --scrim-c: rgb(10 13 32 / 0.92);
+  --scrim-w: 52%;
+  background: #111528;
+}
+
+.ml-edges {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ml-edges line {
+  stroke: rgb(140 156 255 / 0.45);
+  stroke-width: 1;
+}
+
+.ml-node {
+  position: absolute;
+  box-sizing: border-box;
+  width: 0.36em;
+  height: 0.36em;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 1.5px solid #7f8fe8;
+  background: #111528;
+  animation: mlNode 1.5s ease-in-out infinite;
+}
+
+.ml-col-1 {
+  animation-delay: 0.5s;
+}
+
+.ml-col-2 {
+  animation-delay: 1s;
+}
+
+.ml-col-3 {
+  animation-delay: 1.5s;
+}
+
+@keyframes mlNode {
+  0%,
+  45%,
+  100% {
+    border-color: #7f8fe8;
+    background: #111528;
+  }
+  15% {
+    border-color: #b4c0ff;
+    background: #4e60d6;
+  }
+}
+
+.ml-pulse {
+  position: absolute;
+  width: 0.24em;
+  height: 0.24em;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: #9aa8ff;
+  box-shadow: none;
+  opacity: 0;
+}
+
+.ml-pulse-up {
+  left: 8%;
+  top: 22%;
+  animation: mlUp 1.5s linear infinite;
+}
+
+.ml-pulse-down {
+  left: 8%;
+  top: 78%;
+  animation: mlDown 1.5s linear 0.5s infinite;
+}
+
+@keyframes mlUp {
+  0% {
+    left: 8%;
+    top: 22%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  33.3% {
+    left: 35%;
+    top: 38%;
+  }
+  66.6% {
+    left: 65%;
+    top: 50%;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    left: 92%;
+    top: 34%;
+    opacity: 0;
+  }
+}
+
+@keyframes mlDown {
+  0% {
+    left: 8%;
+    top: 78%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  33.3% {
+    left: 35%;
+    top: 85%;
+  }
+  66.6% {
+    left: 65%;
+    top: 78%;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    left: 92%;
+    top: 66%;
+    opacity: 0;
+  }
+}
+
+/* Zen horizon lock -------------------------------------------------------- */
+
+.sf-photography {
+  --scrim-c: rgb(18 19 22 / 0.5);
+  background: #121316;
+}
+
+.sf-photography::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 62% 110% at 50% 50%, rgb(96 110 132 / 0.28), transparent 72%);
+}
+
+.ph-notch {
+  top: 50%;
+  width: 0.5em;
+  height: 1px;
+  translate: 0 -50%;
+  background: rgb(255 255 255 / 0.22);
+}
+
+.ph-notch-l {
+  left: 0.12em;
+}
+
+.ph-notch-r {
+  right: 0.12em;
+}
+
+.ph-horizon {
+  inset: 0;
+  rotate: calc(-4deg * (1 - var(--lit)));
+  transition: rotate calc(var(--lit) * 720ms) cubic-bezier(0.2, 0.85, 0.25, 1) calc((1 - var(--lit)) * 260ms);
+}
+
+.ph-seg {
+  position: absolute;
+  top: 50%;
+  width: 0.55em;
+  height: 1px;
+  translate: 0 -50%;
+  background: rgb(246 244 240 / 0.58);
+}
+
+.ph-seg::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 0.22em;
+  height: 0.22em;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: #f26857;
+}
+
+.ph-seg-l {
+  left: 0.8em;
+}
+
+.ph-seg-l::after {
+  right: -0.08em;
+}
+
+.ph-seg-r {
+  right: 1.4em;
+}
+
+.ph-seg-r::after {
+  left: -0.08em;
+}
+
+/* PCB --------------------------------------------------------------------- */
+
+.sf-electronics {
+  --scrim-c: rgb(6 30 19 / 0.94);
+  background: #0e3322;
+}
+
+.pcb-h {
+  left: 0;
+  right: 0;
+  height: 2.7%;
+  background: #d8a93e;
+}
+
+.pcb-h-top {
+  top: calc(10% - 1.35%);
+}
+
+.pcb-h-bottom {
+  top: calc(90% - 1.35%);
+}
+
+.pcb-pulse {
+  stroke: #fff3c4;
+  stroke-dasharray: 7 93;
+  stroke-dashoffset: 7;
+  filter: drop-shadow(0 0 1.5px #ffe08a);
+  animation: pcbPulse 1.5s linear infinite;
+}
+
+.pcb-pulse-r {
+  animation-direction: reverse;
+}
+
+@keyframes pcbPulse {
+  to {
+    stroke-dashoffset: -93;
+  }
+}
+
+/* Engineering 7 architectural miniature ----------------------------------- */
+
+.sf-waterloo {
+  --scrim-c: rgb(14 17 24 / 0.88);
+  --scrim-w: 50%;
+  --scrim-h: 88%;
+  background: #10141e;
+}
+
+.wl-sky {
+  inset: 0;
+  background: linear-gradient(180deg, #111826 0%, #1c273b 62%, #243148 88.3%, #10131a 88.3% 100%);
+}
+
+/* Central building body connecting left & right wings behind the reading scrim */
+.wl-mid {
+  left: 0;
+  right: 0;
+  top: 21.6%;
+  height: 66.7%;
+  background: linear-gradient(
+    180deg,
+    #455166 0 2.2%,
+    #1b202b 2.2% 67%,
+    #12161f 67% 72%,
+    #2b2419 72% 100%
+  );
+}
+
+/* Toronto studio pass ----------------------------------------------------- */
+
+.sf-about {
+  --scrim-c: rgb(33 29 24 / 0.9);
+  --scrim-w: 50%;
+  background: #211d18;
+}
+
+.ab-light {
+  inset: 0;
+  background: radial-gradient(ellipse 120% 220% at 0 0, rgb(232 162 74 / 0.4), transparent 62%);
+}
+
+.ab-skyline {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ab-skyline path {
+  stroke: rgb(245 205 150 / 0.5);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+/* 1U rack bezel ----------------------------------------------------------- */
+
+.sf-systems {
+  --scrim-c: rgb(18 20 24 / 0.9);
+  --scrim-w: 48%;
+  --scrim-h: 88%;
+  background: linear-gradient(180deg, #272b32 0%, #1e2127 50%, #171a1f 100%);
+}
+
+.rk-grain {
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgb(255 255 255 / 0.03) 0 1px, transparent 1px 2.5px);
+}
+
+/* Continuous 1U top & bottom chassis flange rails aligned to SVG y=3 and y=57 */
+.rk-rails {
+  inset: 0;
+  background:
+    linear-gradient(180deg, #101216 0 4.5%, #474e5a 4.5% 5.8%, transparent 5.8% 94.2%, #0c0e11 94.2% 100%);
+}
+
+.nic-teal {
+  animation: nicA 1.3s steps(1, end) infinite;
+}
+
+.nic-amber {
+  animation: nicB 0.9s steps(1, end) infinite;
+}
+
+.nic-1 {
+  animation-delay: -0.6s;
+}
+
+@keyframes nicA {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.22;
+  }
+  45% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes nicB {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  25% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.35;
+  }
+}
+
+/* Surface animations only run while their block is lit. */
+.tb .tb-surface * {
+  animation-play-state: var(--run) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reduced motion: lit composition stays, motion goes                          */
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tb,
+  .tb * {
+    transition-property: color, border-color, opacity !important;
+    transition-duration: 160ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .tb .tb-surface *,
+  .tb-surface {
+    animation: none !important;
+    scale: 1 !important;
+  }
+
+  .tb-rest,
+  .tb-hover,
+  .sl-arrow {
+    translate: 0 0 !important;
+  }
+
+  .tb-chevron {
+    transition-property: color !important;
+  }
+
+  .ph-horizon {
+    rotate: 0deg !important;
+  }
+
+  .tb:active {
+    translate: 0 0;
+  }
+}
+
+/* ==========================================================================
+   Magnetic frame cursor
+   ========================================================================== */
+
+html.mc-on,
+html.mc-on *:not(input, textarea, select, [contenteditable='true']) {
+  cursor: none !important;
+}
+
+.mc-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 140ms ease-out;
+}
+
+.mc-layer[data-visible='true'] {
+  opacity: 1;
+}
+
+.mc {
+  --mc-accent: var(--ink);
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 1.5px solid transparent;
+  background: var(--ink);
+  will-change: transform, width, height;
+  transition:
+    background-color 160ms ease-out,
+    border-color 160ms ease-out,
+    border-width 160ms ease-out,
+    box-shadow 200ms ease-out;
+}
+
+.mc[data-mode='lock'] {
+  background-color: transparent;
+  border-color: var(--mc-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-accent) 16%, transparent);
+}
+
+/* Minecraft: sharp blocky voxel frame with 3-pixel stepped corners */
+.mc[data-mode='lock'][data-frame='pixel'] {
+  border-width: 2px;
+  border-top-color: #79d447;
+  border-left-color: #79d447;
+  border-right-color: #3d7d20;
+  border-bottom-color: #3d7d20;
+  box-shadow:
+    inset 2px 2px 0 rgb(176 245 106 / 0.42),
+    inset -2px -2px 0 rgb(24 58 12 / 0.52);
+}
+
+/* Electronics & CompEng: clean outline + 4 non-overlapping corner vias */
+.mc[data-mode='lock'][data-frame='pcb'] {
+  border-color: var(--mc-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--mc-accent) 18%, transparent);
+}
+
+/* Photography: 4 corner viewfinder brackets */
+.mc[data-mode='lock'][data-frame='viewfinder'] {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Projects: real 8-bit ASCII binary perimeter curving around rounded edges */
+.mc[data-mode='lock'][data-frame='projects'] {
+  border-width: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Waterloo: iconic UWaterloo gold & black diagonal stripe border + perched Canada goose + Iron Ring */
+.mc[data-mode='lock'][data-frame='waterloo'] {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Distributed Systems: neatly combed muted patch cables held by molded server cable combs */
+.mc[data-mode='lock'][data-frame='systems'] {
+  border-width: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Machine Learning: clean hairline ring with a single 4-point spark cut */
+.mc[data-mode='lock'][data-frame='ml'] {
+  border-width: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* PeterYHS (about): Option D — Offset Keycap Echo */
+.mc[data-mode='lock'][data-frame='studio'] {
+  border-color: light-dark(#c97c24, #e8a24a);
+  box-shadow: 2.5px 2.5px 0 0 light-dark(rgb(201 124 36 / 0.42), rgb(232 162 74 / 0.38));
+}
+
+.mc-orn {
+  position: absolute;
+  display: none;
+  box-sizing: border-box;
+}
+
+.mc[data-mode='lock'][data-frame='pcb'] .mc-via,
+.mc[data-mode='lock'][data-frame='viewfinder'] .mc-bracket,
+.mc[data-mode='lock'][data-frame='pixel'] .mc-px,
+.mc[data-mode='lock'][data-frame='projects'] .mc-bin-svg,
+.mc[data-mode='lock'][data-frame='waterloo'] .mc-wl-stripes,
+.mc[data-mode='lock'][data-frame='waterloo'] .mc-wl-goose,
+.mc[data-mode='lock'][data-frame='waterloo'] .mc-wl-ring,
+.mc[data-mode='lock'][data-frame='systems'] .mc-sys-svg,
+.mc[data-mode='lock'][data-frame='ml'] .mc-ml-ring,
+.mc[data-mode='lock'][data-frame='ml'] .mc-ml-spark {
+  display: block;
+}
+
+/* PCB vias: positioned cleanly in the exterior corner pockets with ~2.6px air gap */
+.mc-via {
+  width: 5px;
+  height: 5px;
+  border: 1.5px solid var(--mc-accent);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.mc-via.tl {
+  top: -3.5px;
+  left: -3.5px;
+}
+.mc-via.tr {
+  top: -3.5px;
+  right: -3.5px;
+}
+.mc-via.bl {
+  bottom: -3.5px;
+  left: -3.5px;
+}
+.mc-via.br {
+  right: -3.5px;
+  bottom: -3.5px;
+}
+
+/* Viewfinder brackets */
+.mc-bracket {
+  width: 9px;
+  height: 9px;
+  border: 0 solid #f26857;
+}
+
+.mc-bracket.tl {
+  top: -1.5px;
+  left: -1.5px;
+  border-top-width: 1.75px;
+  border-left-width: 1.75px;
+}
+.mc-bracket.tr {
+  top: -1.5px;
+  right: -1.5px;
+  border-top-width: 1.75px;
+  border-right-width: 1.75px;
+}
+.mc-bracket.bl {
+  bottom: -1.5px;
+  left: -1.5px;
+  border-bottom-width: 1.75px;
+  border-left-width: 1.75px;
+}
+.mc-bracket.br {
+  right: -1.5px;
+  bottom: -1.5px;
+  border-bottom-width: 1.75px;
+  border-right-width: 1.75px;
+}
+
+/* Minecraft blocky stepped corner voxels */
+.mc-px {
+  width: 4px;
+  height: 4px;
+  border-radius: 0;
+}
+
+.mc-px.tl {
+  top: -4px;
+  left: -4px;
+  background: #8ee04d;
+  box-shadow:
+    4px 0 0 #5db234,
+    0 4px 0 #5db234;
+}
+.mc-px.tr {
+  top: -4px;
+  right: -4px;
+  background: #79d447;
+  box-shadow:
+    -4px 0 0 #5db234,
+    0 4px 0 #448c24;
+}
+.mc-px.bl {
+  bottom: -4px;
+  left: -4px;
+  background: #5db234;
+  box-shadow:
+    4px 0 0 #448c24,
+    0 -4px 0 #79d447;
+}
+.mc-px.br {
+  right: -4px;
+  bottom: -4px;
+  background: #3b7a1e;
+  box-shadow:
+    -4px 0 0 #448c24,
+    0 -4px 0 #448c24;
+}
+
+/* Projects: static 8-bit ASCII binary digits curving cleanly along a rounded-rect path */
+.mc-bin-svg {
+  top: -10px;
+  left: -10px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mc-bin-text {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  font-size: 6.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  user-select: none;
+  fill: light-dark(#248a42, #258d3e);
+}
+
+.mc-bin-text .mc-b1 {
+  font-weight: 700;
+  fill: light-dark(#0c5e24, #63f57d);
+}
+
+/* Waterloo: UWaterloo gold & black diagonal stripe border + static perched Canada goose + Iron Ring */
+.mc-wl-stripes {
+  inset: -1.5px;
+  border-radius: 10px;
+  padding: 2.5px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #f5c94d 0 5.5px,
+    #23262f 5.5px 10.5px
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 0.5px rgb(0 0 0 / 0.35));
+}
+
+.mc-wl-goose {
+  top: -17.5px;
+  right: 10px;
+  width: 30px;
+  height: 19px;
+  overflow: visible;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
+}
+
+.mc-wl-ring {
+  bottom: -6.5px;
+  left: 9px;
+  width: 12px;
+  height: 12px;
+  overflow: visible;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.55));
+}
+
+/* Distributed Systems: combed server patch cables & molded cable combs */
+.mc-sys-svg {
+  top: -12px;
+  left: -12px;
+  overflow: visible;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.38));
+}
+
+/* Machine Learning: Option C — clean hairline ring with a single 4-point spark cut */
+.mc-ml-ring {
+  inset: 0;
+  border: 1.5px solid light-dark(#5464e0, #8c9cff);
+  border-radius: inherit;
+  -webkit-mask-image: radial-gradient(circle 6.5px at calc(100% - 14.5px) 0.75px, transparent 92%, #000 100%);
+  mask-image: radial-gradient(circle 6.5px at calc(100% - 14.5px) 0.75px, transparent 92%, #000 100%);
+}
+
+.mc-ml-spark {
+  top: -4.25px;
+  right: 9.5px;
+  width: 10px;
+  height: 10px;
+  overflow: visible;
+  color: light-dark(#5464e0, #8c9cff);
+}

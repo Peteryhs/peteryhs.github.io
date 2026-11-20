@@ -29,7 +29,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'p1',
         title: 'The Bund Waterfront',
-        src: '/photos-bund.jpg',
+        src: `${import.meta.env.BASE_URL}photos-bund.jpg`,
         targetX: -160,
         targetY: -55,
         rotation: -7,
@@ -37,7 +37,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'p2',
         title: 'Forbidden City Overlook',
-        src: '/photos-palace.jpg',
+        src: `${import.meta.env.BASE_URL}photos-palace.jpg`,
         targetX: -260,
         targetY: 45,
         rotation: 5,
@@ -45,7 +45,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'p3',
         title: 'Urban Dawn & Mountains',
-        src: '/photos-cityscape.png',
+        src: `${import.meta.env.BASE_URL}photos-cityscape.png`,
         targetX: -80,
         targetY: 95,
         rotation: -4,
@@ -61,7 +61,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'mc1',
         title: 'Hypixel Bedwars',
-        src: '/minecraft-hypixel.png',
+        src: `${import.meta.env.BASE_URL}minecraft-hypixel.png`,
         targetX: -160,
         targetY: -65,
         rotation: -6,
@@ -69,7 +69,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'mc2',
         title: 'Prominence II',
-        src: '/minecraft-prominence.png',
+        src: `${import.meta.env.BASE_URL}minecraft-prominence.png`,
         targetX: -260,
         targetY: 30,
         rotation: 5,
@@ -77,7 +77,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'mc3',
         title: 'Peterfat11 Skin',
-        src: '/minecraft-skin.png',
+        src: `${import.meta.env.BASE_URL}minecraft-skin.png`,
         targetX: -80,
         targetY: 85,
         rotation: -2,
@@ -92,7 +92,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'g1',
         title: 'GEFA Information Brochure',
-        src: '/gefa-brochure.png',
+        src: `${import.meta.env.BASE_URL}gefa-brochure.png`,
         targetX: -160,
         targetY: -65,
         rotation: -6,
@@ -101,7 +101,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'g2',
         title: 'GEFA Business Plan',
-        src: '/gefa-business-plan.png',
+        src: `${import.meta.env.BASE_URL}gefa-business-plan.png`,
         targetX: -260,
         targetY: 30,
         rotation: 5,
@@ -110,7 +110,7 @@ const FOLDERS_DATA: FolderItem[] = [
       {
         id: 'g3',
         title: 'GEFA Official Logo',
-        src: '/gefa-logo.png',
+        src: `${import.meta.env.BASE_URL}gefa-logo.png`,
         targetX: -80,
         targetY: 85,
         rotation: -2,

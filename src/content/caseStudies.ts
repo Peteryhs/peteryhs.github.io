@@ -186,7 +186,7 @@ export const caseStudies: Record<string, CaseStudy> = {
           {
             kind: 'figure',
             figure: {
-              src: '/case/ai-detector/pipeline.webp',
+              src: `${import.meta.env.BASE_URL}case/ai-detector/pipeline.webp`,
               alt: 'Training pipeline diagram',
               caption: 'The training pipeline, from the repo.',
               width: 1100,
@@ -402,7 +402,7 @@ export const caseStudies: Record<string, CaseStudy> = {
           {
             kind: 'figure',
             figure: {
-              src: '/case/sun-systems/network-topology.webp',
+              src: `${import.meta.env.BASE_URL}case/sun-systems/network-topology.webp`,
               alt: 'Sun Systems network topology',
               caption: 'Network topology. Orange is Cloudflare tunnels, purple is CrowdSec, red is blocked threats, grey is the Tailscale overlay.',
               width: 1800,

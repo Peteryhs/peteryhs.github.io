@@ -9,6 +9,8 @@ type IconKind =
   | 'utilities'
   | 'infrastructure'
   | 'research'
+  | 'minecraft'
+  | 'photography'
 
 /** Keep the final word and its illustration together when a sentence wraps. */
 export function IconLabel({ kind, children }: { kind: IconKind; children: ReactNode }) {
@@ -103,6 +105,24 @@ export function DemoIcon({ kind }: { kind: IconKind }) {
       <path d="m8 18 13 1v2L8 20Z" fill={side} />
       <circle cx="21" cy="14" r="2" fill={metal} /><circle cx="21" cy="14" r=".65" fill={inset} stroke="none" />
       <path d="m7 24 14 1.5" stroke="#fff" opacity=".6" />
+    </>,
+    minecraft: <>
+      <path d="m4 11 12-6 12 6-12 6Z" fill={accent} />
+      <path d="m4 11 12 6v12L4 23Z" fill="#a88360" />
+      <path d="m28 11-12 6v12l12-6Z" fill="#7d5d41" />
+      <path d="m4 11 12 6 12-6v3.4l-12 6L4 14.4Z" fill={side} />
+      <path d="m7 20 3 1.5m3 3 3 1.5m4-2 3-1.5" stroke="#5e442f" strokeWidth="1.4" opacity=".7" />
+      <path d="m8 10.5 8-4" stroke="#fff" opacity=".45" />
+    </>,
+    photography: <>
+      <path d="M5 12h24v15H5Z" fill={side} transform="translate(0 1.5)" />
+      <path d="m11 12 2.2-4h7.6l2.2 4Z" fill={metal} />
+      <path d="M4 11.5h24v15H4Z" fill={accent} />
+      <path d="M4 11.5h24v4H4Z" fill={metal} opacity=".55" />
+      <circle cx="16" cy="19.5" r="5.6" fill={metal} />
+      <circle cx="16" cy="19.5" r="3.6" fill={inset} />
+      <circle cx="14.7" cy="18.2" r="1" fill="#fff" stroke="none" opacity=".75" />
+      <circle cx="24.6" cy="14.4" r=".9" fill="#e6d18f" stroke="none" />
     </>,
   }[kind]
 

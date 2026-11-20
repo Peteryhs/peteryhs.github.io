@@ -72,7 +72,7 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
       <div className="bento-profile-wrap">
         <div className="bento-photo-container">
           <img
-            src="/peter-photo.jpg"
+            src={`${import.meta.env.BASE_URL}peter-photo.jpg`}
             alt="Peter Shao"
             className="bento-profile-img"
             loading="lazy"
@@ -380,7 +380,7 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
       <div className="bento-waterloo-wrap">
         <div className="bento-crest-box">
           <img
-            src="/waterloo-crest.png"
+            src={`${import.meta.env.BASE_URL}waterloo-crest.png`}
             alt="University of Waterloo Crest"
             className="waterloo-crest-img"
             loading="lazy"
