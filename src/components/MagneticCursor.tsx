@@ -18,6 +18,8 @@ const FRAME_RADIUS = {
   studio: 13,
   systems: 13,
   ml: 12,
+  watcloud: 13,
+  hacktheridge: 13,
 } as const
 type FrameKind = keyof typeof FRAME_RADIUS
 const CORNERS = ['tl', 'tr', 'bl', 'br'] as const
@@ -529,6 +531,46 @@ function Cursor() {
         <i className="mc-orn mc-ml-ring" />
         <svg className="mc-orn mc-ml-spark" viewBox="0 0 10 10" fill="none" aria-hidden="true" focusable="false">
           <path d="M5 0.5L6.1 3.9L9.5 5L6.1 6.1L5 9.5L3.9 6.1L0.5 5L3.9 3.9Z" fill="currentColor" />
+        </svg>
+        <i className="mc-orn mc-wc-pcie" />
+        <svg className="mc-orn mc-htr-sketch" viewBox="0 0 220 56" preserveAspectRatio="none" fill="none" aria-hidden="true" focusable="false">
+          <path
+            className="mc-htr-primary"
+            d="M 15 2.0 C 62 0.2, 138 3.8, 204 1.4 C 215.5 1.2, 219.2 7.2, 218.4 18.2 C 217.5 31.2, 219.4 44.5, 216.4 50.0 C 213.8 54.8, 204 55.2, 190 54.6 C 134 52.8, 72 56.2, 18 54.4 C 6.2 54.0, 1.4 48.2, 1.8 37 C 2.2 24.8, 0.8 12.8, 3.4 7.2 C 5.8 2.4, 10 2.1, 15 2.0"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+          />
+          <path
+            className="mc-htr-secondary"
+            d="M 28 4.0 C 92 -0.4, 166 3.6, 213 5.0 M 216.5 13.5 C 220.2 28, 216.2 41.5, 212.8 53.0 M 186 56.4 C 122 51.8, 56 56.8, 10 52.6 M 0.2 41.5 C 3.8 27, 0.2 15.5, 5.4 4.6"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
+          <path
+            className="mc-htr-amber"
+            d="M -6.5 1 L 2 1 M -2.2 -3.5 L -2.2 5.5 M -5.2 -1.8 L 0.8 3.8 M 0.8 -1.8 L -5.2 3.8"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+          />
+          <path
+            className="mc-htr-teal"
+            d="M 173 -3.2 Q 178 -6.0 183 -3.2 T 193 -3.2 T 203 -3.2"
+            strokeWidth="2.0"
+            strokeLinecap="round"
+          />
+          <path
+            className="mc-htr-pink"
+            d="M 16 59.8 L 20 53.4 M 21.5 60.0 L 25.5 53.6 M 27 59.8 L 31 53.4"
+            strokeWidth="1.95"
+            strokeLinecap="round"
+          />
+          <path
+            className="mc-htr-amber"
+            d="M 223 48 Q 227 54.5 218.5 57.5 M 221.5 54.6 L 218.0 57.6 L 222.2 59.5"
+            strokeWidth="1.95"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </div>
     </div>

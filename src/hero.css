@@ -39,9 +39,14 @@
   --run: paused;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --tb-fill: light-dark(#ebe6db, #27251f);
-  --tb-edge: light-dark(rgb(40 34 24 / 0.2), rgb(255 244 225 / 0.13));
-  --tb-ledge: light-dark(#cdc5b3, #0b0a09);
+  --tb-fill: linear-gradient(180deg, #f4f5f7 0%, #e7e9ee 100%);
+  --tb-edge: light-dark(rgb(28 32 42 / 0.16), rgb(255 255 255 / 0.12));
+  --tb-rest-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.1)),
+    0 1px 2px light-dark(rgb(15 23 42 / 0.08), rgb(0 0 0 / 0.45));
+  --tb-lit-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.14)),
+    0 4px 14px -2px light-dark(rgb(15 23 42 / 0.12), rgb(0 0 0 / 0.5));
   --tb-accent: var(--ink);
   --tb-lit-edge: var(--tb-accent);
   --tb-fg: var(--ink);
@@ -55,10 +60,10 @@
   justify-content: center;
   gap: 0.3em;
   box-sizing: border-box;
-  height: 1.52em;
+  height: 1.44em;
   margin: 0 0.1em;
   padding: 0 0.46em;
-  vertical-align: middle;
+  vertical-align: -0.14em;
   white-space: nowrap;
   overflow: hidden;
   isolation: isolate;
@@ -78,7 +83,7 @@
   background: var(--tb-fill);
   border: 1px solid color-mix(in srgb, var(--tb-lit-edge) calc(var(--lit) * 100%), var(--tb-edge));
   border-radius: var(--tb-radius);
-  box-shadow: 0 calc(1.5px * (1 - var(--lit))) 0 var(--tb-ledge);
+  box-shadow: var(--tb-rest-shadow);
 
   transition:
     color 200ms ease-out,
@@ -86,6 +91,10 @@
     border-radius 220ms var(--ease),
     box-shadow 140ms ease-out,
     translate 90ms ease-out;
+}
+
+:is(html.dark, :root.dark) .tb {
+  --tb-fill: linear-gradient(180deg, #27292f 0%, #1d1e22 100%);
 }
 
 .no-wrap > .tb {
@@ -103,19 +112,23 @@
 
 .tb:active {
   translate: 0 1px;
-  box-shadow: 0 0.5px 0 var(--tb-ledge);
+  box-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.06)),
+    0 0.5px 1px light-dark(rgb(15 23 42 / 0.08), rgb(0 0 0 / 0.4));
 }
 
 /* The lit state. Hover is gated so touch screens never keep a stuck highlight. */
 .tb:is(:focus-visible, [aria-expanded='true'], [data-copied='true']) {
   --lit: 1;
   --run: running;
+  box-shadow: var(--tb-lit-shadow);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .tb:hover {
     --lit: 1;
     --run: running;
+    box-shadow: var(--tb-lit-shadow);
   }
 }
 
@@ -334,6 +347,20 @@
   --tb-shadow: 0 1px 2px rgb(4 8 8 / 0.95), 0 0 8px rgb(6 12 12 / 0.9);
 }
 
+.tb[data-topic='watcloud'] {
+  --tb-accent: #7dd3fc;
+  --tb-fg: #ffffff;
+  --tb-chev: #e0f2fe;
+  --tb-shadow: 0 1px 4px rgb(10 38 72 / 0.8), 0 0 10px rgb(10 38 72 / 0.55);
+}
+
+.tb[data-topic='hacktheridge'] {
+  --tb-accent: #a8d5ba;
+  --tb-fg: #edf7f0;
+  --tb-chev: #a8d5ba;
+  --tb-shadow: 0 1px 2px rgb(6 14 14 / 0.95), 0 0 8px rgb(8 20 18 / 0.85);
+}
+
 .tb[data-topic='minecraft'] .tb-hover {
   font-family: 'Press Start 2P', ui-monospace, monospace;
   font-size: 0.5em;
@@ -346,11 +373,14 @@
 /* External links (tier three): quiet, dashed, no surface                      */
 /* -------------------------------------------------------------------------- */
 
-.sl {
+.sl,
+:is(html.dark, :root.dark) .sl {
   --tb-fill: transparent;
-  --tb-edge: light-dark(rgb(34 30 22 / 0.4), rgb(255 244 225 / 0.3));
-  --tb-accent: light-dark(rgb(34 30 22 / 0.7), rgb(255 244 225 / 0.7));
-  --tb-lit-edge: light-dark(rgb(34 30 22 / 0.62), rgb(255 244 225 / 0.6));
+  --tb-edge: light-dark(rgb(28 32 42 / 0.34), rgb(255 255 255 / 0.24));
+  --tb-accent: light-dark(rgb(28 32 42 / 0.68), rgb(255 255 255 / 0.68));
+  --tb-lit-edge: light-dark(rgb(28 32 42 / 0.62), rgb(255 255 255 / 0.58));
+  --tb-rest-shadow: none;
+  --tb-lit-shadow: none;
   --tb-radius: 9px;
   border-style: dashed;
   box-shadow: none;
@@ -942,6 +972,159 @@
   }
 }
 
+/* WATCloud: blue sky + 3 parallax cloud layers ---------------------------- */
+
+.sf-watcloud {
+  --scrim-c: rgb(18 68 128 / 0.44);
+  --scrim-w: 62%;
+  --scrim-h: 96%;
+}
+
+.sf-watcloud .sf-scrim {
+  z-index: 2;
+}
+
+.wc-sky {
+  inset: 0;
+  background:
+    radial-gradient(ellipse 68% 78% at 18% 12%, rgb(186 230 253 / 0.45) 0%, transparent 65%),
+    linear-gradient(180deg, #1665be 0%, #3498e2 54%, #82d4fa 100%);
+}
+
+.wc-cloud-track {
+  inset: 0;
+  width: 200%;
+  height: 100%;
+  display: flex;
+  z-index: 1;
+}
+
+.wc-cloud-track svg {
+  width: 50%;
+  height: 100%;
+  flex: none;
+}
+
+.wc-far {
+  opacity: 0.56;
+  animation: wcCloudDrift 36s linear infinite;
+}
+
+.wc-mid {
+  opacity: 0.78;
+  animation: wcCloudDrift 22s linear infinite;
+}
+
+.wc-near {
+  opacity: 0.95;
+  animation: wcCloudDrift 13.5s linear infinite;
+}
+
+@keyframes wcCloudDrift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Hack the Ridge: starry pine-slate skyline + gliding monorail ------------ */
+
+.sf-hacktheridge {
+  --scrim-c: rgb(14 24 27 / 0.68);
+  --scrim-w: 62%;
+  --scrim-h: 96%;
+}
+
+.sf-hacktheridge .sf-flank {
+  z-index: 2;
+}
+
+.sf-hacktheridge .sf-scrim {
+  z-index: 4;
+}
+
+.htr-sky {
+  inset: 0;
+  background: linear-gradient(180deg, #0f1b1f 0%, #192b30 58%, #22373a 100%);
+}
+
+.htr-stars {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.htr-twinkle-a {
+  animation: htrTwinkle 2.8s ease-in-out infinite;
+}
+
+.htr-twinkle-b {
+  animation: htrTwinkle 3.5s ease-in-out 1.1s infinite;
+}
+
+.htr-win-flk {
+  animation: htrWinFlk 4.2s steps(1, end) infinite;
+}
+
+.htr-viaduct-layer {
+  left: 0;
+  right: 0;
+  bottom: 18%;
+  height: 22%;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.htr-viaduct-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.htr-train {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32%;
+  height: 100%;
+  animation: htrTrainGlide 6.5s linear infinite;
+}
+
+@keyframes htrTwinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes htrWinFlk {
+  0%,
+  72%,
+  100% {
+    opacity: 0.95;
+  }
+  75%,
+  82% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes htrTrainGlide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(330%);
+  }
+}
+
 /* Surface animations only run while their block is lit. */
 .tb .tb-surface * {
   animation-play-state: var(--run) !important;
@@ -1086,6 +1269,19 @@ html.mc-on *:not(input, textarea, select, [contenteditable='true']) {
   box-shadow: 2.5px 2.5px 0 0 light-dark(rgb(201 124 36 / 0.42), rgb(232 162 74 / 0.38));
 }
 
+/* WATCloud: sky-blue frame + centered gold PCIe contact fingers */
+.mc[data-mode='lock'][data-frame='watcloud'] {
+  border-color: light-dark(#0284c7, rgb(125 211 252 / 0.88));
+  box-shadow: 0 0 10px light-dark(rgb(2 132 199 / 0.22), rgb(56 189 248 / 0.26));
+}
+
+/* Hack the Ridge: Sketch C multi-stroke hackathon napkin doodle outline */
+.mc[data-mode='lock'][data-frame='hacktheridge'] {
+  border-width: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .mc-orn {
   position: absolute;
   display: none;
@@ -1101,7 +1297,9 @@ html.mc-on *:not(input, textarea, select, [contenteditable='true']) {
 .mc[data-mode='lock'][data-frame='waterloo'] .mc-wl-ring,
 .mc[data-mode='lock'][data-frame='systems'] .mc-sys-svg,
 .mc[data-mode='lock'][data-frame='ml'] .mc-ml-ring,
-.mc[data-mode='lock'][data-frame='ml'] .mc-ml-spark {
+.mc[data-mode='lock'][data-frame='ml'] .mc-ml-spark,
+.mc[data-mode='lock'][data-frame='watcloud'] .mc-wc-pcie,
+.mc[data-mode='lock'][data-frame='hacktheridge'] .mc-htr-sketch {
   display: block;
 }
 
@@ -1289,4 +1487,50 @@ html.mc-on *:not(input, textarea, select, [contenteditable='true']) {
   height: 10px;
   overflow: visible;
   color: light-dark(#5464e0, #8c9cff);
+}
+
+/* WATCloud: gold PCIe edge-connector pins along the bottom frame edge */
+.mc-wc-pcie {
+  bottom: -4.5px;
+  left: 22%;
+  right: 22%;
+  height: 4.5px;
+  background: repeating-linear-gradient(90deg, #eab308 0 3px, #11151d 3px 5.2px);
+  border-radius: 0 0 2.5px 2.5px;
+  box-shadow: 0 1px 5px rgb(234 179 8 / 0.45);
+}
+
+/* Hack the Ridge: Sketch C multi-stroke outline + margin doodles */
+.mc-htr-sketch {
+  inset: -2.5px;
+  width: calc(100% + 5px);
+  height: calc(100% + 5px);
+  overflow: visible;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px light-dark(rgb(31 122 76 / 0.22), rgb(168 213 186 / 0.28)));
+}
+
+.mc-htr-primary {
+  stroke: light-dark(#1f7a4c, #b7e7cb);
+  opacity: 0.98;
+}
+
+.mc-htr-secondary {
+  stroke: light-dark(#2d9a63, #e4fbed);
+  opacity: 0.74;
+}
+
+.mc-htr-amber {
+  stroke: light-dark(#d97706, #fde68a);
+  opacity: 0.95;
+}
+
+.mc-htr-teal {
+  stroke: light-dark(#0d9488, #5eead4);
+  opacity: 0.92;
+}
+
+.mc-htr-pink {
+  stroke: light-dark(#e11d48, #fda4af);
+  opacity: 0.94;
 }

@@ -13,7 +13,6 @@ import { TopicBlock } from './components/hero/TopicBlock'
 import { ExternalLink, EmailLink } from './components/hero/SocialLink'
 import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 import { WebringBadge } from './components/WebringBadge'
-import { IconLabel } from './components/DemoIcon'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
 import { CompactProjectsGrid } from './components/CompactProjectsGrid'
@@ -25,7 +24,8 @@ import {
   LinkedInContactCard,
   EmailContactCard,
 } from './components/ContactSection'
-import { TrueNorthSection, TrueNorthTimeline } from './components/TrueNorth'
+import { TrueNorthTimeline } from './components/TrueNorth'
+import { ExperienceSection, ExperienceTimeline } from './components/ExperienceSection'
 import { BottomBounceEffect } from './components/BottomBounceEffect'
 import { CommandPalette, CommandPaletteTrigger } from './components/CommandPalette'
 import { CaseStudyPage, CaseBack } from './components/CaseStudyPage'
@@ -69,6 +69,24 @@ function ExpandedSection({ topic }: { topic: Topic }) {
         return (
           <div className="expanded-cards-single">
             <TrueNorthTimeline />
+          </div>
+        )
+      case 'experience':
+        return (
+          <div className="expanded-cards-single">
+            <ExperienceTimeline />
+          </div>
+        )
+      case 'watcloud':
+        return (
+          <div className="expanded-cards-single">
+            <ExperienceTimeline filterId="watcloud" />
+          </div>
+        )
+      case 'hacktheridge':
+        return (
+          <div className="expanded-cards-single">
+            <ExperienceTimeline filterId="hacktheridge" />
           </div>
         )
       case 'electronics':
@@ -358,24 +376,21 @@ export default function App() {
           <div className="intro-group">
             <BlurFade delay={0.22} yOffset={12}>
               <p className="intro-sentence">
-                I am passionate about <span className="no-wrap">{block('systems')},</span> {block('ml')} and{' '}
-                <span className="no-wrap">{block('electronics')}.</span>
+                Currently building infra at <span className="no-wrap">{block('watcloud')},</span> and previously organized{' '}
+                <span className="no-wrap">{block('hacktheridge')}.</span>
               </p>
             </BlurFade>
-            {showAfter('systems', 'ml', 'electronics', 'truenorth')}
+            {showAfter('watcloud', 'hacktheridge', 'experience')}
           </div>
 
           <div className="intro-group">
             <BlurFade delay={0.3} yOffset={12}>
               <p className="intro-sentence">
-                I love making <span className="no-wrap">{block('projects')},</span> from everyday <IconLabel kind="utilities">utilities</IconLabel>, to{' '}
-                <IconLabel kind="infrastructure">infrastructure</IconLabel> and{' '}
-                <span className="no-wrap">
-                  <IconLabel kind="research">research</IconLabel>.
-                </span>
+                I love making {block('projects')} across <span className="no-wrap">{block('systems')},</span> {block('ml')} and{' '}
+                <span className="no-wrap">{block('electronics')}.</span>
               </p>
             </BlurFade>
-            {showAfter('projects')}
+            {showAfter('projects', 'systems', 'ml', 'electronics', 'truenorth')}
           </div>
 
           <div className="intro-group">
@@ -407,7 +422,7 @@ export default function App() {
       <div className="longform-content">
         <div className="longform-container">
           <LongFormSection topicId="about" />
-          <TrueNorthSection />
+          <ExperienceSection />
           <LongFormSection topicId="projects" />
           <LongFormSection topicId="passions" />
           <LongFormSection topicId="contact" />

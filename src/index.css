@@ -1154,6 +1154,182 @@ main {
   margin: 0 !important;
 }
 
+.truenorth-card-link {
+  margin: 0.9rem 0 0;
+}
+
+/* ==========================================================================
+   Experience Section (Concept A: Chronological Spine + Compass) & WATCloud Pill
+   ========================================================================== */
+
+.bento-watcloud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+  padding: 0.36rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--surface) 72%, var(--surface-alt) 28%);
+  color: var(--ink);
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.bento-watcloud-pill:hover {
+  border-color: var(--ink-muted);
+  background: var(--surface-alt);
+  transform: translateY(-1px);
+}
+
+.bento-watcloud-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.bento-watcloud-sep,
+.bento-watcloud-role,
+.bento-watcloud-arrow {
+  color: var(--ink-muted);
+}
+
+.bento-watcloud-pill:hover .bento-watcloud-arrow {
+  color: var(--ink);
+}
+
+.exp-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 3px rgb(52 211 153 / 0.18);
+  flex-shrink: 0;
+}
+
+.exp-node-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  border-color: rgb(52 211 153 / 0.42);
+}
+
+.exp-node-upcoming {
+  border-style: dashed;
+  color: var(--ink-muted);
+}
+
+.exp-card-upcoming {
+  border-style: dashed !important;
+  opacity: 0.9;
+}
+
+.exp-card-upcoming:hover {
+  opacity: 1;
+}
+
+.exp-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.65rem;
+}
+
+.exp-card-titles {
+  min-width: 0;
+}
+
+.exp-card-org {
+  margin-bottom: 0.15rem !important;
+}
+
+.exp-card-role {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  line-height: 1.3;
+}
+
+.exp-card-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.12rem;
+  flex-shrink: 0;
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  line-height: 1.35;
+}
+
+.exp-card-period {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.exp-card-summary {
+  font-size: 1.04rem !important;
+  color: var(--ink) !important;
+}
+
+.exp-highlights {
+  margin: 0.75rem 0 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+  color: var(--ink-muted);
+  font-size: 0.96rem;
+  line-height: 1.48;
+}
+
+.exp-highlight-item {
+  padding-left: 0.1rem;
+}
+
+.exp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+}
+
+.exp-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.56rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--surface-alt) 60%, transparent);
+  color: var(--ink-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 640px) {
+  .exp-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .exp-card-meta {
+    align-items: flex-start;
+    text-align: left;
+    flex-direction: row;
+    gap: 0.6rem;
+  }
+}
+
 /* ==========================================================================
    About Me Interactive Grid Pattern Background (Full Viewport Bleed)
    ========================================================================== */

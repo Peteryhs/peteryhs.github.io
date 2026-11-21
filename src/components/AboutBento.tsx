@@ -395,6 +395,20 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
             Awesome school with the largest co-op program in NA. I am learning & applying my skills
             in the workforce here.
           </p>
+          <button
+            type="button"
+            className="bento-watcloud-pill"
+            onClick={(e) => {
+              e.stopPropagation()
+              document.getElementById('experience')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+          >
+            <span className="exp-live-dot" aria-hidden="true" />
+            <span className="bento-watcloud-name">WATonomous</span>
+            <span className="bento-watcloud-sep" aria-hidden="true">·</span>
+            <span className="bento-watcloud-role">Infrastructure Engineer</span>
+            <span className="bento-watcloud-arrow" aria-hidden="true">→</span>
+          </button>
         </div>
       </div>
     </BentoCardWrapper>

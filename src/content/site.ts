@@ -1,5 +1,8 @@
 export type TopicId =
   | 'about'
+  | 'experience'
+  | 'watcloud'
+  | 'hacktheridge'
   | 'truenorth'
   | 'electronics'
   | 'systems'
@@ -36,6 +39,27 @@ export const topics: Topic[] = [
       { title: 'Program', text: 'Computer Engineering @ University of Waterloo' },
       { title: 'Freetime', text: 'Homelab Nerd & Audio/camera aficionado' },
     ],
+  },
+  {
+    id: 'experience',
+    title: 'Experience',
+    shortTitle: 'Experience',
+    preview: 'WATonomous infrastructure & Hack the Ridge web/brand.',
+    description: 'Production cluster infrastructure and hackathon web development & brand design.',
+  },
+  {
+    id: 'watcloud',
+    title: 'WATonomous',
+    shortTitle: 'WATonomous',
+    preview: 'Infrastructure Engineer · WATcloud Slurm, Kubernetes & Proxmox',
+    description: 'Operate production Slurm, Kubernetes, and Proxmox infrastructure serving 22 teams, labs, and course groups.',
+  },
+  {
+    id: 'hacktheridge',
+    title: 'Hack the Ridge',
+    shortTitle: 'Hack the Ridge',
+    preview: 'Director of Web Development & Brand Design · Oakville, ON',
+    description: 'Led the web stack and brand design for a 150+ participant hackathon, contributing to 2× registration growth.',
   },
   {
     id: 'truenorth',

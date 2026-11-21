@@ -1,11 +1,22 @@
 import type { TopicId } from '../../content/site'
 
-export type FrameKind = 'default' | 'pixel' | 'pcb' | 'viewfinder' | 'projects' | 'waterloo' | 'studio' | 'systems' | 'ml'
+export type FrameKind =
+  | 'default'
+  | 'pixel'
+  | 'pcb'
+  | 'viewfinder'
+  | 'projects'
+  | 'waterloo'
+  | 'studio'
+  | 'systems'
+  | 'ml'
+  | 'watcloud'
+  | 'hacktheridge'
 
 export type BlockIcon =
   | { type: 'photo' }
   | { type: 'crest' }
-  | { type: 'demo'; kind: 'engineering' | 'systems' | 'machine-learning' | 'electronics' | 'projects' | 'minecraft' | 'photography' }
+  | { type: 'demo'; kind: 'engineering' | 'systems' | 'machine-learning' | 'electronics' | 'projects' | 'infrastructure' | 'minecraft' | 'photography' }
 
 export interface BlockConfig {
   id: TopicId
@@ -18,11 +29,13 @@ export interface BlockConfig {
 }
 
 export const BLOCKS = {
-  about: { id: 'about', label: 'Peter', hoverLabel: 'PeterYHS', icon: { type: 'photo' }, frame: 'studio' },
+  about: { id: 'about', label: 'Peter', hoverLabel: 'Peter Shao', icon: { type: 'photo' }, frame: 'studio' },
   waterloo: { id: 'waterloo', label: 'University of Waterloo', hoverLabel: "ECE Co-op · '31", icon: { type: 'crest' }, frame: 'waterloo' },
   compeng: { id: 'compeng', label: 'CompEng', hoverLabel: 'Stream 8', icon: { type: 'demo', kind: 'engineering' }, frame: 'pcb' },
-  systems: { id: 'systems', label: 'distributed systems', hoverLabel: 'Sun Systems', icon: { type: 'demo', kind: 'systems' }, frame: 'systems' },
-  ml: { id: 'ml', label: 'ML', hoverLabel: 'LLMs', icon: { type: 'demo', kind: 'machine-learning' }, frame: 'ml' },
+  watcloud: { id: 'watcloud', label: 'WATonomous', hoverLabel: 'Slurm & K8s', icon: { type: 'demo', kind: 'infrastructure' }, frame: 'watcloud' },
+  hacktheridge: { id: 'hacktheridge', label: 'Hack the Ridge', hoverLabel: 'Web Dev & Brand', icon: { type: 'demo', kind: 'projects' }, frame: 'hacktheridge' },
+  systems: { id: 'systems', label: 'distributed systems', hoverLabel: 'Linux & Docker', icon: { type: 'demo', kind: 'systems' }, frame: 'systems' },
+  ml: { id: 'ml', label: 'machine learning', hoverLabel: 'PyTorch & Agents', icon: { type: 'demo', kind: 'machine-learning' }, frame: 'ml' },
   electronics: { id: 'electronics', label: 'electronics', hoverLabel: 'PCBs & MCU', icon: { type: 'demo', kind: 'electronics' }, frame: 'pcb' },
   projects: { id: 'projects', label: 'projects', hoverLabel: 'AI/Infra OSS', icon: { type: 'demo', kind: 'projects' }, frame: 'projects' },
   minecraft: { id: 'minecraft', label: 'Minecraft', hoverLabel: 'Hypixel', icon: { type: 'demo', kind: 'minecraft' }, frame: 'pixel' },
