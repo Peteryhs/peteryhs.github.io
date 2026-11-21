@@ -36,10 +36,13 @@ export interface TapestryPalette {
 }
 
 interface WeatherProfile {
-  holdMs: number
-  morphMs: number
-  driftX: number
-  driftY: number
+  vx: number
+  vy: number
+  sx: number
+  sy: number
+  shear: number
+  threshold: number
+  rigidity: number
   coreLight: [number, number, number]
   rimLight: [number, number, number]
   accentLight: [number, number, number]
@@ -65,46 +68,35 @@ interface BirdWakeDot {
   life: number
 }
 
-type ShapeName = 'square' | 'triangle' | 'rectangle' | 'star' | 'diamond' | 'cross' | 'ring' | 'hexagon'
-type CellRole = 'blue' | 'yellow' | 'white' | 'red'
-
-interface ShapeCell {
-  dx: number
-  dy: number
-  role: CellRole
-}
-
-interface ClusterState {
-  fromShape: ShapeName
-  toShape: ShapeName
-  phaseStartMs: number
-  morphing: boolean
-  holdDurationMs: number
-  seed: number
-}
-
 export interface TapestryRuntime {
   wake: BirdWakeDot[]
   mouseX: number
   mouseY: number
   mouseActive: boolean
-  clusters: [ClusterState, ClusterState]
 }
 
 const WEATHER_CACHE_KEY = 'peter-waterloo-weather-v1'
 const WEATHER_CACHE_TTL_MS = 30 * 60 * 1000
 
-const SHAPE_NAMES: ShapeName[] = ['square', 'triangle', 'rectangle', 'star', 'diamond', 'cross', 'ring', 'hexagon']
+const BAYER4 = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+] as const
 
 // Sampled directly from Peter's profile photo (peter-photo.jpg):
 // lots of vibrant cobalt blue + lots of golden yellow + a little crisp white + a touch of diner-basket red.
 // Each weather mood shifts motion, shear, rigidity, and subtle hue temperature while staying faithful to the photo.
 const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
   clear: {
-    holdMs: 3400,
-    morphMs: 1150,
-    driftX: 14,
-    driftY: 12,
+    vx: 0.16,
+    vy: -0.07,
+    sx: 0.17,
+    sy: 0.17,
+    shear: 0.14,
+    threshold: 0.55,
+    rigidity: 0.54,
     coreLight: [26, 118, 226],    // diner-table cobalt blue
     rimLight: [246, 188, 38],     // golden crisp yellow
     accentLight: [226, 56, 56],   // diner-basket red touch
@@ -113,10 +105,13 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     accentDark: [244, 80, 76],
   },
   rain: {
-    holdMs: 2800,
-    morphMs: 980,
-    driftX: 8,
-    driftY: 22,
+    vx: -0.32,
+    vy: 0.85,
+    sx: 0.25,
+    sy: 0.1,
+    shear: 0.45,
+    threshold: 0.54,
+    rigidity: 0.64,
     coreLight: [22, 108, 220],    // deep cobalt blue
     rimLight: [242, 184, 42],     // warm golden yellow
     accentLight: [220, 58, 62],   // red accent
@@ -125,10 +120,13 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     accentDark: [240, 82, 82],
   },
   fog: {
-    holdMs: 4200,
-    morphMs: 1400,
-    driftX: 10,
-    driftY: 8,
+    vx: 0.1,
+    vy: 0.03,
+    sx: 0.13,
+    sy: 0.14,
+    shear: 0.08,
+    threshold: 0.5,
+    rigidity: 0.46,
     coreLight: [46, 132, 230],    // airy cobalt blue
     rimLight: [248, 196, 54],     // soft golden yellow
     accentLight: [228, 66, 66],   // red accent
@@ -137,10 +135,13 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     accentDark: [246, 88, 86],
   },
   wind: {
-    holdMs: 2500,
-    morphMs: 880,
-    driftX: 26,
-    driftY: 10,
+    vx: 0.86,
+    vy: -0.1,
+    sx: 0.11,
+    sy: 0.24,
+    shear: -0.26,
+    threshold: 0.55,
+    rigidity: 0.68,
     coreLight: [30, 124, 232],    // breezy royal blue
     rimLight: [248, 190, 36],     // bright yellow
     accentLight: [232, 54, 54],   // punchy red touch
@@ -149,10 +150,13 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     accentDark: [248, 78, 74],
   },
   snow: {
-    holdMs: 4400,
-    morphMs: 1450,
-    driftX: 10,
-    driftY: 16,
+    vx: 0.11,
+    vy: 0.3,
+    sx: 0.21,
+    sy: 0.2,
+    shear: 0.16,
+    threshold: 0.58,
+    rigidity: 0.58,
     coreLight: [42, 136, 234],    // crisp winter cobalt
     rimLight: [250, 200, 62],     // pale sunlit yellow
     accentLight: [226, 60, 64],   // berry red touch
@@ -161,10 +165,13 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     accentDark: [244, 84, 84],
   },
   dusk: {
-    holdMs: 3600,
-    morphMs: 1200,
-    driftX: 12,
-    driftY: 10,
+    vx: 0.14,
+    vy: -0.06,
+    sx: 0.16,
+    sy: 0.17,
+    shear: 0.14,
+    threshold: 0.55,
+    rigidity: 0.54,
     coreLight: [28, 110, 222],    // evening cobalt blue
     rimLight: [244, 182, 34],     // rich amber-yellow
     accentLight: [224, 54, 58],   // red accent
@@ -174,94 +181,12 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
   },
 }
 
-function shapeCoords(name: ShapeName): Array<[number, number]> {
-  const coords: Array<[number, number]> = []
-  for (let y = -4; y <= 4; y++) {
-    for (let x = -4; x <= 4; x++) {
-      const ax = Math.abs(x)
-      const ay = Math.abs(y)
-      let inside = false
-      if (name === 'square') inside = x >= -3 && x <= 2 && y >= -3 && y <= 2
-      else if (name === 'rectangle') inside = x >= -4 && x <= 3 && y >= -2 && y <= 1
-      else if (name === 'triangle') inside = y >= -3 && y <= 2 && ax <= y + 3
-      else if (name === 'diamond') inside = ax + ay <= 4
-      else if (name === 'star')
-        inside = (ax <= 1 && ay <= 1) || (ax === 0 && ay <= 4) || (ay === 0 && ax <= 4) || (ax === 2 && ay === 2)
-      else if (name === 'cross') inside = ax <= 3 && ay <= 3 && (ax <= 1 || ay <= 1)
-      else if (name === 'ring') inside = Math.max(ax, ay) >= 2 && Math.max(ax, ay) <= 3 && ax + ay <= 5
-      else inside = ax <= 3 && ay <= 3 && ax + ay <= 5
-      if (inside) coords.push([x, y])
-    }
-  }
-  // Angular sort so blocks fan cleanly between shapes instead of crossing chaotically
-  coords.sort((a, b) => {
-    const d = Math.atan2(a[1], a[0]) - Math.atan2(b[1], b[0])
-    return Math.abs(d) > 0.01 ? d : Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1])
-  })
-  return coords
-}
-
-// Structured color grammar, lit from the top-left:
-// White specular bevel on the leading edge -> Yellow sunlit band -> one Red hinge where yellow meets blue -> Blue body.
-function buildShapeCells(name: ShapeName): ShapeCell[] {
-  const coords = shapeCoords(name)
-  const key = (x: number, y: number) => x + ',' + y
-  const set = new Set(coords.map(([x, y]) => key(x, y)))
-  let minD = Infinity
-  let maxD = -Infinity
-  for (const [x, y] of coords) {
-    minD = Math.min(minD, x + y)
-    maxD = Math.max(maxD, x + y)
-  }
-  const span = Math.max(1, maxD - minD)
-
-  const cells: ShapeCell[] = coords.map(([dx, dy]) => {
-    const n = (dx + dy - minD) / span
-    const leading = !set.has(key(dx - 1, dy)) || !set.has(key(dx, dy - 1))
-    let role: CellRole = 'blue'
-    if (n < 0.2 && leading) role = 'white'
-    else if (n < 0.48) role = 'yellow'
-    return { dx, dy, role }
-  })
-
-  // Exactly one red hinge: the top-right-most outer yellow cell bordering blue
-  let best = -1
-  let bestScore = -Infinity
-  cells.forEach((c, i) => {
-    if (c.role !== 'yellow') return
-    const outer = !set.has(key(c.dx + 1, c.dy)) || !set.has(key(c.dx, c.dy - 1))
-    if (!outer) return
-    const score = c.dx - c.dy * 0.5
-    if (score > bestScore) {
-      bestScore = score
-      best = i
-    }
-  })
-  if (best >= 0) cells[best].role = 'red'
-  return cells
-}
-
-const SHAPE_LIBRARY = Object.fromEntries(SHAPE_NAMES.map((n) => [n, buildShapeCells(n)])) as Record<
-  ShapeName,
-  ShapeCell[]
->
-
-function nextRandomShape(current: ShapeName, other: ShapeName): ShapeName {
-  const candidates = SHAPE_NAMES.filter((s) => s !== current && s !== other)
-  return candidates[Math.floor(Math.random() * candidates.length)] ?? 'star'
-}
-
 export function createTapestryRuntime(): TapestryRuntime {
-  const now = typeof performance !== 'undefined' ? performance.now() : 0
   return {
     wake: [],
     mouseX: -9999,
     mouseY: -9999,
     mouseActive: false,
-    clusters: [
-      { fromShape: 'diamond', toShape: 'diamond', phaseStartMs: now - 1200, morphing: false, holdDurationMs: 3200, seed: 11 },
-      { fromShape: 'square', toShape: 'square', phaseStartMs: now - 2600, morphing: false, holdDurationMs: 3700, seed: 47 },
-    ],
   }
 }
 
@@ -370,137 +295,52 @@ function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
 }
 
-function lerpRgb(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
-  return [
-    Math.round(a[0] + (b[0] - a[0]) * t),
-    Math.round(a[1] + (b[1] - a[1]) * t),
-    Math.round(a[2] + (b[2] - a[2]) * t),
-  ]
+function triWave(v: number): number {
+  const m = ((v / (Math.PI * 2)) % 1 + 1) % 1
+  return 1 - 4 * Math.abs(m - 0.5)
 }
 
-function roleToRgb(role: CellRole, pal: TapestryPalette): [number, number, number] {
-  if (role === 'blue') return pal.core
-  if (role === 'yellow') return pal.rim
-  if (role === 'white') return pal.white
-  return pal.accent
-}
-
-function roleAlpha(role: CellRole, isDark: boolean): number {
-  if (role === 'red') return isDark ? 0.84 : 0.78
-  if (role === 'white') return isDark ? 0.68 : 0.94
-  if (role === 'yellow') return isDark ? 0.74 : 0.68
-  return isDark ? 0.72 : 0.64
-}
-
-function advanceClusters(runtime: TapestryRuntime, timeMs: number, profile: WeatherProfile): void {
-  runtime.clusters.forEach((c, i) => {
-    const other = runtime.clusters[1 - i]
-    const elapsed = timeMs - c.phaseStartMs
-    if (!c.morphing && elapsed >= c.holdDurationMs) {
-      c.fromShape = c.toShape
-      c.toShape = nextRandomShape(c.toShape, other.toShape)
-      c.morphing = true
-      c.phaseStartMs = timeMs
-    } else if (c.morphing && elapsed >= profile.morphMs) {
-      c.fromShape = c.toShape
-      c.morphing = false
-      c.phaseStartMs = timeMs
-      c.seed += 1
-      c.holdDurationMs = profile.holdMs + Math.random() * 900
-    }
-  })
-}
-
-interface LiveBlock {
-  x: number
-  y: number
-  rgb: [number, number, number]
-  isWhite: boolean
-  alpha: number
-}
-
-function sampleLiveClusterBlocks(
-  lane: LaneRect,
-  mood: WeatherMood,
-  pal: TapestryPalette,
-  timeMs: number,
+function sampleFieldValue(
+  gx: number,
+  gy: number,
+  t: number,
+  profile: WeatherProfile,
   runtime: TapestryRuntime
-): LiveBlock[] {
-  const profile = WEATHER_PROFILES[mood]
-  advanceClusters(runtime, timeMs, profile)
-  const t = timeMs * 0.001
-  const dX = profile.driftX / TAPESTRY_CELL
-  const dY = profile.driftY / TAPESTRY_CELL
+): number {
+  const px = gx * profile.sx + gy * profile.shear * 0.06 - t * profile.vx
+  const py = gy * profile.sy - t * profile.vy
 
-  // Both sculptures stay centered in the open right-side lane, never behind the About cards
-  const anchors = [
-    {
-      gx: Math.round((lane.left + lane.width * 0.5) / TAPESTRY_CELL + Math.sin(t * 0.42) * dX),
-      gy: Math.round((lane.top + lane.height * 0.3) / TAPESTRY_CELL + Math.cos(t * 0.34) * dY),
-    },
-    {
-      gx: Math.round((lane.left + lane.width * 0.5) / TAPESTRY_CELL + Math.cos(t * 0.38 + 1.4) * dX),
-      gy: Math.round((lane.top + lane.height * 0.7) / TAPESTRY_CELL + Math.sin(t * 0.31 + 0.9) * dY),
-    },
-  ]
+  const faceted =
+    triWave(px * 0.92 + py * 0.34 + t * 0.14) * 0.44 +
+    triWave(py * 0.98 - px * 0.42 - t * 0.11) * 0.34 +
+    triWave((px - py) * 0.62 + t * 0.18) * 0.22
 
-  const blocks: LiveBlock[] = []
-  runtime.clusters.forEach((cluster, i) => {
-    const anchor = anchors[i]
-    const from = SHAPE_LIBRARY[cluster.fromShape]
-    const to = SHAPE_LIBRARY[cluster.toShape]
-    const count = Math.max(from.length, to.length)
-    const raw = cluster.morphing ? clamp01((timeMs - cluster.phaseStartMs) / profile.morphMs) : 1
+  const organic =
+    Math.sin(px * 1.05 + Math.cos(py * 0.85 + t * 0.2)) * 0.45 +
+    Math.cos(py * 1.15 - Math.sin(px * 0.78 - t * 0.16)) * 0.35 +
+    Math.sin((px + py) * 0.7 + t * 0.26) * 0.2
 
-    for (let k = 0; k < count; k++) {
-      const a = from[k % from.length]
-      const b = to[k % to.length]
-      const delay = (k / count) * 0.24
-      const local = cluster.morphing ? clamp01((raw - delay) / (1 - delay)) : 1
-      const ease = 1 - Math.pow(1 - local, 3)
+  let f = organic * (1 - profile.rigidity) + faceted * profile.rigidity
 
-      // Extra blocks fade in/out so resting shapes never stack duplicate tiles
-      const inFrom = k < from.length
-      const inTo = k < to.length
-      const presence = inFrom && inTo ? 1 : inTo ? ease : 1 - ease
-      if (presence <= 0.01) continue
+  // Crisp architectural terracing
+  const terrace = Math.round(f * 5) / 5
+  f = f * 0.68 + terrace * 0.32
 
-      const sx = (anchor.gx + a.dx) * TAPESTRY_CELL
-      const sy = (anchor.gy + a.dy) * TAPESTRY_CELL
-      const tx = (anchor.gx + b.dx) * TAPESTRY_CELL
-      const ty = (anchor.gy + b.dy) * TAPESTRY_CELL
-      let x = sx + (tx - sx) * ease
-      let y = sy + (ty - sy) * ease
-
-      if (local > 0 && local < 1) {
-        const arc = Math.sin(ease * Math.PI) * 14 * (k % 2 === 0 ? 1 : -1)
-        const len = Math.max(1, Math.hypot(tx - sx, ty - sy))
-        x += (-(ty - sy) / len) * arc
-        y += ((tx - sx) / len) * arc
-      }
-
-      if (runtime.mouseActive) {
-        const mdx = x + TAPESTRY_CELL * 0.5 - runtime.mouseX
-        const mdy = y + TAPESTRY_CELL * 0.5 - runtime.mouseY
-        const dist = Math.hypot(mdx, mdy)
-        if (dist < 110 && dist > 1) {
-          const push = (1 - dist / 110) * 12
-          x += (mdx / dist) * push
-          y += (mdy / dist) * push
-        }
-      }
-
-      const role = ease > 0.5 ? b.role : a.role
-      const rgb = cluster.morphing ? lerpRgb(roleToRgb(a.role, pal), roleToRgb(b.role, pal), ease) : roleToRgb(b.role, pal)
-      const breathe = 0.92 + 0.08 * Math.sin(t * 1.4 + k * 0.25 + i * 2)
-      blocks.push({ x, y, rgb, isWhite: role === 'white', alpha: roleAlpha(role, pal.isDark) * breathe * presence })
+  if (runtime.mouseActive) {
+    const dx = gx * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseX
+    const dy = gy * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseY
+    const dist = Math.hypot(dx, dy)
+    if (dist < 140) {
+      f += Math.sin(dist * 0.09 - t * 4.5) * (1 - dist / 140) * 0.34
     }
-  })
-  return blocks
+  }
+
+  return clamp01((f + 1) * 0.5)
 }
 
-// Two floating 20px-block geometric sculptures in the open right-side lane that morph at random between
-// square, triangle, rectangle, star, diamond, cross, ring and hexagon. Live weather sets cadence and drift.
+// Render the unified 20px Crisp + Soft Aura live-weather tapestry across the ENTIRE grid.
+// Never carves a rectangular hole — when Flappy is active, softly dims uniformly so the game
+// integrates directly onto the same living 20px canvas.
 export function renderWeatherTapestry(
   bloomCtx: CanvasRenderingContext2D,
   pixelCtx: CanvasRenderingContext2D,
@@ -510,26 +350,79 @@ export function renderWeatherTapestry(
   pal: TapestryPalette,
   timeMs: number,
   runtime: TapestryRuntime,
-  dimFactor = 1,
-  lane: LaneRect | null = null
+  dimFactor = 1
 ): void {
   bloomCtx.clearRect(0, 0, width, height)
   pixelCtx.clearRect(0, 0, width, height)
-  if (!lane) return
 
-  for (const b of sampleLiveClusterBlocks(lane, mood, pal, timeMs, runtime)) {
-    const alpha = b.alpha * dimFactor
-    if (alpha <= 0.015) continue
-    if (!b.isWhite) {
-      bloomCtx.fillStyle = rgba(b.rgb, alpha * 0.62)
-      bloomCtx.fillRect(b.x, b.y, TAPESTRY_CELL, TAPESTRY_CELL)
-    }
-    pixelCtx.fillStyle = rgba(b.rgb, alpha)
-    pixelCtx.fillRect(b.x + 1, b.y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
-    if (b.isWhite && !pal.isDark) {
-      pixelCtx.strokeStyle = rgba(pal.core, 0.24 * dimFactor)
-      pixelCtx.lineWidth = 1
-      pixelCtx.strokeRect(b.x + 1.5, b.y + 1.5, TAPESTRY_CELL - 3, TAPESTRY_CELL - 3)
+  const cols = Math.ceil(width / TAPESTRY_CELL)
+  const rows = Math.ceil(height / TAPESTRY_CELL)
+  const profile = WEATHER_PROFILES[mood]
+  const t = timeMs * 0.001
+
+  // Generous balance of blue (core) & yellow (rim), plus a little crisp white & a sparse touch of red
+  const rimStart = profile.threshold - 0.09
+  const coreStart = profile.threshold + 0.05
+  const coreFull = profile.threshold + 0.26
+
+  for (let gy = 0; gy < rows; gy++) {
+    const y = gy * TAPESTRY_CELL
+    for (let gx = 0; gx < cols; gx++) {
+      const val = sampleFieldValue(gx, gy, t, profile, runtime)
+      if (val <= rimStart) continue
+
+      const density = clamp01((val - rimStart) / (coreFull - rimStart))
+      const bayerVal = (BAYER4[gy & 3][gx & 3] + 0.5) / 16
+      if (density <= bayerVal * 0.88) continue
+
+      const x = gx * TAPESTRY_CELL
+      const coreMix = clamp01((val - coreStart) / (coreFull - coreStart))
+      const isCore = coreMix > bayerVal * 0.85
+      const hash = ((gx * 17 + gy * 31) & 31)
+      const isRedAccent = val > coreStart + 0.06 && hash === 0
+      const isWhiteTile = !isRedAccent && val > rimStart + 0.06 && (hash === 7 || hash === 19 || hash === 27)
+
+      const rgb = isRedAccent
+        ? pal.accent
+        : isWhiteTile
+          ? pal.white
+          : isCore
+            ? pal.core
+            : pal.rim
+
+      const baseAlpha = isRedAccent
+        ? pal.isDark
+          ? 0.58
+          : 0.48
+        : isWhiteTile
+          ? pal.isDark
+            ? 0.42
+            : 0.86
+          : isCore
+            ? pal.isDark
+              ? 0.36 + coreMix * 0.34
+              : 0.28 + coreMix * 0.34
+            : pal.isDark
+              ? 0.32 + density * 0.28
+              : 0.3 + density * 0.28
+
+      const finalAlpha = baseAlpha * dimFactor
+
+      if (isCore || isRedAccent || (!isWhiteTile && density > 0.55)) {
+        bloomCtx.fillStyle = rgba(rgb, finalAlpha * 0.62)
+        bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
+      }
+
+      // Crisp 18x18 tile centered in the 20px grid cell
+      pixelCtx.fillStyle = rgba(rgb, finalAlpha)
+      pixelCtx.fillRect(x + 1, y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
+
+      // Subtle crisp rim on white tiles in light mode so they read cleanly on warm paper
+      if (isWhiteTile && !pal.isDark) {
+        pixelCtx.strokeStyle = rgba(pal.core, 0.22 * dimFactor)
+        pixelCtx.lineWidth = 1
+        pixelCtx.strokeRect(x + 1.5, y + 1.5, TAPESTRY_CELL - 3, TAPESTRY_CELL - 3)
+      }
     }
   }
 }
@@ -593,10 +486,35 @@ export function buildWeatherMorphParticles(
   flight: AmbientFlight,
   lane: LaneRect
 ): MorphParticle[] {
-  const sources = sampleLiveClusterBlocks(lane, mood, getTapestryPalette(mood), timeMs, runtime).map((b) => ({
-    x: b.x,
-    y: b.y,
-  }))
+  const profile = WEATHER_PROFILES[mood]
+  const t = timeMs * 0.001
+  const rimStart = profile.threshold - 0.05
+  const coreFull = profile.threshold + 0.24
+
+  const sources: Array<{ x: number; y: number }> = []
+  const startCol = Math.floor(lane.left / TAPESTRY_CELL)
+  const endCol = Math.floor((lane.left + lane.width) / TAPESTRY_CELL)
+  const startRow = Math.floor(lane.top / TAPESTRY_CELL)
+  const endRow = Math.floor((lane.top + lane.height) / TAPESTRY_CELL)
+
+  for (let gy = startRow; gy < endRow; gy++) {
+    for (let gx = startCol; gx < endCol; gx++) {
+      const val = sampleFieldValue(gx, gy, t, profile, runtime)
+      if (val <= rimStart) continue
+      const density = clamp01((val - rimStart) / (coreFull - rimStart))
+      const bayerVal = (BAYER4[gy & 3][gx & 3] + 0.5) / 16
+      if (density > bayerVal * 0.88) {
+        sources.push({ x: gx * TAPESTRY_CELL, y: gy * TAPESTRY_CELL })
+      }
+    }
+  }
+
+  for (let i = sources.length - 1; i > 0; i--) {
+    const j = Math.floor(((Math.sin(i * 19.31 + 0.7) + 1) * 0.5) * (i + 1))
+    const tmp = sources[i]
+    sources[i] = sources[j]
+    sources[j] = tmp
+  }
 
   const targets = collectFlappyTargets(flight, lane)
   const particles: MorphParticle[] = []

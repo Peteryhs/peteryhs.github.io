@@ -314,8 +314,7 @@ export function InteractiveGridPattern({
         pal,
         0,
         runtimeRef.current,
-        1,
-        laneRef.current
+        1
       )
       return
     }
@@ -347,8 +346,7 @@ export function InteractiveGridPattern({
           pal,
           now,
           runtimeRef.current,
-          1,
-          activeLane
+          1
         )
       } else if (curMode === 'morphing') {
         const morph = morphRef.current
@@ -371,8 +369,7 @@ export function InteractiveGridPattern({
             pal,
             now,
             runtimeRef.current,
-            dim,
-            activeLane
+            dim
           )
           renderMorphOverlay(bloomCtx, pixelCtx, morph.particles, progress, pal)
 
@@ -452,8 +449,7 @@ export function InteractiveGridPattern({
             pal,
             now,
             runtimeRef.current,
-            0.26,
-            activeLane
+            0.26
           )
           renderFlappyInLane(
             bloomCtx,
