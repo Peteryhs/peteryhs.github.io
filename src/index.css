@@ -1430,104 +1430,6 @@ main {
   }
 }
 
-/* Snake Simulation */
-.snake-body-square {
-  fill: rgba(176, 128, 58, 0.72) !important;
-  stroke: rgba(196, 150, 82, 0.55) !important;
-  stroke-width: 1px;
-}
-
-.snake-head-square {
-  fill: rgba(190, 140, 66, 0.78) !important;
-  stroke: rgba(255, 255, 255, 0.42) !important;
-  stroke-width: 1.5px;
-}
-
-.snake-body-square.is-flashing {
-  animation: snakeFlashWhite 0.27s ease-in-out 3;
-}
-
-@keyframes snakeFlashWhite {
-  0%, 100% {
-    fill: rgba(176, 128, 58, 0.72) !important;
-    stroke: rgba(196, 150, 82, 0.55) !important;
-    filter: none;
-  }
-  50% {
-    fill: #ffffff !important;
-    stroke: #ffffff !important;
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 1));
-  }
-}
-
-.snake-apple-square {
-  fill: rgba(62, 81, 150, 0.78) !important;
-  stroke: rgba(88, 111, 188, 0.58) !important;
-  stroke-width: 1.5px;
-  animation: applePulse 1.8s ease-in-out infinite alternate;
-}
-
-@keyframes applePulse {
-  0% {
-    opacity: 0.72;
-  }
-  100% {
-    opacity: 0.86;
-    filter: drop-shadow(0 0 4px rgba(88, 111, 188, 0.28));
-  }
-}
-
-.snake-milestone-text {
-  font-family: 'Press Start 2P', 'Courier New', monospace !important;
-  font-size: 11px;
-  fill: rgba(96, 119, 198, 0.86);
-  letter-spacing: 0.05em;
-  font-weight: 700;
-  pointer-events: none;
-  user-select: none;
-  white-space: nowrap;
-  paint-order: stroke fill;
-  stroke: var(--bg, #f4f0e7);
-  stroke-width: 3.5px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transform-box: fill-box;
-  transform-origin: center;
-  will-change: transform, opacity;
-  animation: milestoneFloat 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@media (prefers-color-scheme: dark) {
-  .snake-head-square {
-    stroke: rgba(255, 255, 255, 0.55) !important;
-  }
-  .snake-milestone-text {
-    fill: rgba(120, 142, 220, 0.82);
-    stroke: var(--bg, #161513);
-    stroke-width: 3.5px;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.72));
-  }
-}
-
-@keyframes milestoneFloat {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 4px, 0);
-  }
-  12% {
-    opacity: 1;
-    transform: translate3d(0, -8px, 0);
-  }
-  75% {
-    opacity: 1;
-    transform: translate3d(0, -24px, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(0, -34px, 0);
-  }
-}
-
 /* ==========================================================================
    Responsive & Accessibility
    ========================================================================== */
@@ -2013,17 +1915,6 @@ html.dark .interactive-grid-square.is-active,
 html.dark .interactive-grid-square:hover {
   fill: rgba(110, 87, 65, 0.75);
   stroke: rgba(242, 238, 232, 0.25);
-}
-
-html.dark .snake-head-square {
-  stroke: rgba(255, 255, 255, 0.55) !important;
-}
-
-html.dark .snake-milestone-text {
-  fill: rgba(120, 142, 220, 0.82);
-  stroke: var(--bg, #161513);
-  stroke-width: 3.5px;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.72));
 }
 
 /* ==========================================================================

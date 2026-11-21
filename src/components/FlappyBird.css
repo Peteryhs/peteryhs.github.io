@@ -1,0 +1,693 @@
+.flappy {
+  --flight-sky: #eaf0ed;
+  --flight-line: #506456;
+  --flight-pipe: #b8cbb4;
+  --flight-cap: #ccdbc3;
+  --flight-ground: #dce3c9;
+  --flight-cloud: #fbfcf5;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--bento-border);
+  border-radius: 20px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--bento-shadow);
+}
+
+.flappy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px 28px 24px;
+}
+
+.flappy-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font: 600 9px/1.4 var(--font-main);
+  letter-spacing: 0.15em;
+}
+
+.flappy-eyebrow > span {
+  color: #b67b2f;
+  font-size: 15px;
+}
+
+.flappy h3 {
+  margin: 0;
+  font: 500 28px/1.15 var(--font-main);
+  letter-spacing: -0.045em;
+}
+
+.flappy-title-dot {
+  color: #c28b37;
+}
+
+.flappy-subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.flappy-scoreboard {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-shrink: 0;
+}
+
+.flappy-scoreboard > div {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.flappy-scoreboard > div + div {
+  padding-left: 22px;
+  border-left: 1px solid var(--line);
+}
+
+.flappy-scoreboard span {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+}
+
+.flappy-scoreboard strong {
+  font: 400 27px/1 'Press Start 2P', monospace;
+  letter-spacing: -0.08em;
+  color: var(--ink);
+}
+
+.flappy-stage {
+  position: relative;
+  height: 320px;
+  margin: 0 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  isolation: isolate;
+  touch-action: pan-y;
+}
+
+.flappy-stage.is-playing {
+  touch-action: none;
+  cursor: pointer;
+}
+
+.flappy-stage:focus-visible {
+  outline: 3px solid #aa7b36;
+  outline-offset: 3px;
+}
+
+.flappy-scene {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+}
+
+.flappy-sky {
+  fill: var(--flight-sky);
+}
+
+.flappy-graph {
+  color: var(--flight-line);
+  opacity: 0.15;
+}
+
+.flappy-sun {
+  fill: #efd9a0;
+  opacity: 0.8;
+}
+
+.flappy-cloud {
+  fill: var(--flight-cloud);
+  opacity: 0.8;
+}
+
+.flappy-hills-back {
+  fill: #c8d8cc;
+  opacity: 0.5;
+}
+
+.flappy-hills {
+  fill: #b0c7b6;
+  opacity: 0.5;
+}
+
+.flappy-ground {
+  fill: var(--flight-ground);
+}
+
+.flappy-ground-texture {
+  color: var(--flight-line);
+  opacity: 0.15;
+}
+
+.flappy-ground-line {
+  stroke: var(--flight-line);
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+.flappy-pipe {
+  fill: var(--flight-pipe);
+  stroke: var(--flight-line);
+  stroke-width: 1.5;
+}
+
+.flappy-pipe-cap {
+  fill: var(--flight-cap);
+  stroke: var(--flight-line);
+  stroke-width: 1.5;
+}
+
+.flappy-pipe-shine {
+  stroke: var(--flight-cloud);
+  stroke-width: 4;
+  opacity: 0.45;
+}
+
+.flappy-gate-number {
+  fill: var(--flight-line);
+  font: 600 10px var(--font-main);
+  letter-spacing: 1px;
+}
+
+.flappy-token-ring {
+  fill: var(--flight-cloud);
+  stroke: #acb9ca;
+  stroke-dasharray: 3 3;
+}
+
+.flappy-token {
+  fill: #768fbc;
+}
+
+.flappy-gate.is-passed {
+  opacity: 0.65;
+}
+
+.flappy-speed-lines {
+  stroke: #a7b7aa;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.flappy-bird {
+  filter: drop-shadow(0 4px 0 #42513e18);
+}
+
+.flappy-bird.is-flying .flappy-wing {
+  transform-box: fill-box;
+  transform-origin: 75% 50%;
+  animation: flappy-wingbeat 180ms ease-in-out infinite alternate;
+}
+
+@keyframes flappy-wingbeat {
+  to {
+    transform: rotate(-35deg) scaleY(0.65);
+  }
+}
+
+.flappy-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #e9eee67d;
+  backdrop-filter: blur(3px);
+}
+
+.flappy-overlay.is-ready {
+  background: none;
+  backdrop-filter: none;
+  grid-template-columns: 1fr 1fr;
+}
+
+.flappy-overlay.is-ready .flappy-overlay-card {
+  grid-column: 2;
+  text-align: left;
+}
+
+.flappy-overlay-card {
+  max-width: 320px;
+  text-align: center;
+}
+
+.flappy-overlay-kicker {
+  margin: 0 0 10px !important;
+  font-size: 8px !important;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--flight-line) !important;
+}
+
+.flappy h4 {
+  margin: 0;
+  color: #364f40;
+  font: 500 39px/1.03 var(--font-main);
+  letter-spacing: -0.055em;
+}
+
+.flappy-overlay-card > p:not(.flappy-overlay-kicker) {
+  margin: 12px 0 18px;
+  color: #526355;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.flappy button {
+  font-family: var(--font-main);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flappy-start {
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 34px;
+  min-height: 42px;
+  padding: 0 17px;
+  color: #fffaf0;
+  background: #425c47;
+  border: 1px solid #354c3a;
+  border-radius: 8px;
+  box-shadow: 0 3px 0 #293d2d;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms, transform 150ms, box-shadow 150ms;
+}
+
+.flappy-start:hover {
+  background: #526f55;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #293d2d;
+}
+
+.flappy-start:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #293d2d;
+}
+
+.flappy-start > span {
+  font-size: 18px;
+}
+
+.flappy button:focus-visible,
+.flappy summary:focus-visible {
+  outline: 3px solid #bc8430;
+  outline-offset: 4px;
+}
+
+.flappy-next {
+  position: absolute;
+  top: 15px;
+  left: 16px;
+  max-width: calc(100% - 78px);
+  display: grid;
+  gap: 4px;
+  color: var(--flight-line);
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--flight-cloud);
+}
+
+.flappy-next > span {
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  opacity: 0.8;
+}
+
+.flappy-pause {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  background: var(--flight-cloud);
+  color: var(--flight-line);
+  border: 1px solid var(--flight-line);
+  border-radius: 8px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.flappy-collected {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  max-width: 90%;
+  padding: 8px 12px;
+  border: 1px solid #a8b9ce;
+  border-radius: 7px;
+  color: #465e83;
+  background: #f6f8f1;
+  text-align: center;
+  font-size: 12px;
+  pointer-events: none;
+  animation: flappy-stamp 2s both;
+}
+
+@keyframes flappy-stamp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  15%,
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+}
+
+.flappy-underwing {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 26px 17px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.flappy-underwing p {
+  margin: 0;
+}
+
+.flappy-underwing p > span {
+  padding: 0 5px;
+  opacity: 0.5;
+}
+
+.flappy kbd {
+  padding: 2px 4px;
+  font: inherit;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+}
+
+.flappy-underwing > span {
+  opacity: 0.75;
+}
+
+.flappy-log {
+  border-top: 1px solid var(--line);
+}
+
+.flappy-log summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 26px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.flappy-log summary::-webkit-details-marker {
+  display: none;
+}
+
+.flappy-log-icon {
+  color: #a97939;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.flappy-log-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.flappy-log-toggle {
+  margin-left: 9px;
+  font-size: 16px;
+  color: var(--muted);
+  transition: transform 150ms ease;
+}
+
+.flappy-log[open] .flappy-log-toggle {
+  transform: rotate(45deg);
+}
+
+.flappy-log ol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 26px;
+  margin: 0;
+  list-style: none;
+}
+
+.flappy-log li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.flappy-log li > span {
+  font: 9px monospace;
+  opacity: 0.6;
+}
+
+.flappy-log li.is-collected {
+  border-style: solid;
+  border-color: #83a28b;
+  color: var(--ink);
+  background: #8eae8a12;
+}
+
+.flappy-log li.is-collected > span {
+  color: #648f6f;
+  opacity: 1;
+}
+
+.flappy-log > p {
+  padding: 0 26px 18px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.flappy-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+html.dark .flappy {
+  --flight-sky: #263731;
+  --flight-line: #aec1a9;
+  --flight-pipe: #405e49;
+  --flight-cap: #56705a;
+  --flight-ground: #354a37;
+  --flight-cloud: #334a40;
+}
+
+html.dark .flappy-sun {
+  fill: #9e8751;
+  opacity: 0.6;
+}
+
+html.dark .flappy-cloud {
+  fill: #668274;
+  opacity: 0.3;
+}
+
+html.dark .flappy-hills-back {
+  fill: #456052;
+}
+
+html.dark .flappy-hills {
+  fill: #4f6d53;
+}
+
+html.dark .flappy-overlay:not(.is-ready) {
+  background: #26372de0;
+}
+
+html.dark .flappy h4 {
+  color: #e2e9d5;
+}
+
+html.dark .flappy-overlay-card > p:not(.flappy-overlay-kicker) {
+  color: #b8c8b4;
+}
+
+html.dark .flappy-token-ring {
+  fill: #c6d3ca;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) .flappy {
+    --flight-sky: #263731;
+    --flight-line: #aec1a9;
+    --flight-pipe: #405e49;
+    --flight-cap: #56705a;
+    --flight-ground: #354a37;
+    --flight-cloud: #334a40;
+  }
+
+  html:not(.light) .flappy-sun {
+    fill: #9e8751;
+    opacity: 0.6;
+  }
+
+  html:not(.light) .flappy-cloud {
+    fill: #668274;
+    opacity: 0.3;
+  }
+
+  html:not(.light) .flappy-hills-back {
+    fill: #456052;
+  }
+
+  html:not(.light) .flappy-hills {
+    fill: #4f6d53;
+  }
+
+  html:not(.light) .flappy-overlay:not(.is-ready) {
+    background: #26372de0;
+  }
+
+  html:not(.light) .flappy h4 {
+    color: #e2e9d5;
+  }
+
+  html:not(.light) .flappy-overlay-card > p:not(.flappy-overlay-kicker) {
+    color: #b8c8b4;
+  }
+
+  html:not(.light) .flappy-token-ring {
+    fill: #c6d3ca;
+  }
+}
+
+@media (max-width: 600px) {
+  .flappy-header {
+    padding: 22px 20px;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .flappy h3 {
+    font-size: 26px;
+  }
+
+  .flappy-subtitle {
+    max-width: 260px;
+  }
+
+  .flappy-scoreboard {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 20px;
+  }
+
+  .flappy-scoreboard > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .flappy-scoreboard > div + div {
+    padding-left: 20px;
+  }
+
+  .flappy-scoreboard strong {
+    font-size: 18px;
+  }
+
+  .flappy-scoreboard span {
+    font-size: 7px;
+  }
+
+  .flappy-stage {
+    height: 320px;
+    margin: 0 8px;
+  }
+
+  .flappy-overlay.is-ready {
+    grid-template-columns: 1fr;
+    padding-top: 98px;
+    padding-bottom: 35px;
+  }
+
+  .flappy-overlay.is-ready .flappy-overlay-card {
+    grid-column: 1;
+    text-align: center;
+  }
+
+  .flappy-overlay.is-ready h4 br {
+    display: none;
+  }
+
+  .flappy h4 {
+    font-size: 32px;
+  }
+
+  .flappy-underwing {
+    padding: 13px 18px 16px;
+  }
+
+  .flappy-underwing > span {
+    display: none;
+  }
+
+  .flappy-log summary {
+    padding: 16px 20px;
+  }
+
+  .flappy-log ol {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 20px;
+  }
+
+  .flappy-log > p {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flappy *,
+  .flappy *::before,
+  .flappy *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .flappy-collected {
+    display: none;
+  }
+}
