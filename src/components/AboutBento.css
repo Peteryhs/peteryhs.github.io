@@ -415,6 +415,18 @@
   animation-delay: calc(var(--day-i, 0) * 38ms);
 }
 
+/* Card 3: University of Waterloo — prevent narrow-viewport overflow */
+.bento-card-waterloo .bento-waterloo-info {
+  min-width: 0;
+}
+
+.bento-card-waterloo .bento-watcloud-pill {
+  max-width: 100%;
+  flex-wrap: wrap;
+  text-align: left;
+  row-gap: 0.2rem;
+}
+
 /* Card 4: CompEng Focus Areas — tighter rhythm & clearer scannability */
 .bento-card.bento-card-compeng .bento-focus-list {
   display: grid;
@@ -669,6 +681,20 @@ html.dark .about-streak-eyebrow,
   }
   .about-streak-week {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .bento-card-waterloo .bento-waterloo-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+  .bento-card-waterloo .bento-watcloud-pill {
+    padding: 0.36rem 0.62rem;
+    gap: 0.34rem;
+    border-radius: 14px;
+    font-size: 0.82rem;
   }
 }
 
