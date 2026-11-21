@@ -1430,27 +1430,51 @@ main {
   }
 }
 
-/* Artistic Game of Life -> Dynamic Flappy Bird Canvas (About Right-Side Desktop Space) */
-.life-flappy-canvas {
+/* Full-Bleed Crisp + Soft Aura 8px Live-Weather Pixel Tapestry -> Flappy Bird */
+.interactive-grid-subline {
+  opacity: 0.42;
+}
+
+.interactive-grid-container.is-dissolving .tapestry-canvas-pixels {
+  filter: blur(6px);
+}
+
+.tapestry-canvas-bloom {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: block;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(12px);
+  opacity: 0.44;
+  transition: opacity 280ms ease;
+}
+
+.tapestry-canvas-pixels {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  z-index: 1;
+  transition: filter 220ms ease;
+}
+
+.tapestry-play-hitbox {
+  position: absolute;
+  z-index: 2;
   cursor: pointer;
   pointer-events: auto;
-  z-index: 1;
-  -webkit-mask-image:
-    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
-  -webkit-mask-composite: source-in;
-          mask-image:
-    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
-          mask-composite: intersect;
+  outline: none;
 }
 
 .flappy-milestone-layer {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
   overflow: hidden;
 }
