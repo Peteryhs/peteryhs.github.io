@@ -174,7 +174,8 @@ export function InteractiveGridPattern({
 
   // Main requestAnimationFrame loop for ambient + playable flight
   useEffect(() => {
-    if (!lane || shouldReduceMotion || !inView) return
+    if (!lane || !inView) return
+    if (shouldReduceMotion && mode === 'auto') return
     if (mode === 'crashed') return
 
     let frame = 0
