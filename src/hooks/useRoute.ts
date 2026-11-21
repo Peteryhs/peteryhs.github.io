@@ -9,7 +9,7 @@ import { clearProjectHover } from './projectHover'
  * study stays shareable. Navigation runs through the View Transitions API
  * when it's available, so the project card morphs into the page header.
  */
-export type Route = { name: 'home' } | { name: 'project'; slug: string }
+export type Route = { name: 'home' } | { name: 'project'; slug: string } | { name: 'icons' }
 
 const HOME: Route = { name: 'home' }
 const HOME_SCROLL_KEY = 'peter_home_scroll'
@@ -17,6 +17,7 @@ const HOME_SCROLL_KEY = 'peter_home_scroll'
 export const projectHref = (slug: string) => `#/work/${slug}`
 
 function parse(hash: string): Route {
+  if (/^#\/icons\/?$/.test(hash)) return { name: 'icons' }
   const match = /^#\/work\/([\w-]+)\/?$/.exec(hash)
   if (match && projectsData.some((p) => p.slug === match[1])) {
     return { name: 'project', slug: match[1] }
@@ -25,7 +26,7 @@ function parse(hash: string): Route {
 }
 
 const sameRoute = (a: Route, b: Route) =>
-  a.name === b.name && (a.name === 'home' || a.slug === (b as { slug: string }).slug)
+  a.name === b.name && (a.name !== 'project' || a.slug === (b as { slug: string }).slug)
 
 let current: Route = typeof window === 'undefined' ? HOME : parse(window.location.hash)
 const listeners = new Set<() => void>()
@@ -277,7 +278,7 @@ function transitionTo(next: Route): Promise<void> {
 export function navigate(route: Route, source?: HTMLElement | null): Promise<void> {
   if (sameRoute(route, current)) return Promise.resolve()
   pendingSource = source ?? null
-  const url = route.name === 'home' ? window.location.pathname + window.location.search : projectHref(route.slug)
+  const url = route.name === 'home' ? window.location.pathname + window.location.search : route.name === 'icons' ? '#/icons' : projectHref(route.slug)
   // depth = how many case-study entries sit above the home entry we came from.
   const prevDepth = (history.state as { depth?: number } | null)?.depth
   const depth =

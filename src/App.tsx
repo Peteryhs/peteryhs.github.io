@@ -30,6 +30,7 @@ import { ExperienceSection, ExperienceTimeline } from './components/ExperienceSe
 import { BottomBounceEffect } from './components/BottomBounceEffect'
 import { CommandPalette, CommandPaletteTrigger } from './components/CommandPalette'
 import { CaseStudyPage, CaseBack } from './components/CaseStudyPage'
+import { IconGallery } from './components/IconGallery'
 import { useRoute } from './hooks/useRoute'
 import { topicById, type Topic, type TopicId } from './content/site'
 import type { BlockId } from './components/hero/blocks'
@@ -344,6 +345,7 @@ export default function App() {
       <MagneticCursor />
 
       <BottomBounceEffect>
+        {route.name === 'icons' && <IconGallery />}
         {route.name === 'project' && (
           <main className="case-main">
             <CaseStudyPage key={route.slug} slug={route.slug} />
@@ -352,7 +354,7 @@ export default function App() {
         {/* The home page stays mounted (just hidden) behind a case study, so
             coming back doesn't replay every entrance animation and the card
             is there to morph into. */}
-        <main hidden={route.name === 'project'}>
+        <main hidden={route.name !== 'home'}>
           <header className="intro" id="top">
         <div className="intro-container">
           <div className="intro-group">
