@@ -205,6 +205,14 @@ export function FlappyBird() {
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (
+      (event.key === 'Escape' || event.key.toLowerCase() === 'p') &&
+      mode === 'playing'
+    ) {
+      event.preventDefault()
+      setMode('paused')
+      return
+    }
     if ((event.target as HTMLElement).closest('button')) return
     if ([' ', 'ArrowUp', 'Enter'].includes(event.key)) {
       event.preventDefault()
@@ -212,12 +220,6 @@ export function FlappyBird() {
       if (mode === 'playing') commit(flap(flightRef.current))
       else if (mode === 'paused') resume()
       else start()
-    } else if (
-      (event.key === 'Escape' || event.key.toLowerCase() === 'p') &&
-      mode === 'playing'
-    ) {
-      event.preventDefault()
-      setMode('paused')
     }
   }
 
