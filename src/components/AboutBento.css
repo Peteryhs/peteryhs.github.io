@@ -507,13 +507,16 @@ html.dark .about-portrait,
   inset: 0;
   z-index: 6;
   border-radius: inherit;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  opacity: 1;
+  transition: opacity 200ms ease-out;
+}
+
+.streak-overlay.is-dismissing {
+  opacity: 0;
 }
 
 .streak-overlay-wash {
@@ -521,53 +524,15 @@ html.dark .about-portrait,
   inset: 0;
   background: radial-gradient(
     circle at 50% 50%,
-    #ffc800 0%,
-    #ff9600 42%,
-    #ff6b00 78%,
-    #e55200 100%
+    #ff9f1a 0%,
+    #ff8400 45%,
+    #f56400 84%,
+    #e04f00 100%
   );
-  pointer-events: none;
-}
-
-.streak-overlay-sunburst-wrap {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 520px;
-  height: 520px;
-  margin-left: -260px;
-  margin-top: -260px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.streak-overlay-sunburst {
-  width: 100%;
-  height: 100%;
-  animation: streakSunburstSpin 12s linear infinite;
-}
-
-.streak-overlay-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 96px;
-  height: 96px;
-  margin-left: -48px;
-  margin-top: -48px;
-  border-radius: 999px;
-  border: 2.5px solid rgba(255, 244, 184, 0.65);
   opacity: 0;
-}
-
-.streak-overlay-ring-1 {
-  animation: streakShockwave 820ms cubic-bezier(0.16, 1, 0.3, 1) 180ms forwards;
-}
-
-.streak-overlay-ring-2 {
-  animation: streakShockwave 940ms cubic-bezier(0.16, 1, 0.3, 1) 340ms forwards;
+  clip-path: circle(0px at 50% 50%);
+  pointer-events: none;
+  will-change: clip-path, opacity;
 }
 
 .streak-overlay-canvas {
@@ -580,48 +545,15 @@ html.dark .about-portrait,
 
 .streak-overlay-hero {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 0;
+  left: 0;
   transform-origin: center center;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  filter: drop-shadow(0 12px 24px rgba(145, 42, 0, 0.3));
-}
-
-.streak-overlay-glow {
-  position: absolute;
-  width: 145%;
-  height: 145%;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 248, 200, 0.62) 0%,
-    rgba(255, 200, 0, 0.28) 45%,
-    rgba(255, 150, 0, 0) 74%
-  );
-  pointer-events: none;
-}
-
-@keyframes streakSunburstSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes streakShockwave {
-  0% {
-    transform: scale(0.45);
-    opacity: 0.78;
-  }
-  100% {
-    transform: scale(3.4);
-    opacity: 0;
-  }
+  will-change: transform;
+  filter: drop-shadow(0 12px 22px rgba(135, 38, 0, 0.28));
 }
 
 .bento-card-languages .qe-streak-trigger.is-static {

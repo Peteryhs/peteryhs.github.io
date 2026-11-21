@@ -127,11 +127,12 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
   )
 }
 
+let hasAutoPlayedLanguagesStreak = false
+
 export function LanguagesCard({ standalone = false }: { standalone?: boolean }) {
   const cardRef = useRef<HTMLElement>(null)
   const flameSlotRef = useRef<HTMLSpanElement>(null)
   const settleTimerRef = useRef<number | null>(null)
-  const hasAutoPlayedRef = useRef(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
@@ -146,6 +147,13 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [])
+
+  // Immediately clear an active animation if reduced motion is enabled mid-playback
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setOverlayOrigin(null)
+    }
+  }, [prefersReducedMotion])
 
   const measureFlameOrigin = useCallback((): FlameOrigin | null => {
     const cardEl = cardRef.current
@@ -183,16 +191,16 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
     }
   }, [measureFlameOrigin, prefersReducedMotion])
 
-  // Auto-trigger once when the card first loads into view
+  // Auto-trigger once per page load when the card first enters view
   useEffect(() => {
-    if (prefersReducedMotion || hasAutoPlayedRef.current) return
+    if (prefersReducedMotion || hasAutoPlayedLanguagesStreak) return
     const cardEl = cardRef.current
     if (!cardEl) return
 
     let autoTimer: number | null = null
     const triggerOnce = () => {
-      if (hasAutoPlayedRef.current) return
-      hasAutoPlayedRef.current = true
+      if (hasAutoPlayedLanguagesStreak) return
+      hasAutoPlayedLanguagesStreak = true
       autoTimer = window.setTimeout(() => {
         launchAnimation()
       }, 280)
