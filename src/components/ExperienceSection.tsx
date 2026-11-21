@@ -195,6 +195,7 @@ export function ExperienceTimeline({
                   onHoverId?.(item.id)
                   if (filterId) {
                     document.getElementById('experience')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    document.getElementById('experience-heading')?.focus({ preventScroll: true })
                   }
                 }}
               >
@@ -428,7 +429,7 @@ export function ExperienceSection() {
       >
         <div className="truenorth-content-wrap">
           <BlurFade delay={0.06} duration={0.5} yOffset={10}>
-            <h2 id="experience-heading" className="longform-heading">
+            <h2 id="experience-heading" className="longform-heading" tabIndex={-1}>
               Experience
             </h2>
           </BlurFade>
