@@ -139,20 +139,13 @@ export function DuolingoVectorFlame({
   )
 }
 
-interface BouncingSparkle {
+interface FallingSparkle {
   x: number
   y: number
   vx: number
   vy: number
   size: number
-  rotation: number
-  vRot: number
-  life: number
-  maxLife: number
   color: string
-  kind: 'star' | 'droplet' | 'dot'
-  bouncesLeft: number
-  floorY: number
 }
 
 const SPARKLE_COLORS = ['#FFFFFF', '#FFF8D1', '#FFE14D', '#FFC800']
@@ -178,6 +171,48 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }
 
+// Fraction of the burst at which each flame layer starts blooming, and for how long
+const LAYER_STAGGER = {
+  inner: { start: 0.0, dur: 0.5 },
+  mid: { start: 0.2, dur: 0.55 },
+  outer: { start: 0.38, dur: 0.62 },
+}
+// Every layer grows out of the white core so the rings expand from it
+const LAYER_ANCHOR = { x: 38.4, y: 64 }
+
+function layerBloom(u: number, cfg: { start: number; dur: number }): number {
+  const t = (u - cfg.start) / cfg.dur
+  if (t <= 0) return 0
+  return Math.max(0, easeOutBack(Math.min(1, t)))
+}
+
+function layerTransform(k: number): string {
+  const { x, y } = LAYER_ANCHOR
+  return `translate(${x} ${y}) scale(${k.toFixed(4)}) translate(${-x} ${-y})`
+}
+
+// Burst kick: the tip shoots above its normal height, falls back, squashes, then settles
+const KICK = { rise: 0.15, fall: 0.17, settle: 0.2, stretch: 0.38, narrow: 0.1, lift: 10, squash: 0.28 }
+
+function burstKick(t: number): number {
+  if (t <= 0) return 0
+  if (t < KICK.rise) return easeOutCubic(t / KICK.rise)
+  t -= KICK.rise
+  if (t < KICK.fall) {
+    const x = t / KICK.fall
+    return 1 - x * x
+  }
+  t -= KICK.fall
+  if (t < KICK.settle) {
+    const x = t / KICK.settle
+    return -KICK.squash * Math.sin(Math.PI * x) * (1 - x * 0.6)
+  }
+  return 0
+}
+
+const SPARK_SPEED = 1.45
+const SPARK_GRAVITY = 0.3
+
 interface StreakFireOverlayProps {
   origin: FlameOrigin
   onComplete: () => void
@@ -201,6 +236,9 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
   const midPathRef = useRef<SVGPathElement>(null)
   const innerPathRef = useRef<SVGPathElement>(null)
   const coreEllipseRef = useRef<SVGEllipseElement>(null)
+  const outerGroupRef = useRef<SVGGElement>(null)
+  const midGroupRef = useRef<SVGGElement>(null)
+  const innerGroupRef = useRef<SVGGElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const finishOnce = () => {
@@ -255,18 +293,18 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
     }
 
     const heroSize = Math.round(Math.max(96, Math.min(Math.min(cardW, cardH) * 0.56, 134)))
+    const heroHeight = Math.round(heroSize * 1.14)
     const startScale = origin.width / heroSize
     const maxWashRadius = Math.ceil(
       Math.hypot(Math.max(origin.x, cardW - origin.x), Math.max(origin.y, cardH - origin.y)) + 18
     )
 
-    const particles: BouncingSparkle[] = []
+    const particles: FallingSparkle[] = []
     let burst1Fired = false
     let burst2Fired = false
     let lastEmitT = BURST_END_S
 
     const spawnOffFlame = (count: number, speedMul = 1) => {
-      const kinds: BouncingSparkle['kind'][] = ['star', 'star', 'droplet', 'dot']
       for (let i = 0; i < count; i++) {
         // Spawn directly around the roaring flame perimeter so sparkles visibly pop off the fire
         const spawnAngle = -Math.PI * 0.88 + Math.random() * Math.PI * 1.76
@@ -274,10 +312,9 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         const sx = centerX + Math.cos(spawnAngle) * spawnR
         const sy = centerY + Math.sin(spawnAngle) * spawnR * 0.9 - 4
 
-        const speed = (2.1 + Math.random() * 3.4) * speedMul
+        const speed = (2.1 + Math.random() * 3.4) * speedMul * SPARK_SPEED
         const vx = Math.cos(spawnAngle) * speed + (Math.random() - 0.5) * 1.1
-        const vy = Math.sin(spawnAngle) * speed - (1.6 + Math.random() * 1.9) * speedMul
-        const maxLife = 36 + Math.random() * 28
+        const vy = Math.sin(spawnAngle) * speed - (1.6 + Math.random() * 1.9) * speedMul * SPARK_SPEED
 
         particles.push({
           x: sx,
@@ -285,14 +322,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
           vx,
           vy,
           size: 6.2 + Math.random() * 5.2,
-          rotation: Math.random() * Math.PI * 2,
-          vRot: (Math.random() - 0.5) * 0.16,
-          life: maxLife,
-          maxLife,
           color: SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)],
-          kind: kinds[Math.floor(Math.random() * kinds.length)],
-          bouncesLeft: Math.random() < 0.72 ? 2 : 1,
-          floorY: Math.min(cardH - 12, centerY + heroSize * (0.34 + Math.random() * 0.22)),
         })
       }
     }
@@ -314,6 +344,9 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
 
       let brightness = 1
       let sparkAmount = 0
+      let layerInner = 1
+      let layerMid = 1
+      let layerOuter = 1
       if (elapsed < SPARK_END_S) {
         // Nothing but a kindling spark at center; the flame has not lit yet
         fx = centerX
@@ -323,12 +356,15 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         sparkAmount = easeOutCubic(elapsed / SPARK_END_S)
         morphIntensity = 0.2
       } else if (elapsed < BURST_END_S) {
-        // Flame bursts open from zero: height leads width, with a bright flash that cools
+        // Layers bloom one after another out of the white core, with a bright flash that cools
         const u = (elapsed - SPARK_END_S) / (BURST_END_S - SPARK_END_S)
         fx = centerX
         fy = centerY - 2
-        scaleY = Math.max(0, easeOutBack(Math.min(1, u * 1.18)))
-        scaleX = Math.max(0, easeOutBack(Math.max(0, u * 1.1 - 0.08)))
+        scaleX = 1
+        scaleY = 1
+        layerInner = layerBloom(u, LAYER_STAGGER.inner)
+        layerMid = layerBloom(u, LAYER_STAGGER.mid)
+        layerOuter = layerBloom(u, LAYER_STAGGER.outer)
         brightness = lerp(1.75, 1, easeOutCubic(u))
         sparkAmount = Math.max(0, 1 - u * 3)
         morphIntensity = lerp(0.3, 0.95, easeOutCubic(u))
@@ -354,6 +390,19 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         leanX = -dir * Math.sin(u * Math.PI) * 0.35
         morphIntensity = lerp(0.8, 0.0, e)
       }
+
+      const kick = burstKick(elapsed - SPARK_END_S)
+      if (kick !== 0) {
+        const kickScaleY = 1 + KICK.stretch * kick
+        scaleY *= kickScaleY
+        scaleX *= 1 - KICK.narrow * kick
+        // Keep the base planted while the tip stretches up
+        fy -= (kickScaleY - 1) * heroHeight * 0.42 + Math.max(0, kick) * KICK.lift
+      }
+
+      outerGroupRef.current?.setAttribute('transform', layerTransform(layerOuter))
+      midGroupRef.current?.setAttribute('transform', layerTransform(layerMid))
+      innerGroupRef.current?.setAttribute('transform', layerTransform(layerInner))
 
       if (heroRef.current) {
         heroRef.current.style.transform = `translate3d(${fx.toFixed(2)}px, ${fy.toFixed(2)}px, 0) translate(-50%, -50%) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`
@@ -393,7 +442,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         washRef.current.style.opacity = washOpacity.toFixed(3)
       }
 
-      // --- 4. Fewer, larger sparkles & droplets popping and bouncing off the fire ---
+      // --- 4. Fewer, larger pill sparkles thrown off the fire ---
       if (!burst1Fired && elapsed >= SPARK_END_S + 0.06) {
         burst1Fired = true
         spawnOffFlame(7, 1.15)
@@ -414,69 +463,33 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
 
         for (let i = particles.length - 1; i >= 0; i--) {
           const sp = particles[i]
-          // Gravity pulls sparkles down into playful bounce arcs
-          sp.vy += 0.16
-          sp.vx *= 0.985
+          // Plain ballistic motion: gravity pulls each pill down and out of the card, no fading
+          sp.vy += SPARK_GRAVITY
+          sp.vx *= 0.995
           sp.x += sp.vx
           sp.y += sp.vy
-          sp.rotation += sp.vRot
-          sp.life -= 1
 
-          // Bounce off the sparkle's virtual floor / lower fire arc!
-          if (sp.y >= sp.floorY && sp.vy > 0 && sp.bouncesLeft > 0) {
-            sp.y = sp.floorY
-            sp.vy = -Math.abs(sp.vy) * (0.58 + Math.random() * 0.14)
-            sp.vx *= 0.86
-            sp.bouncesLeft -= 1
-          }
-
-          // Soft bounce off card side edges so sparkles stay lively inside the card
-          if (sp.x < 10 && sp.vx < 0) {
-            sp.x = 10
-            sp.vx = Math.abs(sp.vx) * 0.65
-          } else if (sp.x > cardW - 10 && sp.vx > 0) {
-            sp.x = cardW - 10
-            sp.vx = -Math.abs(sp.vx) * 0.65
-          }
-
-          if (sp.life <= 0) {
+          const margin = sp.size * 2
+          if (sp.y > cardH + margin || sp.x < -margin || sp.x > cardW + margin) {
             particles.splice(i, 1)
             continue
           }
 
-          const lt = sp.life / sp.maxLife
-          // Twinkle alpha + scale
-          const alpha = Math.min(1, lt * 1.6) * (0.78 + 0.22 * Math.sin(sp.life * 0.6))
-          const s = sp.size * (0.35 + 0.65 * Math.sin(Math.min(1, lt * 1.2) * Math.PI * 0.5))
-
+          // Round pill stretched along its direction of travel
+          const len = sp.size * 2.1
+          const r = (sp.size * 0.85) / 2
           ctx.save()
           ctx.translate(sp.x, sp.y)
-          ctx.rotate(sp.rotation)
-          ctx.globalAlpha = alpha
+          ctx.rotate(Math.atan2(sp.vy, sp.vx))
           ctx.fillStyle = sp.color
-
-          if (sp.kind === 'star') {
-            ctx.beginPath()
-            ctx.moveTo(0, -s * 1.35)
-            ctx.quadraticCurveTo(s * 0.2, -s * 0.2, s * 1.35, 0)
-            ctx.quadraticCurveTo(s * 0.2, s * 0.2, 0, s * 1.35)
-            ctx.quadraticCurveTo(-s * 0.2, s * 0.2, -s * 1.35, 0)
-            ctx.quadraticCurveTo(-s * 0.2, -s * 0.2, 0, -s * 1.35)
-            ctx.closePath()
-            ctx.fill()
-          } else if (sp.kind === 'droplet') {
-            ctx.beginPath()
-            ctx.moveTo(0, -s * 1.15)
-            ctx.bezierCurveTo(s * 0.85, -s * 0.15, s * 0.72, s * 0.85, 0, s * 0.85)
-            ctx.bezierCurveTo(-s * 0.72, s * 0.85, -s * 0.85, -s * 0.15, 0, -s * 1.15)
-            ctx.closePath()
-            ctx.fill()
-          } else {
-            ctx.beginPath()
-            ctx.arc(0, 0, s * 0.55, 0, Math.PI * 2)
-            ctx.fill()
-          }
-
+          ctx.beginPath()
+          ctx.moveTo(-len / 2 + r, -r)
+          ctx.lineTo(len / 2 - r, -r)
+          ctx.arc(len / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2)
+          ctx.lineTo(-len / 2 + r, r)
+          ctx.arc(-len / 2 + r, 0, r, Math.PI / 2, Math.PI * 1.5)
+          ctx.closePath()
+          ctx.fill()
           ctx.restore()
         }
 
@@ -550,10 +563,16 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          <path ref={outerPathRef} d={RESTING_PATHS.outer} fill="#FF9600" />
-          <path ref={midPathRef} d={RESTING_PATHS.mid} fill="#FFC800" />
-          <path ref={innerPathRef} d={RESTING_PATHS.inner} fill="#FFF1B8" />
-          <ellipse ref={coreEllipseRef} cx="38.4" cy="67.5" rx="6.2" ry="4.8" fill="#FFFDF2" opacity="0.78" />
+          <g ref={outerGroupRef}>
+            <path ref={outerPathRef} d={RESTING_PATHS.outer} fill="#FF9600" />
+          </g>
+          <g ref={midGroupRef}>
+            <path ref={midPathRef} d={RESTING_PATHS.mid} fill="#FFC800" />
+          </g>
+          <g ref={innerGroupRef}>
+            <path ref={innerPathRef} d={RESTING_PATHS.inner} fill="#FFF1B8" />
+            <ellipse ref={coreEllipseRef} cx="38.4" cy="67.5" rx="6.2" ry="4.8" fill="#FFFDF2" opacity="0.78" />
+          </g>
         </svg>
       </div>
     </div>
