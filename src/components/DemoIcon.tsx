@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { CategoryIcon, getIconDirection, type IconKind } from './CategoryIcon'
+import { CategoryIcon, type IconKind } from './CategoryIcon'
 
 export type { IconKind } from './CategoryIcon'
 
@@ -10,5 +10,5 @@ export function IconLabel({ kind, children }: { kind: IconKind; children: ReactN
 
 /** Existing call sites keep their API while drawing from the shared category family. */
 export function DemoIcon({ kind }: { kind: IconKind }) {
-  return <CategoryIcon kind={kind} direction={getIconDirection()} className={`demo-icon demo-icon-${kind}`} />
+  return <CategoryIcon kind={kind} className={'demo-icon demo-icon-' + kind} />
 }

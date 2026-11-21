@@ -1,4 +1,3 @@
-/* Stable category colours across all three families and future page sections. */
 .category-icon {
   --ci-ink: #30352f;
   --ci-paper: #fff9e9;
@@ -12,18 +11,32 @@
   overflow: visible;
   vertical-align: -0.15em;
 }
-.category-icon-systems { --ci-color: #8ebbd7; --ci-shade: #5986a5; --ci-pop: #f1b864; }
-.category-icon-machine-learning { --ci-color: #b1a1d7; --ci-shade: #8170a5; --ci-pop: #f3be72; }
-.category-icon-electronics { --ci-color: #9ec895; --ci-shade: #628b63; --ci-pop: #ffe49b; }
-.category-icon-projects { --ci-color: #edaa73; --ci-shade: #b97d50; --ci-pop: #a2c2b0; }
-.category-icon-utilities { --ci-color: #dc8d83; --ci-shade: #aa635c; --ci-pop: #f7ce78; }
-.category-icon-infrastructure { --ci-color: #92c7bd; --ci-shade: #64958d; --ci-pop: #f6cd75; }
-.category-icon-research { --ci-color: #a6b6dd; --ci-shade: #7689b1; --ci-pop: #f3cf7a; }
-.category-icon-minecraft { --ci-color: #9bc667; --ci-shade: #5b8949; --ci-pop: #f4cc79; }
-.category-icon-photography { --ci-color: #77aeb8; --ci-shade: #476e78; --ci-pop: #f6ca73; }
-.category-icon-hackathon { --ci-color: #e89c8b; --ci-shade: #ad756c; --ci-pop: #f0c965; }
-.category-icon[data-direction='pals'] { --ci-ink: #37322e; }
-.category-icon[data-direction='press'] { --ci-ink: #443b32; --ci-paper: #fff6e3; }
-:is(html.dark, :root.dark, [data-icon-theme='dark']) .category-icon {
+
+.category-icon-systems { --ci-color: #93bce8; --ci-shade: #557ca8; --ci-pop: #f2aa6b; }
+.category-icon-machine-learning { --ci-color: #c2ade8; --ci-shade: #7c67aa; --ci-pop: #f5cc70; }
+.category-icon-electronics { --ci-color: #94ca8a; --ci-shade: #528454; --ci-pop: #f4cc6c; }
+.category-icon-projects { --ci-color: #f3b26f; --ci-shade: #be7842; --ci-pop: #7ab3dc; }
+.category-icon-utilities { --ci-color: #ec9b82; --ci-shade: #b6604e; --ci-pop: #f3cc70; }
+.category-icon-infrastructure { --ci-color: #99cdc6; --ci-shade: #558886; --ci-pop: #f2b76e; }
+.category-icon-research { --ci-color: #a6c5e6; --ci-shade: #607fa8; --ci-pop: #ed8b7b; }
+.category-icon-minecraft { --ci-color: #9bc667; --ci-shade: #5b8949; --ci-pop: #b5835a; }
+.category-icon-photography { --ci-color: #82b5c4; --ci-shade: #4c798a; --ci-pop: #ee896f; }
+.category-icon-hackathon { --ci-color: #e89b82; --ci-shade: #ab5d4d; --ci-pop: #f4cc70; }
+
+:is(html.dark, :root.dark) .category-icon {
   filter: drop-shadow(0 0 0.7px #fff8e9);
+}
+
+.category-icon-heading {
+  width: 1.05em;
+  height: 1.05em;
+  margin-right: 0.36em;
+  vertical-align: -0.16em;
+}
+
+.category-icon-bullet {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  margin-top: 0.1em;
 }

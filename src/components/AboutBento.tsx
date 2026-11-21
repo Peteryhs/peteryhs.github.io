@@ -1,3 +1,4 @@
+import { CategoryIcon, type IconKind } from './CategoryIcon'
 import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback } from 'react'
 import { BlurFade } from './BlurFade'
 
@@ -88,13 +89,13 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
             <span className="bento-freetime-label">In my freetime, I am a:</span>
             <div className="bento-focus-list bento-freetime-list">
               <div className="bento-focus-row">
-                <span className="bento-focus-bullet">-</span>
+                <CategoryIcon kind="systems" className="category-icon-bullet" />
                 <div className="bento-focus-text">
                   <span className="bento-focus-name">Homelab Nerd</span>
                 </div>
               </div>
               <div className="bento-focus-row">
-                <span className="bento-focus-bullet">-</span>
+                <CategoryIcon kind="photography" className="category-icon-bullet" />
                 <div className="bento-focus-text">
                   <span className="bento-focus-name">Audio/camera aficionado</span>
                 </div>
@@ -416,16 +417,19 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
 }
 
 export function CompEngFocusCard({ standalone = false }: { standalone?: boolean }) {
-  const focusAreas = [
+  const focusAreas: { kind: IconKind; title: string; details: string }[] = [
     {
+      kind: 'systems',
       title: 'Distributed systems',
       details: 'edge networking & IPS, stack design, data security',
     },
     {
+      kind: 'machine-learning',
       title: 'Machine learning',
       details: 'LLM Fine tuning, research reproduction & optimization, Applied ML',
     },
     {
+      kind: 'electronics',
       title: 'Electronics',
       details: 'embedded computing, imaging pipeline engineering, HW repairs',
     },
@@ -434,12 +438,13 @@ export function CompEngFocusCard({ standalone = false }: { standalone?: boolean 
   return (
     <BentoCardWrapper className="bento-card-compeng" standalone={standalone}>
       <h3 className="bento-card-title bento-compeng-heading">
+        <CategoryIcon kind="engineering" className="category-icon-heading" />
         I learn CompEng with a focus on:
       </h3>
       <div className="bento-focus-list">
         {focusAreas.map((area) => (
           <div key={area.title} className="bento-focus-row">
-            <span className="bento-focus-bullet">-</span>
+            <CategoryIcon kind={area.kind} className="category-icon-bullet" />
             <div className="bento-focus-text">
               <span className="bento-focus-name">{area.title}</span>{' '}
               <span className="bento-focus-desc">({area.details})</span>

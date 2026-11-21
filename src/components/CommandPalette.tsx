@@ -1,3 +1,4 @@
+import { CategoryIcon, type IconKind } from './CategoryIcon'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -86,6 +87,25 @@ interface CommandPaletteProps {
   onOpenTopic: (id: TopicId) => void
 }
 
+const TOPIC_ICON: Partial<Record<TopicId, IconKind>> = {
+  compeng: 'engineering',
+  watcloud: 'infrastructure',
+  hacktheridge: 'hackathon',
+  projects: 'projects',
+  systems: 'systems',
+  ml: 'machine-learning',
+  electronics: 'electronics',
+  minecraft: 'minecraft',
+  photography: 'photography',
+}
+
+const PROJECT_ICON: Record<string, IconKind> = {
+  'openwebui-agentic-tooling': 'machine-learning',
+  'ai-detector': 'research',
+  'sun-systems': 'systems',
+  'hermes-contributions': 'utilities',
+}
+
 export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -120,7 +140,7 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
         label: topicById[id].title,
         hint: 'Expand',
         keywords: `${topicById[id].shortTitle} ${topicById[id].preview}`,
-        icon: icons.spark,
+        icon: TOPIC_ICON[id] ? <CategoryIcon kind={TOPIC_ICON[id]!} size={16} /> : icons.spark,
         run: () => onHome(() => onOpenTopic(id)),
       })),
 
@@ -130,7 +150,7 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
         label: p.name,
         hint: 'Breakdown',
         keywords: `${p.tagline} ${p.repo} github repo`,
-        icon: icons.box,
+        icon: <CategoryIcon kind={PROJECT_ICON[p.slug] ?? 'projects'} size={16} />,
         run: () => openProject(p.slug),
       })),
 
