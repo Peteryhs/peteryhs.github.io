@@ -1,15 +1,27 @@
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
-import { useState, useRef, useEffect, useCallback, useId, type RefObject } from 'react'
+import { useState, useRef, useEffect, useCallback, type RefObject } from 'react'
 import {
   advanceAmbientFlight,
-  birdXForLane,
   createAmbientFlight,
   flapAmbient,
   FLIGHT_STAMPS,
-  PIPE_GAP,
-  PIPE_WIDTH,
   type AmbientFlight,
 } from './flappyBirdEngine'
+import {
+  advanceLifeBoard,
+  buildMorphParticles,
+  createLifeBoard,
+  getThemePalette,
+  MORPH_DURATION_MS,
+  renderFlappyCourse,
+  renderLifeState,
+  renderMorphState,
+  seedLifeAtPixel,
+  seedLifeFromFlight,
+  type LifeBoard,
+  type MorphParticle,
+  type StageMode,
+} from './lifeFlappyEngine'
 
 interface InteractiveGridPatternProps {
   sectionRef: RefObject<HTMLElement | null>
@@ -33,8 +45,6 @@ interface FloatingStamp {
   y: number
 }
 
-type FlightMode = 'auto' | 'manual' | 'crashed'
-
 const BEST_KEY = 'peter-flappy-milestones-best'
 
 function readBest(): number {
@@ -53,9 +63,10 @@ export function InteractiveGridPattern({
   className = '',
   squaresClassName = '',
 }: InteractiveGridPatternProps) {
-  const uid = useId()
   const containerRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const shouldReduceMotion = useReducedMotion()
+
   const [dimensions, setDimensions] = useState<{ cols: number; rows: number }>({
     cols: 32,
     rows: 18,
@@ -65,16 +76,20 @@ export function InteractiveGridPattern({
   const [lane, setLane] = useState<RightLane | null>(null)
   const laneRef = useRef<RightLane | null>(null)
 
-  const [mode, setMode] = useState<FlightMode>('auto')
-  const modeRef = useRef<FlightMode>('auto')
-  const [flight, setFlight] = useState<AmbientFlight | null>(null)
-  const flightRef = useRef<AmbientFlight | null>(null)
+  const [mode, setMode] = useState<StageMode>('life')
+  const modeRef = useRef<StageMode>('life')
+  const [score, setScore] = useState(0)
   const [best, setBest] = useState<number>(readBest)
   const bestRef = useRef<number>(best)
   const [floatingStamps, setFloatingStamps] = useState<FloatingStamp[]>([])
   const [inView, setInView] = useState(true)
+
+  const boardRef = useRef<LifeBoard | null>(null)
+  const flightRef = useRef<AmbientFlight | null>(null)
+  const morphRef = useRef<{ particles: MorphParticle[]; startTime: number } | null>(null)
   const crashTimerRef = useRef<number | null>(null)
   const stampIdRef = useRef(0)
+  const lastSeedRef = useRef(0)
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -83,12 +98,19 @@ export function InteractiveGridPattern({
 
   const opacity = useTransform(scrollYProgress, [0, 0.16, 0.84, 1], [0, 1, 1, 0])
 
-  const syncMode = useCallback((nextMode: FlightMode) => {
+  const syncMode = useCallback((nextMode: StageMode) => {
     modeRef.current = nextMode
     setMode(nextMode)
   }, [])
 
-  // Measure both the grid dimensions and the open right-side desktop space next to About cards
+  const clearCrashTimer = useCallback(() => {
+    if (crashTimerRef.current !== null) {
+      window.clearTimeout(crashTimerRef.current)
+      crashTimerRef.current = null
+    }
+  }, [])
+
+  // Measure both the 40px graph grid and the open right-side desktop space next to About cards
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -115,14 +137,14 @@ export function InteractiveGridPattern({
       const rightEnd = w - 20
       const availWidth = rightEnd - rightStart
 
-      // Only show on desktop viewports that have real open space on the right
+      // Desktop open-space only; hide cleanly on narrow/mobile viewports
       if (availWidth < 210 || h < 340) {
         laneRef.current = null
         setLane(null)
         return
       }
 
-      const laneHeight = Math.min(440, Math.max(300, Math.floor((h - 140) / height) * height))
+      const laneHeight = Math.min(460, Math.max(300, Math.floor((h - 120) / height) * height))
       const laneTop = Math.round(((h - laneHeight) / 2) / height) * height
 
       const nextLane: RightLane = {
@@ -140,12 +162,14 @@ export function InteractiveGridPattern({
         Math.abs(prev.width - nextLane.width) > 2 ||
         Math.abs(prev.height - nextLane.height) > 2
       ) {
+        clearCrashTimer()
         laneRef.current = nextLane
         setLane(nextLane)
-        const fresh = createAmbientFlight(nextLane.width, nextLane.height)
-        flightRef.current = fresh
-        setFlight(fresh)
-        syncMode('auto')
+        boardRef.current = createLifeBoard(nextLane.width, nextLane.height)
+        flightRef.current = createAmbientFlight(nextLane.width, nextLane.height)
+        morphRef.current = null
+        setScore(0)
+        syncMode('life')
       }
     }
 
@@ -158,9 +182,9 @@ export function InteractiveGridPattern({
       window.removeEventListener('resize', updateLayout)
       ro.disconnect()
     }
-  }, [sectionRef, width, height, syncMode])
+  }, [sectionRef, width, height, syncMode, clearCrashTimer])
 
-  // Pause animation when About section scrolls off-screen
+  // Pause simulation when About section scrolls off-screen
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -172,11 +196,92 @@ export function InteractiveGridPattern({
     return () => io.disconnect()
   }, [])
 
-  // Main requestAnimationFrame loop for ambient + playable flight
+  useEffect(() => clearCrashTimer, [clearCrashTimer])
+
+  const dissolveBackToLife = useCallback(() => {
+    clearCrashTimer()
+    const currentLane = laneRef.current
+    const board = boardRef.current
+    const flight = flightRef.current
+    if (currentLane && board && flight) {
+      seedLifeFromFlight(board, flight, currentLane.width, currentLane.height)
+    }
+    morphRef.current = null
+    setScore(0)
+    syncMode('life')
+  }, [clearCrashTimer, syncMode])
+
+  const startMorphOrFlap = useCallback(() => {
+    const currentLane = laneRef.current
+    const board = boardRef.current
+    if (!currentLane || !board) return
+
+    clearCrashTimer()
+    const cur = modeRef.current
+
+    if (cur === 'life') {
+      const freshFlight = createAmbientFlight(currentLane.width, currentLane.height)
+      flightRef.current = freshFlight
+      setScore(0)
+      if (shouldReduceMotion) {
+        flightRef.current = flapAmbient(freshFlight)
+        syncMode('playing')
+        return
+      }
+      morphRef.current = {
+        particles: buildMorphParticles(board, freshFlight, currentLane.width, currentLane.height),
+        startTime: performance.now(),
+      }
+      syncMode('morphing')
+      return
+    }
+
+    if (cur === 'morphing') {
+      // Allow eager player to jump straight into flight
+      if (flightRef.current) {
+        flightRef.current = flapAmbient(flightRef.current)
+      }
+      morphRef.current = null
+      syncMode('playing')
+      return
+    }
+
+    if (cur === 'crashed') {
+      const freshFlight = flapAmbient(createAmbientFlight(currentLane.width, currentLane.height))
+      flightRef.current = freshFlight
+      board.trailDots = []
+      setScore(0)
+      syncMode('playing')
+      return
+    }
+
+    // Playing: flap!
+    if (flightRef.current) {
+      flightRef.current = flapAmbient(flightRef.current)
+    }
+  }, [clearCrashTimer, shouldReduceMotion, syncMode])
+
+  // Main 60fps canvas animation loop (zero React state updates per frame)
   useEffect(() => {
-    if (!lane || !inView) return
-    if (shouldReduceMotion && mode === 'auto') return
-    if (mode === 'crashed') return
+    const canvas = canvasRef.current
+    const currentLane = laneRef.current
+    if (!canvas || !currentLane || !inView) return
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    canvas.width = Math.round(currentLane.width * dpr)
+    canvas.height = Math.round(currentLane.height * dpr)
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // If reduced motion and in ambient life mode, render one calm static frame
+    if (shouldReduceMotion && modeRef.current === 'life') {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      if (boardRef.current) {
+        renderLifeState(ctx, boardRef.current, getThemePalette())
+      }
+      return
+    }
 
     let frame = 0
     let prevTime = 0
@@ -185,127 +290,106 @@ export function InteractiveGridPattern({
       const dt = prevTime ? Math.min((now - prevTime) / 1000, 0.05) : 0
       prevTime = now
 
-      const currentLane = laneRef.current
-      const currentFlight = flightRef.current
-      if (currentLane && currentFlight) {
-        const isAuto = modeRef.current === 'auto'
-        const next = advanceAmbientFlight(
-          currentFlight,
-          dt,
-          currentLane.width,
-          currentLane.height,
-          isAuto
-        )
-        flightRef.current = next
-        setFlight(next)
+      const activeLane = laneRef.current
+      const board = boardRef.current
+      if (activeLane && board) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        const pal = getThemePalette()
+        const curMode = modeRef.current
 
-        if (next.lastEvent) {
-          const id = ++stampIdRef.current
-          const ev = next.lastEvent
-          setFloatingStamps((prev) => [
-            ...prev.slice(-3),
-            {
-              id,
-              text: ev.stamp,
-              x: currentLane.left + ev.x,
-              y: currentLane.top + ev.y,
-            },
-          ])
-          window.setTimeout(() => {
-            setFloatingStamps((prev) => prev.filter((item) => item.id !== id))
-          }, 2300)
-
-          if (!isAuto && next.score > bestRef.current) {
-            bestRef.current = next.score
-            setBest(next.score)
-            try {
-              localStorage.setItem(BEST_KEY, String(next.score))
-            } catch {
-              /* ignore storage errors */
+        if (curMode === 'life') {
+          advanceLifeBoard(board, dt)
+          renderLifeState(ctx, board, pal)
+        } else if (curMode === 'morphing') {
+          const morph = morphRef.current
+          if (!morph) {
+            syncMode('playing')
+          } else {
+            const progress = Math.min(1, (now - morph.startTime) / MORPH_DURATION_MS)
+            renderMorphState(ctx, morph.particles, progress, activeLane.width, activeLane.height, pal)
+            if (progress >= 1) {
+              morphRef.current = null
+              if (flightRef.current) {
+                flightRef.current = flapAmbient(flightRef.current)
+              }
+              syncMode('playing')
             }
           }
-        }
+        } else if (curMode === 'playing' || curMode === 'crashed') {
+          const currentFlight = flightRef.current
+          if (currentFlight) {
+            if (curMode === 'playing') {
+              const next = advanceAmbientFlight(
+                currentFlight,
+                dt,
+                activeLane.width,
+                activeLane.height,
+                false
+              )
+              flightRef.current = next
 
-        if (!isAuto && next.result === 'crashed') {
-          syncMode('crashed')
-          if (crashTimerRef.current !== null) window.clearTimeout(crashTimerRef.current)
-          crashTimerRef.current = window.setTimeout(() => {
-            const activeLane = laneRef.current
-            if (activeLane && modeRef.current === 'crashed') {
-              const fresh = createAmbientFlight(activeLane.width, activeLane.height)
-              flightRef.current = fresh
-              setFlight(fresh)
-              syncMode('auto')
+              if (next.score !== currentFlight.score) {
+                setScore(next.score)
+                if (next.score > bestRef.current) {
+                  bestRef.current = next.score
+                  setBest(next.score)
+                  try {
+                    localStorage.setItem(BEST_KEY, String(next.score))
+                  } catch {
+                    // ignore storage errors
+                  }
+                }
+              }
+
+              if (next.lastEvent) {
+                const id = ++stampIdRef.current
+                const ev = next.lastEvent
+                setFloatingStamps((prev) => [
+                  ...prev.slice(-3),
+                  {
+                    id,
+                    text: ev.stamp,
+                    x: activeLane.left + ev.x,
+                    y: activeLane.top + ev.y,
+                  },
+                ])
+                window.setTimeout(() => {
+                  setFloatingStamps((prev) => prev.filter((item) => item.id !== id))
+                }, 2350)
+              }
+
+              if (next.result === 'crashed') {
+                syncMode('crashed')
+                clearCrashTimer()
+                crashTimerRef.current = window.setTimeout(() => {
+                  dissolveBackToLife()
+                }, 1800)
+              }
             }
-          }, 3800)
-          return
+
+            renderFlappyCourse(
+              ctx,
+              board,
+              flightRef.current ?? currentFlight,
+              pal,
+              now,
+              modeRef.current === 'crashed',
+              dt
+            )
+          }
         }
       }
 
-      frame = requestAnimationFrame(tick)
+      frame = window.requestAnimationFrame(tick)
     }
 
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [lane, mode, shouldReduceMotion, inView, syncMode])
+    frame = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frame)
+  }, [lane, inView, mode, shouldReduceMotion, syncMode, clearCrashTimer, dissolveBackToLife])
 
+  // Keyboard controls while actively flying or crashed
   useEffect(() => {
-    return () => {
-      if (crashTimerRef.current !== null) window.clearTimeout(crashTimerRef.current)
-    }
-  }, [])
-
-  const takeControlAndFlap = useCallback(() => {
-    const activeLane = laneRef.current
-    if (!activeLane) return
-    if (crashTimerRef.current !== null) {
-      window.clearTimeout(crashTimerRef.current)
-      crashTimerRef.current = null
-    }
-
-    if (modeRef.current === 'crashed') {
-      const fresh = flapAmbient(createAmbientFlight(activeLane.width, activeLane.height))
-      flightRef.current = fresh
-      setFlight(fresh)
-      syncMode('manual')
-      return
-    }
-
-    if (modeRef.current === 'auto') {
-      const current = flightRef.current ?? createAmbientFlight(activeLane.width, activeLane.height)
-      // Seamless handoff from autopilot: reset flight score to 0 and give an immediate flap
-      const handoff = flapAmbient({ ...current, score: 0, result: 'flying' })
-      flightRef.current = handoff
-      setFlight(handoff)
-      syncMode('manual')
-      return
-    }
-
-    if (flightRef.current) {
-      const flapped = flapAmbient(flightRef.current)
-      flightRef.current = flapped
-      setFlight(flapped)
-    }
-  }, [syncMode])
-
-  const returnToAuto = useCallback(() => {
-    if (crashTimerRef.current !== null) {
-      window.clearTimeout(crashTimerRef.current)
-      crashTimerRef.current = null
-    }
-    const activeLane = laneRef.current
-    if (!activeLane) return
-    if (modeRef.current === 'crashed') {
-      const fresh = createAmbientFlight(activeLane.width, activeLane.height)
-      flightRef.current = fresh
-      setFlight(fresh)
-    }
-    syncMode('auto')
-  }, [syncMode])
-
-  // Keyboard flap when player has taken control (Space / ArrowUp) and Escape to return to auto
-  useEffect(() => {
-    if (mode === 'auto') return
+    if (mode === 'life') return
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null
       const tag = target?.tagName
@@ -314,7 +398,7 @@ export function InteractiveGridPattern({
       }
       if (e.key === 'Escape') {
         e.preventDefault()
-        returnToAuto()
+        dissolveBackToLife()
         return
       }
       if (target?.closest('button, a, [role="button"]')) {
@@ -322,12 +406,12 @@ export function InteractiveGridPattern({
       }
       if (e.key === ' ' || e.key === 'ArrowUp') {
         e.preventDefault()
-        if (!e.repeat) takeControlAndFlap()
+        if (!e.repeat) startMorphOrFlap()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [mode, takeControlAndFlap, returnToAuto])
+  }, [mode, startMorphOrFlap, dissolveBackToLife])
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
@@ -340,29 +424,19 @@ export function InteractiveGridPattern({
       if (col >= 0 && col < dimensions.cols && row >= 0 && row < dimensions.rows) {
         setHoveredSquare(`${col}-${row}`)
       }
-      const activeLane = laneRef.current
-      if (
-        activeLane &&
-        x >= activeLane.left &&
-        x <= activeLane.left + activeLane.width &&
-        y >= activeLane.top - 24 &&
-        y <= activeLane.top + activeLane.height + 24
-      ) {
-        setLaneHovered(true)
-      } else {
-        setLaneHovered(false)
-      }
     },
     [width, height, dimensions.cols, dimensions.rows]
   )
 
-  const bx = lane ? birdXForLane(lane.width) : 0
-  const tilt =
-    flight && mode !== 'crashed'
-      ? Math.max(-22, Math.min(48, flight.velocity / 8))
-      : mode === 'crashed'
-        ? 55
-        : 0
+  const handleCanvasMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    setLaneHovered(true)
+    if (modeRef.current !== 'life' || !boardRef.current) return
+    const now = performance.now()
+    if (now - lastSeedRef.current < 55) return
+    lastSeedRef.current = now
+    const rect = e.currentTarget.getBoundingClientRect()
+    seedLifeAtPixel(boardRef.current, e.clientX - rect.left, e.clientY - rect.top)
+  }, [])
 
   return (
     <motion.div
@@ -375,10 +449,7 @@ export function InteractiveGridPattern({
         width="100%"
         height="100%"
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => {
-          setHoveredSquare(null)
-          setLaneHovered(false)
-        }}
+        onMouseLeave={() => setHoveredSquare(null)}
       >
         <defs>
           <pattern
@@ -395,25 +466,6 @@ export function InteractiveGridPattern({
               strokeWidth="1"
             />
           </pattern>
-          {lane && (
-            <>
-              <linearGradient id={`${uid}-lane-fade`} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="black" />
-                <stop offset="12%" stopColor="white" />
-                <stop offset="88%" stopColor="white" />
-                <stop offset="100%" stopColor="black" />
-              </linearGradient>
-              <mask id={`${uid}-lane-mask`}>
-                <rect
-                  x={lane.left}
-                  y={lane.top}
-                  width={lane.width}
-                  height={lane.height}
-                  fill={`url(#${uid}-lane-fade)`}
-                />
-              </mask>
-            </>
-          )}
         </defs>
 
         <rect width="100%" height="100%" fill="url(#interactive-grid-base)" />
@@ -435,125 +487,7 @@ export function InteractiveGridPattern({
           })
         )}
 
-        {/* Subtle Right-Side Flappy Milestones Layer (desktop open space only) */}
-        {lane && flight && (
-          <g className={`ambient-flappy-layer ${mode !== 'auto' ? 'is-manual' : ''}`}>
-            {/* Subtle top/bottom horizon hairlines echoing the graph paper */}
-            <line
-              x1={lane.left + 16}
-              y1={lane.top}
-              x2={lane.left + lane.width - 16}
-              y2={lane.top}
-              className="ambient-flappy-horizon"
-            />
-            <line
-              x1={lane.left + 16}
-              y1={lane.top + lane.height}
-              x2={lane.left + lane.width - 16}
-              y2={lane.top + lane.height}
-              className="ambient-flappy-horizon"
-            />
-
-            {/* Softly masked pipes & bird */}
-            <g mask={`url(#${uid}-lane-mask)`}>
-              {flight.gates.map((gate) => {
-                const gx = lane.left + gate.x
-                const topH = Math.max(0, gate.center - PIPE_GAP / 2)
-                const bottomY = lane.top + gate.center + PIPE_GAP / 2
-                const bottomH = Math.max(0, lane.height - (gate.center + PIPE_GAP / 2))
-                return (
-                  <g
-                    key={gate.id}
-                    className={`ambient-flappy-gate ${gate.passed ? 'is-passed' : ''}`}
-                  >
-                    {topH > 0 && (
-                      <>
-                        <rect
-                          x={gx}
-                          y={lane.top}
-                          width={PIPE_WIDTH}
-                          height={topH}
-                          className="ambient-flappy-pipe"
-                        />
-                        <rect
-                          x={gx - 3}
-                          y={lane.top + topH - 8}
-                          width={PIPE_WIDTH + 6}
-                          height={8}
-                          rx={1.5}
-                          className="ambient-flappy-pipe-cap"
-                        />
-                      </>
-                    )}
-                    {bottomH > 0 && (
-                      <>
-                        <rect
-                          x={gx}
-                          y={bottomY}
-                          width={PIPE_WIDTH}
-                          height={bottomH}
-                          className="ambient-flappy-pipe"
-                        />
-                        <rect
-                          x={gx - 3}
-                          y={bottomY}
-                          width={PIPE_WIDTH + 6}
-                          height={8}
-                          rx={1.5}
-                          className="ambient-flappy-pipe-cap"
-                        />
-                      </>
-                    )}
-                    {!gate.passed && (
-                      <rect
-                        x={gx + PIPE_WIDTH / 2 - 4}
-                        y={lane.top + gate.center - 4}
-                        width={8}
-                        height={8}
-                        rx={1.5}
-                        transform={`rotate(45 ${gx + PIPE_WIDTH / 2} ${lane.top + gate.center})`}
-                        className="ambient-flappy-token"
-                      />
-                    )}
-                  </g>
-                )
-              })}
-
-              {/* Minimal geometric bird matching the original snake's ochre palette */}
-              <g
-                transform={`translate(${lane.left + bx} ${lane.top + flight.y}) rotate(${tilt})`}
-                className={`ambient-flappy-bird ${mode === 'crashed' ? 'is-flashing' : ''}`}
-              >
-                {/* Tail */}
-                <polygon points="-13,1 -18,-3 -18,4" className="ambient-flappy-bird-wing" />
-                {/* Body */}
-                <rect x="-12" y="-8" width="21" height="16" rx="6" className="ambient-flappy-bird-body" />
-                {/* Wing */}
-                <rect x="-7" y="-1" width="10" height="6" rx="3" className="ambient-flappy-bird-wing" />
-                {/* Beak */}
-                <polygon points="9,-2 15,1 9,4" className="ambient-flappy-bird-beak" />
-                {/* Eye */}
-                <circle cx="4" cy="-3" r="1.7" className="ambient-flappy-bird-eye" />
-              </g>
-            </g>
-
-            {/* Transparent click target over the right-side lane to take over & flap */}
-            <rect
-              x={lane.left}
-              y={lane.top}
-              width={lane.width}
-              height={lane.height}
-              fill="transparent"
-              className="ambient-flappy-hitbox"
-              onClick={(e) => {
-                e.stopPropagation()
-                takeControlAndFlap()
-              }}
-            />
-          </g>
-        )}
-
-        {/* Floating 8-Bit Achievement Milestone Text Layer (same aesthetic as original snake) */}
+        {/* Floating 8-Bit Achievement Milestone Text Layer */}
         {floatingStamps.map((msg) => (
           <text
             key={msg.id}
@@ -567,53 +501,77 @@ export function InteractiveGridPattern({
         ))}
       </svg>
 
-      {/* Whisper-quiet inline micro-status anchored in the right-side lane (no cards, no borders) */}
+      {/* Artistic Game of Life -> Dynamic Flappy Bird Canvas (desktop right margin only) */}
+      {lane && (
+        <canvas
+          ref={canvasRef}
+          className={`life-flappy-canvas ${mode !== 'life' ? 'is-playing' : ''}`}
+          style={{
+            left: `${lane.left}px`,
+            top: `${lane.top}px`,
+            width: `${lane.width}px`,
+            height: `${lane.height}px`,
+          }}
+          aria-label="Interactive Game of Life artwork that rearranges into a Flappy milestones course on click"
+          onMouseMove={handleCanvasMouseMove}
+          onMouseEnter={() => setLaneHovered(true)}
+          onMouseLeave={() => setLaneHovered(false)}
+          onClick={(e) => {
+            e.stopPropagation()
+            startMorphOrFlap()
+          }}
+        />
+      )}
+
+      {/* Whisper-quiet inline micro-status anchored below the right margin (invisible until hover/play) */}
       {lane && (
         <div
-          className={`ambient-flappy-hud ${laneHovered || mode !== 'auto' ? 'is-visible' : ''}`}
+          className={`ambient-flappy-hud ${laneHovered || mode !== 'life' ? 'is-visible' : ''}`}
           style={{
-            left: `${lane.left + 16}px`,
-            top: `${lane.top + lane.height + 10}px`,
-            width: `${lane.width - 32}px`,
+            left: `${lane.left + 14}px`,
+            top: `${lane.top + lane.height + 8}px`,
+            width: `${lane.width - 28}px`,
           }}
         >
-          {mode === 'auto' ? (
+          {mode === 'life' ? (
             <button
               type="button"
               className="ambient-flappy-hud-btn"
-              onClick={takeControlAndFlap}
-              aria-label="Play Flappy milestones in the background"
+              onClick={startMorphOrFlap}
+              aria-label="Rearrange Game of Life cells into Flappy Bird"
             >
-              click to fly · {FLIGHT_STAMPS.length} milestones
+              click to play
             </button>
+          ) : mode === 'morphing' ? (
+            <span className="ambient-flappy-hud-btn is-muted">rearranging…</span>
           ) : mode === 'crashed' ? (
             <>
               <button
                 type="button"
                 className="ambient-flappy-hud-btn"
-                onClick={takeControlAndFlap}
+                onClick={startMorphOrFlap}
               >
-                {flight?.score ?? 0}/{FLIGHT_STAMPS.length} · click to retry
+                {score}/{FLIGHT_STAMPS.length} · click to retry
               </button>
               <button
                 type="button"
                 className="ambient-flappy-hud-btn is-muted"
-                onClick={returnToAuto}
+                onClick={dissolveBackToLife}
               >
-                auto
+                life
               </button>
             </>
           ) : (
             <>
               <span className="ambient-flappy-hud-score">
-                {String(flight?.score ?? 0).padStart(2, '0')} · best {String(best).padStart(2, '0')}
+                {String(score).padStart(2, '0')} · best {String(best).padStart(2, '0')}
               </span>
               <button
                 type="button"
                 className="ambient-flappy-hud-btn is-muted"
-                onClick={returnToAuto}
+                onClick={dissolveBackToLife}
               >
-                auto (esc)
+                life
               </button>
             </>
           )}

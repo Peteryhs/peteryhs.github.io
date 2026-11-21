@@ -1430,78 +1430,21 @@ main {
   }
 }
 
-/* Subtle Ambient Flappy Bird in About Right-Side Desktop Space */
-.ambient-flappy-horizon {
-  stroke: var(--line);
-  stroke-width: 1;
-  stroke-dasharray: 3 5;
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.ambient-flappy-pipe {
-  fill: rgba(176, 128, 58, 0.12);
-  stroke: rgba(176, 128, 58, 0.34);
-  stroke-width: 1;
-  pointer-events: none;
-}
-
-.ambient-flappy-pipe-cap {
-  fill: rgba(176, 128, 58, 0.2);
-  stroke: rgba(176, 128, 58, 0.44);
-  stroke-width: 1;
-  pointer-events: none;
-}
-
-.ambient-flappy-gate.is-passed .ambient-flappy-pipe,
-.ambient-flappy-gate.is-passed .ambient-flappy-pipe-cap {
-  opacity: 0.52;
-}
-
-.ambient-flappy-token {
-  fill: rgba(62, 81, 150, 0.56);
-  stroke: rgba(88, 111, 188, 0.45);
-  stroke-width: 1;
-  pointer-events: none;
-}
-
-.ambient-flappy-bird {
-  pointer-events: none;
-}
-
-.ambient-flappy-bird-body {
-  fill: rgba(190, 140, 66, 0.84);
-  stroke: rgba(132, 92, 36, 0.58);
-  stroke-width: 1.2;
-}
-
-.ambient-flappy-bird-wing {
-  fill: rgba(164, 116, 48, 0.76);
-}
-
-.ambient-flappy-bird-beak {
-  fill: rgba(196, 112, 66, 0.82);
-}
-
-.ambient-flappy-bird-eye {
-  fill: var(--paper, #fbfaf7);
-}
-
-.ambient-flappy-bird.is-flashing .ambient-flappy-bird-body {
-  animation: flappyCrashFlash 0.24s ease-in-out 3;
-}
-
-@keyframes flappyCrashFlash {
-  0%, 100% {
-    fill: rgba(190, 140, 66, 0.84);
-  }
-  50% {
-    fill: #ffffff;
-  }
-}
-
-.ambient-flappy-hitbox {
+/* Artistic Game of Life -> Dynamic Flappy Bird Canvas (About Right-Side Desktop Space) */
+.life-flappy-canvas {
+  position: absolute;
+  display: block;
   cursor: pointer;
+  pointer-events: auto;
+  z-index: 1;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  -webkit-mask-composite: source-in;
+          mask-image:
+    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
+          mask-composite: intersect;
 }
 
 .flappy-milestone-text {
@@ -1553,8 +1496,8 @@ main {
   font-size: 11px;
   letter-spacing: 0.03em;
   color: var(--muted);
-  opacity: 0.42;
-  transition: opacity 220ms ease;
+  opacity: 0;
+  transition: opacity 260ms ease;
   pointer-events: none;
   user-select: none;
 }
@@ -1589,21 +1532,6 @@ main {
   opacity: 0.72;
 }
 
-html.dark .ambient-flappy-pipe {
-  fill: rgba(196, 150, 82, 0.12);
-  stroke: rgba(196, 150, 82, 0.34);
-}
-
-html.dark .ambient-flappy-pipe-cap {
-  fill: rgba(196, 150, 82, 0.22);
-  stroke: rgba(196, 150, 82, 0.46);
-}
-
-html.dark .ambient-flappy-token {
-  fill: rgba(120, 142, 220, 0.62);
-  stroke: rgba(145, 165, 236, 0.48);
-}
-
 html.dark .flappy-milestone-text {
   fill: rgba(126, 148, 224, 0.86);
   stroke: var(--paper, #161618);
@@ -1611,18 +1539,6 @@ html.dark .flappy-milestone-text {
 }
 
 @media (prefers-color-scheme: dark) {
-  html:not(.light) .ambient-flappy-pipe {
-    fill: rgba(196, 150, 82, 0.12);
-    stroke: rgba(196, 150, 82, 0.34);
-  }
-  html:not(.light) .ambient-flappy-pipe-cap {
-    fill: rgba(196, 150, 82, 0.22);
-    stroke: rgba(196, 150, 82, 0.46);
-  }
-  html:not(.light) .ambient-flappy-token {
-    fill: rgba(120, 142, 220, 0.62);
-    stroke: rgba(145, 165, 236, 0.48);
-  }
   html:not(.light) .flappy-milestone-text {
     fill: rgba(126, 148, 224, 0.86);
     stroke: var(--paper, #161618);
