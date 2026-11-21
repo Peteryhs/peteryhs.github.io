@@ -105,11 +105,11 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
   }, [])
 
   const commands = useMemo<Command[]>(() => {
-    const introTopics: TopicId[] = ['about', 'waterloo', 'compeng', 'systems', 'ml', 'electronics', 'projects', 'minecraft', 'photography']
+    const introTopics: TopicId[] = ['about', 'waterloo', 'compeng', 'watcloud', 'hacktheridge', 'projects', 'systems', 'ml', 'electronics', 'minecraft', 'photography']
     return [
       { id: 'top', group: 'Jump to', label: 'Top', keywords: 'home intro start', icon: icons.up, run: () => onHome(() => window.scrollTo({ top: 0, behavior: 'smooth' })) },
       { id: 'sec-about', group: 'Jump to', label: 'About', keywords: 'bento profile', icon: icons.hash, run: () => scrollToId('about') },
-      { id: 'sec-truenorth', group: 'Jump to', label: 'True North', keywords: 'timeline focus', icon: icons.hash, run: () => scrollToId('truenorth') },
+      { id: 'sec-experience', group: 'Jump to', label: 'Experience', keywords: 'watcloud hack the ridge work timeline compass', icon: icons.hash, run: () => scrollToId('experience') },
       { id: 'sec-projects', group: 'Jump to', label: 'Projects', keywords: 'work', icon: icons.hash, run: () => scrollToId('projects') },
       { id: 'sec-passions', group: 'Jump to', label: 'Hobbies', keywords: 'passions photography minecraft', icon: icons.hash, run: () => scrollToId('passions') },
       { id: 'sec-contact', group: 'Jump to', label: 'Contact', keywords: 'reach socials', icon: icons.hash, run: () => scrollToId('contact') },

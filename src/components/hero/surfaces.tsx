@@ -601,10 +601,169 @@ function RackSurface() {
   )
 }
 
+/* ------------------------------------------------------------------ watcloud */
+
+function CloudBand({ layer }: { layer: 'far' | 'mid' | 'near' }) {
+  if (layer === 'far') {
+    return (
+      <svg viewBox="0 0 380 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <g fill="#e0f2fe" opacity="0.58">
+          <path d="M10 13c6-2.5 18-3 28-1 5 1 12 .5 17 2.2-10 .8-32 1.2-45-1.2z" />
+          <path d="M98 18c0-2.6 2.5-4.8 5.6-4.8 2 0 3.8 1 4.8 2.5 1-.5 2.2-.8 3.4-.8 3.2 0 5.6 2.2 5.6 4.8H98v-1.7z" />
+          <path d="M164 10c9-2.2 26-2.4 39-.4 4 .6 9 .4 13 1.6-14 .8-39 .9-52-1.2z" />
+          <path d="M254 21c0-3.2 3-5.8 6.8-5.8 2.4 0 4.5 1.1 5.7 2.8 1.4-1.4 3.5-2.2 5.8-2.2 4.1 0 7.4 2.9 7.4 6.5H254v-1.3z" />
+          <path d="M324 14c7-2 19-2.4 29-.8 5 .8 10 .5 15 1.8-12 .6-33 .8-44-1z" />
+        </g>
+      </svg>
+    )
+  }
+  if (layer === 'mid') {
+    return (
+      <svg viewBox="0 0 380 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <g fill="#f0f9ff" opacity="0.82">
+          <path d="M18 33c0-3.4 3-6.2 6.8-6.2 1.8 0 3.4.7 4.6 1.8 1.4-2.8 4.4-4.7 7.9-4.7 4.4 0 8 3 8.6 7 2.5.4 4.4 2.3 4.4 4.6H18v-2.5z" />
+          <path d="M126 26c0-2.5 2.2-4.6 5-4.6 1.5 0 2.9.6 3.9 1.6 1.1-1.3 2.8-2.1 4.7-2.1 3.4 0 6.1 2.4 6.1 5.4H126v-.3z" />
+          <path d="M206 37c0-4.2 3.8-7.6 8.6-7.6 2.2 0 4.2.8 5.8 2.1 1.7-3.4 5.4-5.7 9.7-5.7 5.6 0 10.2 4 10.6 9.1 3 .4 5.3 2.7 5.3 5.5H206v-3.4z" />
+          <path d="M312 29c0-3 2.8-5.4 6.2-5.4 1.9 0 3.6.8 4.8 2.1 1.3-1.8 3.5-3 6-3 4.1 0 7.4 3 7.4 6.7H312v-.4z" />
+        </g>
+      </svg>
+    )
+  }
+  return (
+    <svg viewBox="0 0 380 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <g fill="#ffffff" opacity="0.93">
+        <path d="M16 50c0-5.4 4.8-9.8 10.8-9.8 2.6 0 5 .9 6.9 2.4 1.9-4.1 6.2-6.9 11.2-6.9 6.4 0 11.6 4.6 12.1 10.4 3.4.5 6 3.1 6 6.3H16V50z" />
+        <path d="M122 45c0-3.2 2.9-5.8 6.5-5.8 1.8 0 3.4.7 4.6 1.9 1.1-1.6 3-2.6 5.2-2.6 3.6 0 6.5 2.7 6.5 6 0 .4-.1.8-.1 1.2H122v-.7z" />
+        <path d="M192 54c0-6.2 5.6-11.2 12.6-11.2 3.1 0 6 1.1 8.2 3 2.2-4.8 7.2-8.1 13-8.1 7.4 0 13.4 5.4 13.9 12.1 4 .6 7.1 3.7 7.1 7.5H192V54z" />
+        <path d="M308 47c0-4 3.6-7.2 8.2-7.2 2.2 0 4.2.9 5.7 2.3 1.4-2.4 4.1-4 7.2-4 4.8 0 8.6 3.5 8.6 7.9 2.4.5 4.2 2.3 4.2 4.5H308V47z" />
+      </g>
+      <g fill="#bae6fd" opacity="0.52">
+        <rect x="20" y="50.4" width="40" height="2" rx="1" />
+        <rect x="125" y="44.2" width="18" height="1.5" rx=".75" />
+        <rect x="198" y="55" width="54" height="2.2" rx="1.1" />
+        <rect x="312" y="48.8" width="28" height="1.7" rx=".85" />
+      </g>
+    </svg>
+  )
+}
+
+function WatcloudSurface() {
+  return (
+    <>
+      <i className="wc-sky" />
+      <span className="wc-cloud-track wc-far">
+        <CloudBand layer="far" />
+        <CloudBand layer="far" />
+      </span>
+      <span className="wc-cloud-track wc-mid">
+        <CloudBand layer="mid" />
+        <CloudBand layer="mid" />
+      </span>
+      <span className="wc-cloud-track wc-near">
+        <CloudBand layer="near" />
+        <CloudBand layer="near" />
+      </span>
+      <i className="sf-scrim" />
+    </>
+  )
+}
+
+/* ------------------------------------------------------------------ hacktheridge */
+
+function HackTheRidgeSurface() {
+  return (
+    <>
+      <i className="htr-sky" />
+      <svg className="htr-stars" viewBox="0 0 220 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <circle className="htr-twinkle-a" cx="32" cy="8" r="1.2" fill="#d4ead9" />
+        <circle className="htr-twinkle-b" cx="76" cy="6" r="1" fill="#a8d5ba" />
+        <circle className="htr-twinkle-a" cx="144" cy="9" r="1.3" fill="#e4f7ec" />
+        <circle className="htr-twinkle-b" cx="188" cy="7" r="1.1" fill="#a8d5ba" />
+      </svg>
+      <Flank side="l" width={92}>
+        <rect x="2" y="10" width="16" height="44" fill="#10181b" stroke="#223539" strokeWidth=".6" />
+        <g fill="#b7e0c6">
+          <rect x="4.5" y="14" width="6" height="1.5" />
+          <rect x="4.5" y="18" width="9" height="1.5" />
+          <rect className="htr-win-flk" x="4.5" y="22" width="5" height="1.5" />
+          <rect x="4.5" y="26" width="8" height="1.5" />
+          <rect x="4.5" y="30" width="7" height="1.5" />
+        </g>
+        <rect x="21" y="16" width="15" height="38" fill="#172428" stroke="#293f44" strokeWidth=".6" />
+        <g fill="#d4ead9" opacity=".85">
+          <rect x="23.5" y="20" width="8" height="1.4" />
+          <rect x="23.5" y="24" width="6" height="1.4" />
+          <rect x="23.5" y="28" width="9" height="1.4" />
+          <rect x="23.5" y="32" width="5" height="1.4" />
+        </g>
+        <rect x="39" y="19" width="12" height="35" fill="#132024" stroke="#263b40" strokeWidth=".6" />
+        <line x1="42" y1="21" x2="42" y2="48" stroke="#a8d5ba" strokeWidth=".7" opacity=".45" />
+        <line x1="45" y1="21" x2="45" y2="48" stroke="#a8d5ba" strokeWidth=".7" opacity=".45" />
+        <line x1="48" y1="21" x2="48" y2="48" stroke="#a8d5ba" strokeWidth=".7" opacity=".45" />
+        <polygon points="0,47 34,47 40,56 0,56" fill="#1b2b2e" stroke="#39575b" strokeWidth=".7" />
+        <polygon points="4,49 28,49 32,54.5 4,54.5" fill="#1d4046" stroke="#7db49d" strokeWidth=".6" />
+        <line x1="16" y1="49" x2="18" y2="54.5" stroke="#7db49d" strokeWidth=".5" />
+        <line x1="4" y1="51.7" x2="30" y2="51.7" stroke="#7db49d" strokeWidth=".5" />
+        <rect x="0" y="55" width="92" height="5" fill="#0d1618" />
+      </Flank>
+      <Flank side="r" width={92}>
+        <rect x="41" y="18" width="13" height="36" fill="#132024" stroke="#263b40" strokeWidth=".6" />
+        <g fill="#b7e0c6" opacity=".8">
+          <rect x="44" y="22" width="7" height="1.4" />
+          <rect x="44" y="26" width="5" height="1.4" />
+          <rect x="44" y="30" width="8" height="1.4" />
+        </g>
+        <rect x="57" y="13" width="14" height="41" fill="#172428" stroke="#293f44" strokeWidth=".6" />
+        <line x1="60.5" y1="16" x2="60.5" y2="46" stroke="#c8f3d8" strokeWidth=".8" opacity=".5" />
+        <line x1="64" y1="16" x2="64" y2="46" stroke="#c8f3d8" strokeWidth=".8" opacity=".5" />
+        <line x1="67.5" y1="16" x2="67.5" y2="46" stroke="#c8f3d8" strokeWidth=".8" opacity=".5" />
+        <rect x="74" y="9" width="16" height="45" fill="#10181b" stroke="#223539" strokeWidth=".6" />
+        <g fill="#d4ead9">
+          <rect x="77" y="13" width="9" height="1.5" />
+          <rect className="htr-win-flk" x="77" y="17" width="6" height="1.5" />
+          <rect x="77" y="21" width="10" height="1.5" />
+          <rect x="77" y="25" width="7" height="1.5" />
+          <rect x="77" y="29" width="9" height="1.5" />
+        </g>
+        <polygon points="58,47 92,47 92,56 52,56" fill="#1b2b2e" stroke="#39575b" strokeWidth=".7" />
+        <polygon points="62,49 88,49 88,54.5 58,54.5" fill="#1d4046" stroke="#7db49d" strokeWidth=".6" />
+        <line x1="74" y1="49" x2="72" y2="54.5" stroke="#7db49d" strokeWidth=".5" />
+        <line x1="60" y1="51.7" x2="88" y2="51.7" stroke="#7db49d" strokeWidth=".5" />
+        <rect x="0" y="55" width="92" height="5" fill="#0d1618" />
+      </Flank>
+      <span className="htr-viaduct-layer">
+        <svg className="htr-viaduct-svg" viewBox="0 0 220 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect x="0" y="5" width="220" height="3.2" fill="#23363b" stroke="#46686c" strokeWidth=".6" />
+          <g fill="#19282c">
+            <rect x="20" y="8" width="4" height="4" />
+            <rect x="64" y="8" width="4" height="4" />
+            <rect x="110" y="8" width="4" height="4" />
+            <rect x="156" y="8" width="4" height="4" />
+            <rect x="198" y="8" width="4" height="4" />
+          </g>
+        </svg>
+        <svg className="htr-train" viewBox="0 0 70 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect x="2" y="1" width="66" height="4.5" rx="2" fill="#3a595c" stroke="#a8d5ba" strokeWidth=".6" />
+          <g fill="#d7fae3">
+            <rect x="7" y="2.2" width="8" height="1.9" rx=".5" />
+            <rect x="18" y="2.2" width="8" height="1.9" rx=".5" />
+            <rect x="29" y="2.2" width="8" height="1.9" rx=".5" />
+            <rect x="40" y="2.2" width="8" height="1.9" rx=".5" />
+            <rect x="51" y="2.2" width="11" height="1.9" rx=".5" />
+          </g>
+        </svg>
+      </span>
+      <i className="sf-scrim" />
+    </>
+  )
+}
+
 const SURFACES: Record<BlockId, () => ReactNode> = {
   about: AboutSurface,
   waterloo: WaterlooSurface,
   compeng: BreadboardSurface,
+  watcloud: WatcloudSurface,
+  hacktheridge: HackTheRidgeSurface,
   systems: RackSurface,
   ml: NeuralSurface,
   electronics: PcbSurface,

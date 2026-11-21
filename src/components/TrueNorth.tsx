@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react
 import { useMotionValueEvent, useScroll } from 'motion/react'
 import { BlurFade } from './BlurFade'
 import { CompassRose } from './CompassRose'
+import { CaseArrowIcon } from './ProjectsSection'
+import { projectsData } from '../content/projects'
+import { openProject, projectHref } from '../hooks/useRoute'
 
 interface TrueNorthItem {
   year: string
@@ -78,6 +81,12 @@ function TrueNorthCard({
   )
 }
 
+/** The project each hero topic's hover label points at. */
+const TOPIC_PROJECT_SLUG: Partial<Record<'electronics' | 'systems' | 'ml', string>> = {
+  systems: 'sun-systems',
+  ml: 'ai-detector',
+}
+
 export function TrueNorthTimeline({
   filterKey,
   onHoverYear,
@@ -99,6 +108,7 @@ export function TrueNorthTimeline({
         return true
       })
     : trueNorthItems
+  const project = filterKey && projectsData.find((p) => p.slug === TOPIC_PROJECT_SLUG[filterKey])
 
   return (
     <div className="truenorth-timeline-container" aria-label="True North timeline">
@@ -138,12 +148,28 @@ export function TrueNorthTimeline({
               onClick={() => {
                 onHoverYear?.(item.year)
                 if (filterKey) {
-                  document.getElementById('truenorth')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
               }}
             >
               <h3 className="truenorth-card-title">{item.title}</h3>
               <p className="truenorth-card-body">{item.body}</p>
+              {project && (
+                <a
+                  href={projectHref(project.slug)}
+                  className="project-link-btn project-link-case truenorth-card-link"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+                    event.preventDefault()
+                    openProject(project.slug)
+                  }}
+                  aria-label={`Read the ${project.name} breakdown`}
+                >
+                  <span>{project.name}</span>
+                  <CaseArrowIcon />
+                </a>
+              )}
             </TrueNorthCard>
           </div>
         </BlurFade>
