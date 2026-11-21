@@ -3343,6 +3343,11 @@ html.dark .minecraft-mountain-frame,
   cursor: pointer !important;
 }
 
+.exp-card.is-clickable:focus-visible {
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 3px;
+}
+
 .hobbies-expanded-view-wrapper {
   display: flex;
   flex-direction: column;
