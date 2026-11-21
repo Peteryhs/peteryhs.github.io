@@ -1,3 +1,4 @@
+import { CategoryIcon, type IconKind } from './CategoryIcon'
 import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback, useState } from 'react'
 import { BlurFade } from './BlurFade'
 import { DuolingoVectorFlame, StreakFireOverlay, type FlameOrigin } from './StreakFireOverlay'
@@ -106,17 +107,11 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
             <span className="about-eyebrow">Away from the keyboard</span>
             <ul className="about-hobbies" aria-label="In my free time">
               <li>
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="4" y="3" width="16" height="18" rx="3" />
-                  <path d="M4 9h16M4 15h16M8 6h.01M8 12h.01M8 18h.01M12 6h4M12 12h4M12 18h4" />
-                </svg>
+                <CategoryIcon kind="systems" />
                 Homelab nerd
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="m8 6 2-3h4l2 3h3a2 2 0 0 1 2 2v11H3V8a2 2 0 0 1 2-2Z" />
-                  <circle cx="12" cy="12" r="4" />
-                </svg>
+                <CategoryIcon kind="photography" />
                 Audio &amp; camera aficionado
               </li>
             </ul>
@@ -340,16 +335,19 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
 }
 
 export function CompEngFocusCard({ standalone = false }: { standalone?: boolean }) {
-  const focusAreas = [
+  const focusAreas: { kind: IconKind; title: string; details: string }[] = [
     {
+      kind: 'systems',
       title: 'Distributed systems',
       details: 'edge networking & IPS, stack design, data security',
     },
     {
+      kind: 'machine-learning',
       title: 'Machine learning',
       details: 'LLM Fine tuning, research reproduction & optimization, Applied ML',
     },
     {
+      kind: 'electronics',
       title: 'Electronics',
       details: 'embedded computing, imaging pipeline engineering, HW repairs',
     },
@@ -358,12 +356,13 @@ export function CompEngFocusCard({ standalone = false }: { standalone?: boolean 
   return (
     <BentoCardWrapper className="bento-card-compeng" standalone={standalone}>
       <h3 className="bento-card-title bento-compeng-heading">
+        <CategoryIcon kind="engineering" className="category-icon-heading" />
         I learn CompEng with a focus on:
       </h3>
       <div className="bento-focus-list">
         {focusAreas.map((area) => (
           <div key={area.title} className="bento-focus-row">
-            <span className="bento-focus-bullet">-</span>
+            <CategoryIcon kind={area.kind} className="category-icon-bullet" />
             <div className="bento-focus-text">
               <span className="bento-focus-name">{area.title}</span>{' '}
               <span className="bento-focus-desc">({area.details})</span>

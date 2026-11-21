@@ -2,6 +2,7 @@ import { type MouseEvent } from 'react'
 import { BlurFade } from './BlurFade'
 import { CameraGearDock, MicrophoneCoiledWire } from './CameraGearDock'
 import { FolderBadges } from './FolderBadges'
+import { CategoryIcon } from './CategoryIcon'
 import { MinecraftMountain } from './MinecraftMountain'
 
 export function scrollToSection(id: string) {
@@ -73,7 +74,7 @@ export function PhotographyCard({
       standalone={standalone}
       onClick={onClick}
     >
-      <h3 className="bento-card-title hobbies-card-title">Photography &amp; Video Production</h3>
+      <h3 className="bento-card-title hobbies-card-title"><CategoryIcon kind="photography" className="category-icon-heading" />Photography &amp; Video Production</h3>
       <div className="hobbies-card-paragraphs">
         <p className="passions-body-text hobbies-text-block">
           When I go places, such as trips, or even just a random walk I have taking photos and capturing those moments.
@@ -100,7 +101,7 @@ export function MinecraftCard({
       standalone={standalone}
       onClick={onClick}
     >
-      <h3 className="bento-card-title hobbies-card-title">Minecraft</h3>
+      <h3 className="bento-card-title hobbies-card-title"><CategoryIcon kind="minecraft" className="category-icon-heading" />Minecraft</h3>
       <div className="hobbies-card-paragraphs">
         <p className="passions-body-text hobbies-text-block">
           I am a BIG fan of Minecraft. My play style range from 1.8 PvP (Bedwars main here) to 26.x SMPs.
