@@ -224,6 +224,9 @@ const TOTAL_DURATION_S = 2.2
 const SPARK_END_S = 0.16
 const BURST_END_S = 0.52
 const HOLD_END_S = 1.5
+const LAST_EMIT_S = 1.05
+// Lets the last pills fall out of the card after the flame is back at rest
+const SPARKLE_TAIL_S = 0.9
 
 export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps) {
   const [dismissing, setDismissing] = useState(false)
@@ -432,7 +435,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         washRadius = maxWashRadius
         washOpacity = 1
       } else {
-        const u = easeInOutCubic((elapsed - HOLD_END_S) / (TOTAL_DURATION_S - HOLD_END_S))
+        const u = easeInOutCubic(Math.min(1, (elapsed - HOLD_END_S) / (TOTAL_DURATION_S - HOLD_END_S)))
         washRadius = maxWashRadius * (1 - u)
         washOpacity = Math.max(0, 1 - u * 0.92)
       }
@@ -451,7 +454,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         burst2Fired = true
         spawnOffFlame(4, 0.9)
       }
-      if (elapsed > BURST_END_S && elapsed < HOLD_END_S - 0.16 && elapsed - lastEmitT >= 0.28) {
+      if (elapsed > BURST_END_S && elapsed < LAST_EMIT_S && elapsed - lastEmitT >= 0.28) {
         lastEmitT = elapsed
         spawnOffFlame(1, 0.8)
       }
@@ -518,7 +521,8 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         ctx.restore()
       }
 
-      if (p < 1 && !dismissingRef.current) {
+      const sparklesInFlight = particles.length > 0 && elapsed < TOTAL_DURATION_S + SPARKLE_TAIL_S
+      if ((p < 1 || sparklesInFlight) && !dismissingRef.current) {
         rafId = window.requestAnimationFrame(tick)
       } else if (!dismissingRef.current) {
         finishOnce()
