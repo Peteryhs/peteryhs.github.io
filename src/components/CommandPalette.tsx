@@ -355,7 +355,7 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
   )
 }
 
-/** Small pill beside the theme toggle that opens the palette (hover devices only). */
+/** Keyboard hint on desktop, discoverable search action in the mobile toolbar. */
 export function CommandPaletteTrigger() {
   const mac = useMemo(isMac, [])
   return (
@@ -366,8 +366,10 @@ export function CommandPaletteTrigger() {
       aria-label="Open command palette"
       title="Command palette"
     >
-      <kbd>{mac ? '⌘' : 'Ctrl'}</kbd>
-      <kbd>K</kbd>
+      <span className="cmdk-trigger-shortcut" aria-hidden="true">
+        <kbd>{mac ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
+      </span>
+      <span className="cmdk-trigger-label" aria-hidden="true">Search</span>
     </button>
   )
 }

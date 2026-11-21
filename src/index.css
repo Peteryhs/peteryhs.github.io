@@ -203,6 +203,9 @@ main {
 
 .intro-wave-hand {
   display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
   margin: 0 0.04em 0 0.02em;
   transform-origin: 72% 72%;
   animation: introWaveHand 2.8s ease-in-out 0.4s infinite;
@@ -1832,6 +1835,8 @@ main {
 /* ==========================================================================
    Magic UI Animated Theme Toggler & View Transitions
    ========================================================================== */
+
+.site-controls { display: contents; }
 
 .theme-toggle-floating-wrap {
   position: fixed;
@@ -3847,6 +3852,8 @@ html.dark .bottom-overscroll-gradient,
   line-height: 1;
 }
 
+.cmdk-trigger-label { display: none; }
+
 /* Only where there's a keyboard-ish pointer; phones get nothing extra. */
 @media (hover: hover) and (pointer: fine) {
   .cmdk-trigger { display: inline-flex; }
@@ -4352,6 +4359,43 @@ html.dark .cmdk-panel {
 
 
   .case-next-link { padding: 1.3rem 2.6rem 0.3rem 0; }
+}
+
+/* On narrow screens controls belong to the page, not on top of the cards.
+   Width-based layout also covers resized desktop windows and hybrid devices. */
+@media (max-width: 720px) {
+  .site-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1.25rem 0.75rem;
+  }
+
+  .site-controls .cmdk-trigger,
+  .site-controls .theme-toggle-floating-wrap,
+  .site-controls .case-back {
+    position: static;
+  }
+
+  .site-controls .cmdk-trigger {
+    display: inline-flex;
+    height: 44px;
+    padding-inline: 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .site-controls .theme-toggle-btn { width: 44px; height: 44px; }
+  .site-controls .case-back { margin-right: auto; height: 44px; }
+  .cmdk-trigger-shortcut { display: none; }
+  .cmdk-trigger-label { display: inline; }
+
+  .intro {
+    min-height: calc(100svh - 68px - env(safe-area-inset-top, 0px));
+    padding-top: 1.5rem;
+  }
+
+  .case-main { padding-top: 1.75rem; }
 }
 
 
