@@ -1,5 +1,4 @@
 import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback, useState } from 'react'
-import { useReducedMotion } from 'motion/react'
 import { BlurFade } from './BlurFade'
 import { DuolingoVectorFlame, StreakFireOverlay, type FlameOrigin } from './StreakFireOverlay'
 import './AboutBento.css'
@@ -13,6 +12,7 @@ function scrollToAbout() {
 
 interface BentoCardProps {
   children: ReactNode
+  overlay?: ReactNode
   className?: string
   standalone?: boolean
   cardRef?: React.RefObject<HTMLElement | null>
@@ -23,6 +23,7 @@ interface BentoCardProps {
 
 function BentoCardWrapper({
   children,
+  overlay,
   className = '',
   standalone = false,
   cardRef,
@@ -65,6 +66,7 @@ function BentoCardWrapper({
     >
       <div className="bento-card-spotlight" aria-hidden="true" />
       <div className="bento-card-content">{children}</div>
+      {overlay}
     </article>
   )
 }
@@ -126,34 +128,39 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
 }
 
 export function LanguagesCard({ standalone = false }: { standalone?: boolean }) {
+  const cardRef = useRef<HTMLElement>(null)
   const flameSlotRef = useRef<HTMLSpanElement>(null)
   const settleTimerRef = useRef<number | null>(null)
-  const motionReduced = useReducedMotion()
-  const [mediaReduced, setMediaReduced] = useState(() =>
+  const hasAutoPlayedRef = useRef(false)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
-  const prefersReducedMotion = Boolean(motionReduced || mediaReduced)
+  const [overlayOrigin, setOverlayOrigin] = useState<FlameOrigin | null>(null)
+  const [justSettled, setJustSettled] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onChange = () => setMediaReduced(mq.matches)
+    const onChange = () => setPrefersReducedMotion(mq.matches)
     onChange()
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [])
-  const [overlayOrigin, setOverlayOrigin] = useState<FlameOrigin | null>(null)
-  const [justSettled, setJustSettled] = useState(false)
 
   const measureFlameOrigin = useCallback((): FlameOrigin | null => {
-    const el = flameSlotRef.current
-    if (!el) return null
-    const rect = el.getBoundingClientRect()
+    const cardEl = cardRef.current
+    const slotEl = flameSlotRef.current
+    if (!cardEl || !slotEl) return null
+    const cardRect = cardEl.getBoundingClientRect()
+    const slotRect = slotEl.getBoundingClientRect()
+    if (cardRect.width <= 0 || cardRect.height <= 0) return null
     return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-      width: rect.width || 44,
-      height: rect.height || 50,
+      x: slotRect.left - cardRect.left + slotRect.width / 2,
+      y: slotRect.top - cardRect.top + slotRect.height / 2,
+      width: slotRect.width || 44,
+      height: slotRect.height || 50,
+      cardWidth: cardRect.width,
+      cardHeight: cardRect.height,
     }
   }, [])
 
@@ -168,16 +175,60 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
     }, 520)
   }, [])
 
+  const launchAnimation = useCallback(() => {
+    if (prefersReducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const origin = measureFlameOrigin()
+    if (origin) {
+      setOverlayOrigin(origin)
+    }
+  }, [measureFlameOrigin, prefersReducedMotion])
+
+  // Auto-trigger once when the card first loads into view
+  useEffect(() => {
+    if (prefersReducedMotion || hasAutoPlayedRef.current) return
+    const cardEl = cardRef.current
+    if (!cardEl) return
+
+    let autoTimer: number | null = null
+    const triggerOnce = () => {
+      if (hasAutoPlayedRef.current) return
+      hasAutoPlayedRef.current = true
+      autoTimer = window.setTimeout(() => {
+        launchAnimation()
+      }, 280)
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      triggerOnce()
+      return () => {
+        if (autoTimer) window.clearTimeout(autoTimer)
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect()
+          triggerOnce()
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(cardEl)
+
+    return () => {
+      observer.disconnect()
+      if (autoTimer) window.clearTimeout(autoTimer)
+    }
+  }, [launchAnimation, prefersReducedMotion])
+
   const handleIgnite = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
-      if (overlayOrigin || prefersReducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-      const origin = measureFlameOrigin()
-      if (origin) {
-        setOverlayOrigin(origin)
-      }
+      if (overlayOrigin) return
+      launchAnimation()
     },
-    [measureFlameOrigin, overlayOrigin, prefersReducedMotion]
+    [launchAnimation, overlayOrigin]
   )
 
   const handleOverlayComplete = useCallback(() => {
@@ -194,7 +245,16 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
   }, [])
 
   return (
-    <BentoCardWrapper className="bento-card-languages" standalone={standalone}>
+    <BentoCardWrapper
+      className="bento-card-languages"
+      standalone={standalone}
+      cardRef={cardRef}
+      overlay={
+        overlayOrigin ? (
+          <StreakFireOverlay origin={overlayOrigin} onComplete={handleOverlayComplete} />
+        ) : null
+      }
+    >
       <div className="bento-languages-content qe-languages-content">
         <h3 className="bento-card-title">I speak:</h3>
         <p className="qe-lang-native">Chinese and English</p>
@@ -214,7 +274,7 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
             type="button"
             className={`qe-streak-trigger ${overlayOrigin ? 'is-launched' : ''} ${justSettled ? 'is-settled' : ''}`.trim()}
             onClick={handleIgnite}
-            aria-label="1,000+ day Duolingo streak — click to play full-screen fire animation"
+            aria-label="1,000+ day Duolingo streak — click to replay fire animation"
           >
             <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
               <DuolingoVectorFlame size={44} mode="idle" />
@@ -226,13 +286,6 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
           </button>
         )}
       </div>
-      {overlayOrigin && (
-        <StreakFireOverlay
-          origin={overlayOrigin}
-          getTargetOrigin={measureFlameOrigin}
-          onComplete={handleOverlayComplete}
-        />
-      )}
     </BentoCardWrapper>
   )
 }
