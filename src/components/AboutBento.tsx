@@ -158,17 +158,13 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
   const handleIgnite = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
-      if (overlayOrigin) return
-      if (prefersReducedMotion) {
-        triggerSettleBounce()
-        return
-      }
+      if (overlayOrigin || prefersReducedMotion) return
       const origin = measureFlameOrigin()
       if (origin) {
         setOverlayOrigin(origin)
       }
     },
-    [measureFlameOrigin, overlayOrigin, prefersReducedMotion, triggerSettleBounce]
+    [measureFlameOrigin, overlayOrigin, prefersReducedMotion]
   )
 
   const handleOverlayComplete = useCallback(() => {
@@ -190,20 +186,32 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
         <h3 className="bento-card-title">I speak:</h3>
         <p className="qe-lang-native">Chinese and English</p>
         <p className="qe-lang-learning">Learning Spanish on Duolingo</p>
-        <button
-          type="button"
-          className={`qe-streak-trigger ${overlayOrigin ? 'is-launched' : ''} ${justSettled ? 'is-settled' : ''}`.trim()}
-          onClick={handleIgnite}
-          aria-label="1,000+ day Duolingo streak — click to play full-screen fire animation"
-        >
-          <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
-            <DuolingoVectorFlame size={44} mode="idle" />
-          </span>
-          <span className="qe-streak-copy">
-            <span className="qe-streak-number">1,000+</span>
-            <span className="qe-streak-caption">day streak</span>
-          </span>
-        </button>
+        {prefersReducedMotion ? (
+          <div className="qe-streak-trigger is-static" aria-label="1,000+ day Duolingo streak">
+            <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
+              <DuolingoVectorFlame size={44} mode="idle" />
+            </span>
+            <span className="qe-streak-copy">
+              <span className="qe-streak-number">1,000+</span>
+              <span className="qe-streak-caption">day streak</span>
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={`qe-streak-trigger ${overlayOrigin ? 'is-launched' : ''} ${justSettled ? 'is-settled' : ''}`.trim()}
+            onClick={handleIgnite}
+            aria-label="1,000+ day Duolingo streak — click to play full-screen fire animation"
+          >
+            <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
+              <DuolingoVectorFlame size={44} mode="idle" />
+            </span>
+            <span className="qe-streak-copy">
+              <span className="qe-streak-number">1,000+</span>
+              <span className="qe-streak-caption">day streak</span>
+            </span>
+          </button>
+        )}
       </div>
       {overlayOrigin && (
         <StreakFireOverlay

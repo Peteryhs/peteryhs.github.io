@@ -100,6 +100,7 @@ export function StreakFireOverlay({
   const [phase, setPhase] = useState<OverlayPhase>('ignite')
   const [counterTicked, setCounterTicked] = useState(false)
   const [settleTarget, setSettleTarget] = useState<FlameOrigin>(origin)
+  const overlayRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const completedRef = useRef(false)
 
@@ -141,6 +142,18 @@ export function StreakFireOverlay({
     const tDone = window.setTimeout(finishOnce, 640)
     return () => window.clearTimeout(tDone)
   }, [phase])
+
+  // Prevent native document pointerdown listeners (e.g. App's outside-click handler)
+  // from collapsing the expanded About Me panel when dismissing the portal overlay.
+  useEffect(() => {
+    const el = overlayRef.current
+    if (!el) return
+    const stopOutsidePointerDown = (e: PointerEvent) => {
+      e.stopPropagation()
+    }
+    el.addEventListener('pointerdown', stopOutsidePointerDown)
+    return () => el.removeEventListener('pointerdown', stopOutsidePointerDown)
+  }, [])
 
   // Allow Escape to settle early
   useEffect(() => {
@@ -287,6 +300,7 @@ export function StreakFireOverlay({
 
   return createPortal(
     <div
+      ref={overlayRef}
       className={`streak-overlay is-${phase}`}
       role="dialog"
       aria-modal="false"

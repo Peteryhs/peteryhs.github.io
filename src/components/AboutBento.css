@@ -664,12 +664,22 @@ html.dark .about-portrait,
   }
 }
 
+.bento-card-languages .qe-streak-trigger.is-static {
+  cursor: default;
+}
+
+.bento-card-languages .qe-streak-trigger.is-static:hover,
+.bento-card-languages .qe-streak-trigger.is-static:active {
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .qe-flame-outer-group,
   .qe-flame-mid-group,
   .qe-flame-inner-group,
   .qe-ember,
-  .streak-overlay-sunburst {
+  .streak-overlay-sunburst,
+  .bento-card-languages .qe-streak-trigger.is-settled .qe-flame-slot {
     animation: none !important;
   }
 
