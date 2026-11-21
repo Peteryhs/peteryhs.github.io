@@ -15,6 +15,7 @@ export const WORLD_HEIGHT = 320
 export const FLOOR_Y = 294
 export const BIRD_RADIUS = 12
 export const PIPE_WIDTH = 58
+export const PIPE_CAP_OVERHANG = 5
 export const PIPE_GAP = 154
 const PIPE_SPACING = 246
 const SPEED = 136
@@ -67,7 +68,10 @@ export function flap(flight: Flight): Flight {
 function hitsGate(y: number, x: number, obstacle: Gate) {
   if (obstacle.index >= FLIGHT_STAMPS.length) return false
   // Circle / rectangle collision, including the slightly wider pipe caps.
-  const nearestX = Math.max(obstacle.x - 5, Math.min(x, obstacle.x + PIPE_WIDTH + 5))
+  const nearestX = Math.max(
+    obstacle.x - PIPE_CAP_OVERHANG,
+    Math.min(x, obstacle.x + PIPE_WIDTH + PIPE_CAP_OVERHANG)
+  )
   const dx = x - nearestX
   const top = obstacle.center - PIPE_GAP / 2
   const bottom = obstacle.center + PIPE_GAP / 2
@@ -103,7 +107,7 @@ export function advanceFlight(flight: Flight, elapsed: number, width: number): F
       if (
         item.index < FLIGHT_STAMPS.length &&
         !item.passed &&
-        item.x + PIPE_WIDTH < birdX(width) - BIRD_RADIUS
+        item.x + PIPE_WIDTH + PIPE_CAP_OVERHANG < birdX(width) - BIRD_RADIUS
       ) {
         item.passed = true
         next.score += 1

@@ -6,6 +6,7 @@ import {
   flap,
   FLIGHT_STAMPS,
   FLOOR_Y,
+  PIPE_CAP_OVERHANG,
   PIPE_GAP,
   PIPE_WIDTH,
   WORLD_HEIGHT,
@@ -342,9 +343,9 @@ export function FlappyBird() {
                       className="flappy-pipe"
                     />
                     <rect
-                      x={gate.x - 5}
+                      x={gate.x - PIPE_CAP_OVERHANG}
                       y={top - 16}
-                      width={PIPE_WIDTH + 10}
+                      width={PIPE_WIDTH + PIPE_CAP_OVERHANG * 2}
                       height="16"
                       rx="4"
                       className="flappy-pipe-cap"
@@ -358,9 +359,9 @@ export function FlappyBird() {
                       className="flappy-pipe"
                     />
                     <rect
-                      x={gate.x - 5}
+                      x={gate.x - PIPE_CAP_OVERHANG}
                       y={bottom}
-                      width={PIPE_WIDTH + 10}
+                      width={PIPE_WIDTH + PIPE_CAP_OVERHANG * 2}
                       height="16"
                       rx="4"
                       className="flappy-pipe-cap"
