@@ -87,14 +87,23 @@ export function flapAmbient(flight: AmbientFlight): AmbientFlight {
   return { ...flight, velocity: FLAP_VELOCITY }
 }
 
+// Shared with the renderer: pixel-art edges must not advertise a wider safe gap.
+export function getGateGeometry(gate: Gate) {
+  return {
+    left: gate.x - PIPE_COLLISION_PADDING,
+    right: gate.x + PIPE_WIDTH + PIPE_COLLISION_PADDING,
+    gapTop: gate.center - PIPE_GAP / 2,
+    gapBottom: gate.center + PIPE_GAP / 2,
+  }
+}
+
 function hitsGate(y: number, x: number, gate: Gate): boolean {
+  const { left, right, gapTop: top, gapBottom: bottom } = getGateGeometry(gate)
   const nearestX = Math.max(
-    gate.x - PIPE_COLLISION_PADDING,
-    Math.min(x, gate.x + PIPE_WIDTH + PIPE_COLLISION_PADDING)
+    left,
+    Math.min(x, right)
   )
   const dx = x - nearestX
-  const top = gate.center - PIPE_GAP / 2
-  const bottom = gate.center + PIPE_GAP / 2
   const dy = y < top ? 0 : y > bottom ? 0 : Math.min(y - top, bottom - y)
   return dx * dx + dy * dy < BIRD_RADIUS * BIRD_RADIUS
 }

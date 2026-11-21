@@ -1,5 +1,6 @@
 import {
   birdXForLane,
+  getGateGeometry,
   PIPE_GAP,
   PIPE_WIDTH,
   type AmbientFlight,
@@ -695,29 +696,40 @@ export function renderFlappyInLane(
   const startRow = Math.floor(lane.top / TAPESTRY_CELL)
   const endRow = Math.floor((lane.top + lane.height) / TAPESTRY_CELL)
 
-  // 1. Vibrant 20px grid-locked pixel pillars spanning the full right-side height
+  // 1. Keep the tiled texture, but clip boundary cells to the actual hitboxes.
   for (const gate of flight.gates) {
-    const gxStart = Math.floor((lane.left + gate.x) / TAPESTRY_CELL)
-    const gxEnd = Math.max(gxStart + 2, Math.ceil((lane.left + gate.x + PIPE_WIDTH) / TAPESTRY_CELL))
-    const gapTopRow = Math.floor((lane.top + gate.center - PIPE_GAP / 2) / TAPESTRY_CELL)
-    const gapBotRow = Math.ceil((lane.top + gate.center + PIPE_GAP / 2) / TAPESTRY_CELL)
+    const geometry = getGateGeometry(gate)
+    const left = lane.left + geometry.left
+    const right = lane.left + geometry.right
+    const gxStart = Math.floor(left / TAPESTRY_CELL)
+    const gxEnd = Math.ceil(right / TAPESTRY_CELL)
     const dim = gate.passed ? 0.42 : 1
 
-    for (let gx = Math.max(startCol, gxStart); gx < Math.min(endCol, gxEnd); gx++) {
-      for (let gy = startRow; gy < endRow; gy++) {
-        if (gy >= gapTopRow && gy < gapBotRow) continue
-        const isCap = gy === gapTopRow - 1 || gy === gapBotRow
-        const x = gx * TAPESTRY_CELL
-        const y = gy * TAPESTRY_CELL
-        const rgb = isCap ? pal.rim : pal.core
-        const alpha = (isCap ? 0.88 : 0.64) * dim
+    const pipes = [
+      { top: lane.top, bottom: lane.top + geometry.gapTop, upper: true },
+      { top: lane.top + geometry.gapBottom, bottom: lane.top + lane.height, upper: false },
+    ]
+    for (const pipe of pipes) {
+      const firstRow = Math.floor(pipe.top / TAPESTRY_CELL)
+      const lastRow = Math.ceil(pipe.bottom / TAPESTRY_CELL) - 1
+      for (let gx = Math.max(startCol, gxStart); gx < Math.min(endCol, gxEnd); gx++) {
+        const x = Math.max(left, gx * TAPESTRY_CELL + (gx === gxStart ? 0 : 1))
+        const width = Math.min(right, (gx + 1) * TAPESTRY_CELL - (gx === gxEnd - 1 ? 0 : 1)) - x
+        for (let gy = Math.max(startRow, firstRow); gy <= Math.min(endRow - 1, lastRow); gy++) {
+          const y = Math.max(pipe.top, gy * TAPESTRY_CELL + (gy === firstRow ? 0 : 1))
+          const height = Math.min(pipe.bottom, (gy + 1) * TAPESTRY_CELL - (gy === lastRow ? 0 : 1)) - y
+          if (width <= 0 || height <= 0) continue
+          const isCap = gy === (pipe.upper ? lastRow : firstRow)
+          const rgb = isCap ? pal.rim : pal.core
+          const alpha = (isCap ? 0.88 : 0.64) * dim
 
-        if (isCap) {
-          bloomCtx.fillStyle = rgba(rgb, alpha * 0.72)
-          bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
+          if (isCap) {
+            bloomCtx.fillStyle = rgba(rgb, alpha * 0.72)
+            bloomCtx.fillRect(x, y, width, height)
+          }
+          pixelCtx.fillStyle = rgba(rgb, alpha)
+          pixelCtx.fillRect(x, y, width, height)
         }
-        pixelCtx.fillStyle = rgba(rgb, alpha)
-        pixelCtx.fillRect(x + 1, y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
       }
     }
 
@@ -766,17 +778,17 @@ export function renderFlappyInLane(
   }
   runtime.wake = nextWake
 
-  // 3. Crisp 20px grid-locked pixel bird with warm glow
+  // 3. Center the pixel-art body on the physics circle, not a neighboring cell.
   const flashOff = isCrashed && Math.floor(timeMs / 110) % 2 === 0
   if (flashOff) return
 
   const wingDy = flight.velocity < -20 ? -1 : 0
-  const bx = birdGx * TAPESTRY_CELL
-  const by = birdGy * TAPESTRY_CELL
+  const bx = lane.left + birdXForLane(lane.width) - TAPESTRY_CELL / 2
+  const by = lane.top + flight.y - TAPESTRY_CELL / 2
 
   // Tail / wing tile
   pixelCtx.fillStyle = rgba(pal.rim, 0.86)
-  pixelCtx.fillRect((birdGx - 1) * TAPESTRY_CELL + 2, (birdGy + wingDy) * TAPESTRY_CELL + 2, TAPESTRY_CELL - 4, TAPESTRY_CELL - 4)
+  pixelCtx.fillRect(bx - TAPESTRY_CELL + 2, by + wingDy * TAPESTRY_CELL + 2, TAPESTRY_CELL - 4, TAPESTRY_CELL - 4)
 
   // Main bird body tile (full 20px cell)
   bloomCtx.fillStyle = rgba(pal.birdBody, 0.85)
