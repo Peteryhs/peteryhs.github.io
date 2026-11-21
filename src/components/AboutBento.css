@@ -592,8 +592,9 @@ html.dark .about-portrait,
 .streak-overlay-counter {
   position: fixed;
   top: calc(43% + 114px);
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;

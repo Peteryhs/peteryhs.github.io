@@ -102,6 +102,7 @@ export function StreakFireOverlay({
   const [settleTarget, setSettleTarget] = useState<FlameOrigin>(origin)
   const overlayRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const phaseTimersRef = useRef<number[]>([])
   const completedRef = useRef(false)
 
   const finishOnce = () => {
@@ -110,7 +111,15 @@ export function StreakFireOverlay({
     onComplete()
   }
 
+  const clearPhaseTimers = () => {
+    for (const id of phaseTimersRef.current) {
+      window.clearTimeout(id)
+    }
+    phaseTimersRef.current = []
+  }
+
   const triggerEarlySettle = () => {
+    clearPhaseTimers()
     setPhase((prev) => {
       if (prev === 'settle') return prev
       const fresh = getTargetOrigin()
@@ -128,11 +137,10 @@ export function StreakFireOverlay({
       if (fresh) setSettleTarget(fresh)
       setPhase('settle')
     }, 1780)
+    phaseTimersRef.current = [tCelebrate, tTick, tSettle]
 
     return () => {
-      window.clearTimeout(tCelebrate)
-      window.clearTimeout(tTick)
-      window.clearTimeout(tSettle)
+      clearPhaseTimers()
     }
   }, [getTargetOrigin])
 

@@ -128,7 +128,20 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
 export function LanguagesCard({ standalone = false }: { standalone?: boolean }) {
   const flameSlotRef = useRef<HTMLSpanElement>(null)
   const settleTimerRef = useRef<number | null>(null)
-  const prefersReducedMotion = useReducedMotion()
+  const motionReduced = useReducedMotion()
+  const [mediaReduced, setMediaReduced] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+  const prefersReducedMotion = Boolean(motionReduced || mediaReduced)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = () => setMediaReduced(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
   const [overlayOrigin, setOverlayOrigin] = useState<FlameOrigin | null>(null)
   const [justSettled, setJustSettled] = useState(false)
 
@@ -158,7 +171,7 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
   const handleIgnite = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
-      if (overlayOrigin || prefersReducedMotion) return
+      if (overlayOrigin || prefersReducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
       const origin = measureFlameOrigin()
       if (origin) {
         setOverlayOrigin(origin)
