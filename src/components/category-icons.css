@@ -1,0 +1,47 @@
+.category-icon {
+  --ci-ink: #30352f;
+  --ci-paper: #fff9e9;
+  --ci-color: #f5c65c;
+  --ci-shade: #c89440;
+  --ci-pop: #ed826c;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex: none;
+  overflow: visible;
+  vertical-align: -0.15em;
+}
+
+.category-icon-systems { --ci-color: #93bce8; --ci-shade: #557ca8; --ci-pop: #f2aa6b; }
+.category-icon-machine-learning { --ci-color: #c2ade8; --ci-shade: #7c67aa; --ci-pop: #f5cc70; }
+.category-icon-electronics { --ci-color: #94ca8a; --ci-shade: #528454; --ci-pop: #f4cc6c; }
+.category-icon-projects { --ci-color: #f3b26f; --ci-shade: #be7842; --ci-pop: #7ab3dc; }
+.category-icon-utilities { --ci-color: #ec9b82; --ci-shade: #b6604e; --ci-pop: #f3cc70; }
+.category-icon-infrastructure { --ci-color: #99cdc6; --ci-shade: #558886; --ci-pop: #f2b76e; }
+.category-icon-research { --ci-color: #a6c5e6; --ci-shade: #607fa8; --ci-pop: #ed8b7b; }
+.category-icon-minecraft { --ci-color: #9bc667; --ci-shade: #5b8949; --ci-pop: #b5835a; }
+.category-icon-photography { --ci-color: #82b5c4; --ci-shade: #4c798a; --ci-pop: #ee896f; }
+.category-icon-hackathon { --ci-color: #e89b82; --ci-shade: #ab5d4d; --ci-pop: #f4cc70; }
+
+:is(html.dark, :root.dark) .category-icon {
+  filter: drop-shadow(0 0 0.7px #fff8e9);
+}
+
+.category-icon-heading {
+  width: 1.05em;
+  height: 1.05em;
+  margin-right: 0.36em;
+  vertical-align: -0.21em;
+}
+
+.category-icon-bullet {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.15em;
+}
+
+.cmdk-item-icon .category-icon {
+  vertical-align: 0;
+}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { useMotionValueEvent, useScroll } from 'motion/react'
 import { BlurFade } from './BlurFade'
+import { CategoryIcon, type IconKind } from './CategoryIcon'
 import { CompassRose } from './CompassRose'
 
 export type ExperienceId = 'next' | 'watcloud' | 'hacktheridge'
@@ -16,6 +17,12 @@ export interface ExperienceItem {
   highlights?: string[]
   tags?: string[]
   status?: 'current' | 'upcoming' | 'past'
+}
+
+const EXPERIENCE_ICON: Record<ExperienceId, IconKind> = {
+  next: 'engineering',
+  watcloud: 'infrastructure',
+  hacktheridge: 'hackathon',
 }
 
 export const experienceItems: ExperienceItem[] = [
@@ -201,7 +208,7 @@ export function ExperienceTimeline({
               >
                 <div className="exp-card-header">
                   <div className="exp-card-titles">
-                    <h3 className="truenorth-card-title exp-card-org">{item.org}</h3>
+                    <h3 className="truenorth-card-title exp-card-org"><CategoryIcon kind={EXPERIENCE_ICON[item.id]} className="category-icon-heading" />{item.org}</h3>
                     <p className="exp-card-role">{item.role}</p>
                   </div>
                   <div className="exp-card-meta">

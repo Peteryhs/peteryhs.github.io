@@ -12,6 +12,7 @@ import { MagneticCursor } from './components/MagneticCursor'
 import { TopicBlock } from './components/hero/TopicBlock'
 import { ExternalLink, EmailLink } from './components/hero/SocialLink'
 import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
+import { WavingHand } from './components/WavingHand'
 import { WebringBadge } from './components/WebringBadge'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
@@ -335,9 +336,11 @@ export default function App() {
 
   return (
     <>
-      {route.name === 'project' && <CaseBack />}
-      <AnimatedThemeToggler />
-      <CommandPaletteTrigger />
+      <nav className="site-controls" aria-label="Site controls">
+        {route.name === 'project' && <CaseBack />}
+        <CommandPaletteTrigger />
+        <AnimatedThemeToggler />
+      </nav>
       <CommandPalette onOpenTopic={openTopic} />
       <MagneticCursor />
 
@@ -356,7 +359,7 @@ export default function App() {
           <div className="intro-group">
             <BlurFade delay={0.06} yOffset={12}>
               <p className="intro-sentence">
-                Hi <span className="intro-wave-hand" role="img" aria-label="waving hand">👋</span>, I am{' '}
+                Hi <WavingHand />, I am{' '}
                 <span className="no-wrap">{block('about')}.</span>
               </p>
             </BlurFade>
