@@ -169,7 +169,7 @@ function easeInOutCubic(t: number): number {
 
 function easeOutBack(t: number): number {
   const x = Math.max(0, Math.min(1, t))
-  const c1 = 1.65
+  const c1 = 2.15
   const c3 = c1 + 1
   return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2)
 }
@@ -280,7 +280,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
           y: sy,
           vx,
           vy,
-          size: 3.4 + Math.random() * 4.8,
+          size: 6.2 + Math.random() * 5.2,
           rotation: Math.random() * Math.PI * 2,
           vRot: (Math.random() - 0.5) * 0.16,
           life: maxLife,
@@ -309,20 +309,20 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
       let morphIntensity = 0.2
 
       if (elapsed < 0.44) {
-        // Spring & pop smoothly from slot to center right from frame 1
+        // Ignite from nothing (scale 0) and burst into full flame as it moves to center
         const u = elapsed / 0.44
         const ePos = easeOutCubic(u)
-        const eScale = easeOutBack(u)
+        const eScale = Math.max(0, easeOutBack(u))
         fx = lerp(origin.x, centerX, ePos)
         fy = lerp(origin.y, centerY - 2, ePos) - Math.sin(u * Math.PI) * 10
-        const baseScale = lerp(startScale, 1.0, eScale)
-        // Subtle crisp bounce stretch on arrival
-        const bounce = Math.sin(u * Math.PI) * 0.08
+        const baseScale = eScale
+        // Crisp ignition stretch as the flame bursts open
+        const bounce = Math.sin(u * Math.PI) * 0.1
         scaleX = baseScale * (1 - bounce * 0.45)
         scaleY = baseScale * (1 + bounce)
         const dir = Math.sign(centerX - origin.x) || 1
-        leanX = -dir * Math.sin(u * Math.PI) * 0.5
-        morphIntensity = lerp(0.25, 0.9, ePos)
+        leanX = -dir * Math.sin(u * Math.PI) * 0.45
+        morphIntensity = lerp(0.15, 0.9, ePos)
       } else if (elapsed < 1.48) {
         // Stable, crisp center stance with a gentle elastic vertical breath (no sideways shaking!)
         const u = (elapsed - 0.44) / 1.04
@@ -385,18 +385,18 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         washRef.current.style.opacity = washOpacity.toFixed(3)
       }
 
-      // --- 4. Sparkles & droplets popping and bouncing physically off the fire ---
-      if (!burst1Fired && elapsed >= 0.34) {
+      // --- 4. Fewer, larger sparkles & droplets popping and bouncing off the fire ---
+      if (!burst1Fired && elapsed >= 0.24) {
         burst1Fired = true
-        spawnOffFlame(16, 1.1)
+        spawnOffFlame(7, 1.05)
       }
       if (!burst2Fired && elapsed >= 0.68) {
         burst2Fired = true
-        spawnOffFlame(10, 0.92)
+        spawnOffFlame(4, 0.9)
       }
-      if (elapsed > 0.42 && elapsed < 1.38 && elapsed - lastEmitT >= 0.16) {
+      if (elapsed > 0.48 && elapsed < 1.32 && elapsed - lastEmitT >= 0.28) {
         lastEmitT = elapsed
-        spawnOffFlame(3, 0.8)
+        spawnOffFlame(1, 0.8)
       }
 
       if (ctx && canvas) {
@@ -510,7 +510,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
       <div
         ref={heroRef}
         className="streak-overlay-hero"
-        style={{ width: heroSize, height: heroHeight }}
+        style={{ width: heroSize, height: heroHeight, transform: 'scale(0, 0)' }}
       >
         <svg
           width={heroSize}
