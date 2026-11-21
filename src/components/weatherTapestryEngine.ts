@@ -432,8 +432,8 @@ function collectFlappyTargets(flight: AmbientFlight, lane: LaneRect): TargetPixe
     }
   }
 
-  const bx = Math.round((lane.left + birdXForLane(lane.width)) / TAPESTRY_CELL)
-  const by = Math.round((lane.top + flight.y) / TAPESTRY_CELL)
+  const bx = Math.floor((lane.left + birdXForLane(lane.width)) / TAPESTRY_CELL)
+  const by = Math.floor((lane.top + flight.y) / TAPESTRY_CELL)
   const birdOffsets = [
     [0, 0],
     [-1, 0],
@@ -608,9 +608,9 @@ export function renderFlappyInLane(
     }
   }
 
-  // 2. Subtle cellular wake trail
-  const birdGx = Math.round((lane.left + birdXForLane(lane.width)) / TAPESTRY_CELL)
-  const birdGy = Math.round((lane.top + flight.y) / TAPESTRY_CELL)
+  // 2. Subtle cellular wake trail (floor picks the 20px cell containing the physics center)
+  const birdGx = Math.floor((lane.left + birdXForLane(lane.width)) / TAPESTRY_CELL)
+  const birdGy = Math.floor((lane.top + flight.y) / TAPESTRY_CELL)
 
   if (!isCrashed) {
     const last = runtime.wake[runtime.wake.length - 1]
