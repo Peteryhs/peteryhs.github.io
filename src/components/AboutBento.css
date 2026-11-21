@@ -347,8 +347,9 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  line-height: 1.25;
   color: #b45309;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .about-streak-figure {
@@ -647,6 +648,27 @@ html.dark .about-streak-eyebrow,
   }
   45% {
     transform: translateY(-4px) scale(1.14);
+  }
+}
+
+@media (max-width: 420px) {
+  .about-streak-stage {
+    gap: 0.65rem;
+    padding: 0.72rem 0.75rem;
+  }
+  .about-streak-art {
+    width: 64px;
+    height: 64px;
+  }
+  .streak-vector-svg {
+    width: 68px;
+    height: 68px;
+  }
+  .about-streak-number {
+    font-size: 1.65rem;
+  }
+  .about-streak-week {
+    flex-wrap: wrap;
   }
 }
 
