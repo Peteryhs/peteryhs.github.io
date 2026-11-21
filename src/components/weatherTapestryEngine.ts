@@ -29,6 +29,7 @@ export interface TapestryPalette {
   core: [number, number, number]
   rim: [number, number, number]
   accent: [number, number, number]
+  white: [number, number, number]
   birdBody: [number, number, number]
   birdBeak: [number, number, number]
   paper: string
@@ -84,7 +85,9 @@ const BAYER4 = [
   [15, 7, 13, 5],
 ] as const
 
-// Vibrant, joyful weather palettes (no muddy browns) tuned for light paper & dark obsidian
+// Sampled directly from Peter's profile photo (peter-photo.jpg):
+// lots of vibrant cobalt blue + lots of golden yellow + a little crisp white + a touch of diner-basket red.
+// Each weather mood shifts motion, shear, rigidity, and subtle hue temperature while staying faithful to the photo.
 const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
   clear: {
     vx: 0.16,
@@ -92,14 +95,14 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     sx: 0.17,
     sy: 0.17,
     shear: 0.14,
-    threshold: 0.56,
+    threshold: 0.55,
     rigidity: 0.54,
-    coreLight: [78, 134, 246],    // vibrant sky cobalt
-    rimLight: [64, 198, 188],     // luminous aqua-mint
-    accentLight: [246, 168, 62],  // sunlit coral-gold
-    coreDark: [96, 152, 255],
-    rimDark: [72, 212, 200],
-    accentDark: [252, 182, 82],
+    coreLight: [26, 118, 226],    // diner-table cobalt blue
+    rimLight: [246, 188, 38],     // golden crisp yellow
+    accentLight: [226, 56, 56],   // diner-basket red touch
+    coreDark: [56, 146, 252],
+    rimDark: [252, 200, 62],
+    accentDark: [244, 80, 76],
   },
   rain: {
     vx: -0.32,
@@ -109,12 +112,12 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     shear: 0.45,
     threshold: 0.54,
     rigidity: 0.64,
-    coreLight: [62, 124, 240],    // vivid sapphire
-    rimLight: [52, 194, 208],     // electric cyan-teal
-    accentLight: [122, 116, 242], // crisp indigo
-    coreDark: [84, 146, 255],
-    rimDark: [66, 210, 224],
-    accentDark: [148, 140, 255],
+    coreLight: [22, 108, 220],    // deep cobalt blue
+    rimLight: [242, 184, 42],     // warm golden yellow
+    accentLight: [220, 58, 62],   // red accent
+    coreDark: [52, 138, 248],
+    rimDark: [250, 198, 66],
+    accentDark: [240, 82, 82],
   },
   fog: {
     vx: 0.1,
@@ -124,12 +127,12 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     shear: 0.08,
     threshold: 0.5,
     rigidity: 0.46,
-    coreLight: [108, 146, 240],   // fresh periwinkle
-    rimLight: [92, 198, 178],     // clean seafoam
-    accentLight: [146, 132, 236], // soft iris
-    coreDark: [124, 162, 252],
-    rimDark: [104, 214, 194],
-    accentDark: [168, 154, 250],
+    coreLight: [46, 132, 230],    // airy cobalt blue
+    rimLight: [248, 196, 54],     // soft golden yellow
+    accentLight: [228, 66, 66],   // red accent
+    coreDark: [72, 156, 252],
+    rimDark: [254, 208, 78],
+    accentDark: [246, 88, 86],
   },
   wind: {
     vx: 0.86,
@@ -137,14 +140,14 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     sx: 0.11,
     sy: 0.24,
     shear: -0.26,
-    threshold: 0.56,
+    threshold: 0.55,
     rigidity: 0.68,
-    coreLight: [68, 148, 246],    // bright azure
-    rimLight: [242, 128, 118],    // vibrant coral-peach
-    accentLight: [126, 114, 244], // electric violet
-    coreDark: [88, 168, 255],
-    rimDark: [250, 142, 132],
-    accentDark: [152, 140, 255],
+    coreLight: [30, 124, 232],    // breezy royal blue
+    rimLight: [248, 190, 36],     // bright yellow
+    accentLight: [232, 54, 54],   // punchy red touch
+    coreDark: [60, 152, 255],
+    rimDark: [255, 204, 60],
+    accentDark: [248, 78, 74],
   },
   snow: {
     vx: 0.11,
@@ -152,14 +155,14 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     sx: 0.21,
     sy: 0.2,
     shear: 0.16,
-    threshold: 0.6,
+    threshold: 0.58,
     rigidity: 0.58,
-    coreLight: [88, 174, 246],    // glacier sky
-    rimLight: [152, 136, 242],    // cool lavender
-    accentLight: [64, 198, 212],  // crisp ice-cyan
-    coreDark: [112, 192, 255],
-    rimDark: [172, 156, 252],
-    accentDark: [86, 216, 228],
+    coreLight: [42, 136, 234],    // crisp winter cobalt
+    rimLight: [250, 200, 62],     // pale sunlit yellow
+    accentLight: [226, 60, 64],   // berry red touch
+    coreDark: [72, 162, 255],
+    rimDark: [255, 212, 84],
+    accentDark: [244, 84, 84],
   },
   dusk: {
     vx: 0.14,
@@ -169,12 +172,12 @@ const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
     shear: 0.14,
     threshold: 0.55,
     rigidity: 0.54,
-    coreLight: [108, 108, 238],   // vivid indigo-violet
-    rimLight: [242, 114, 146],    // sunset rose-coral
-    accentLight: [248, 174, 72],  // warm amber
-    coreDark: [130, 132, 252],
-    rimDark: [252, 132, 162],
-    accentDark: [255, 190, 92],
+    coreLight: [28, 110, 222],    // evening cobalt blue
+    rimLight: [244, 182, 34],     // rich amber-yellow
+    accentLight: [224, 54, 58],   // red accent
+    coreDark: [58, 140, 248],
+    rimDark: [252, 196, 56],
+    accentDark: [244, 76, 78],
   },
 }
 
@@ -277,8 +280,9 @@ export function getTapestryPalette(mood: WeatherMood): TapestryPalette {
     core: isDark ? p.coreDark : p.coreLight,
     rim: isDark ? p.rimDark : p.rimLight,
     accent: isDark ? p.accentDark : p.accentLight,
-    birdBody: isDark ? [252, 186, 78] : [244, 162, 48],
-    birdBeak: isDark ? [250, 118, 102] : [236, 96, 84],
+    white: isDark ? [246, 248, 252] : [255, 255, 255],
+    birdBody: isDark ? [252, 200, 62] : [246, 188, 38],
+    birdBeak: isDark ? [244, 80, 76] : [226, 56, 56],
     paper: isDark ? '#161618' : '#fbfaf7',
   }
 }
@@ -356,10 +360,10 @@ export function renderWeatherTapestry(
   const profile = WEATHER_PROFILES[mood]
   const t = timeMs * 0.001
 
-  // Tight rim band so vibrant core colors dominate with seamless rim->core dither
-  const rimStart = profile.threshold - 0.05
-  const coreStart = profile.threshold + 0.02
-  const coreFull = profile.threshold + 0.24
+  // Generous balance of blue (core) & yellow (rim), plus a little crisp white & a sparse touch of red
+  const rimStart = profile.threshold - 0.09
+  const coreStart = profile.threshold + 0.05
+  const coreFull = profile.threshold + 0.26
 
   for (let gy = 0; gy < rows; gy++) {
     const y = gy * TAPESTRY_CELL
@@ -373,28 +377,52 @@ export function renderWeatherTapestry(
 
       const x = gx * TAPESTRY_CELL
       const coreMix = clamp01((val - coreStart) / (coreFull - coreStart))
-      const isCore = coreMix > bayerVal * 0.72
-      const isAccentSpark = val > coreFull + 0.1 && ((gx * 7 + gy * 13) & 7) === 0
+      const isCore = coreMix > bayerVal * 0.85
+      const hash = ((gx * 17 + gy * 31) & 31)
+      const isRedAccent = val > coreStart + 0.06 && hash === 0
+      const isWhiteTile = !isRedAccent && val > rimStart + 0.06 && (hash === 7 || hash === 19 || hash === 27)
 
-      const rgb = isAccentSpark ? pal.accent : isCore ? pal.core : pal.rim
-      const baseAlpha = isCore
+      const rgb = isRedAccent
+        ? pal.accent
+        : isWhiteTile
+          ? pal.white
+          : isCore
+            ? pal.core
+            : pal.rim
+
+      const baseAlpha = isRedAccent
         ? pal.isDark
-          ? 0.34 + coreMix * 0.34
-          : 0.26 + coreMix * 0.34
-        : pal.isDark
-          ? 0.24 + density * 0.24
-          : 0.2 + density * 0.24
+          ? 0.58
+          : 0.48
+        : isWhiteTile
+          ? pal.isDark
+            ? 0.42
+            : 0.86
+          : isCore
+            ? pal.isDark
+              ? 0.36 + coreMix * 0.34
+              : 0.28 + coreMix * 0.34
+            : pal.isDark
+              ? 0.32 + density * 0.28
+              : 0.3 + density * 0.28
 
       const finalAlpha = baseAlpha * dimFactor
 
-      if (isCore || isAccentSpark) {
-        bloomCtx.fillStyle = rgba(rgb, finalAlpha * 0.68)
+      if (isCore || isRedAccent || (!isWhiteTile && density > 0.55)) {
+        bloomCtx.fillStyle = rgba(rgb, finalAlpha * 0.62)
         bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
       }
 
       // Crisp 18x18 tile centered in the 20px grid cell
       pixelCtx.fillStyle = rgba(rgb, finalAlpha)
       pixelCtx.fillRect(x + 1, y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
+
+      // Subtle crisp rim on white tiles in light mode so they read cleanly on warm paper
+      if (isWhiteTile && !pal.isDark) {
+        pixelCtx.strokeStyle = rgba(pal.core, 0.22 * dimFactor)
+        pixelCtx.lineWidth = 1
+        pixelCtx.strokeRect(x + 1.5, y + 1.5, TAPESTRY_CELL - 3, TAPESTRY_CELL - 3)
+      }
     }
   }
 }
