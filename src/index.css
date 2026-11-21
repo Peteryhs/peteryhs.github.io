@@ -1403,6 +1403,206 @@ main {
   }
 }
 
+/* Subtle Ambient Flappy Bird in About Right-Side Desktop Space */
+.ambient-flappy-horizon {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.ambient-flappy-pipe {
+  fill: rgba(176, 128, 58, 0.12);
+  stroke: rgba(176, 128, 58, 0.34);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.ambient-flappy-pipe-cap {
+  fill: rgba(176, 128, 58, 0.2);
+  stroke: rgba(176, 128, 58, 0.44);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.ambient-flappy-gate.is-passed .ambient-flappy-pipe,
+.ambient-flappy-gate.is-passed .ambient-flappy-pipe-cap {
+  opacity: 0.52;
+}
+
+.ambient-flappy-token {
+  fill: rgba(62, 81, 150, 0.56);
+  stroke: rgba(88, 111, 188, 0.45);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.ambient-flappy-bird {
+  pointer-events: none;
+}
+
+.ambient-flappy-bird-body {
+  fill: rgba(190, 140, 66, 0.84);
+  stroke: rgba(132, 92, 36, 0.58);
+  stroke-width: 1.2;
+}
+
+.ambient-flappy-bird-wing {
+  fill: rgba(164, 116, 48, 0.76);
+}
+
+.ambient-flappy-bird-beak {
+  fill: rgba(196, 112, 66, 0.82);
+}
+
+.ambient-flappy-bird-eye {
+  fill: var(--paper, #fbfaf7);
+}
+
+.ambient-flappy-bird.is-flashing .ambient-flappy-bird-body {
+  animation: flappyCrashFlash 0.24s ease-in-out 3;
+}
+
+@keyframes flappyCrashFlash {
+  0%, 100% {
+    fill: rgba(190, 140, 66, 0.84);
+  }
+  50% {
+    fill: #ffffff;
+  }
+}
+
+.ambient-flappy-hitbox {
+  cursor: pointer;
+}
+
+.flappy-milestone-text {
+  font-family: 'Press Start 2P', 'Courier New', monospace !important;
+  font-size: 10px;
+  fill: rgba(96, 119, 198, 0.86);
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  paint-order: stroke fill;
+  stroke: var(--paper, #fbfaf7);
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform, opacity;
+  animation: flappyMilestoneFloat 2.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes flappyMilestoneFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+  14% {
+    opacity: 1;
+    transform: translate3d(0, -8px, 0);
+  }
+  75% {
+    opacity: 1;
+    transform: translate3d(0, -24px, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -34px, 0);
+  }
+}
+
+.ambient-flappy-hud {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-main);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  opacity: 0.42;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ambient-flappy-hud.is-visible {
+  opacity: 0.85;
+}
+
+.ambient-flappy-hud-score {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.ambient-flappy-hud-btn {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.ambient-flappy-hud-btn:hover {
+  color: var(--ink);
+}
+
+.ambient-flappy-hud-btn.is-muted {
+  opacity: 0.72;
+}
+
+html.dark .ambient-flappy-pipe {
+  fill: rgba(196, 150, 82, 0.12);
+  stroke: rgba(196, 150, 82, 0.34);
+}
+
+html.dark .ambient-flappy-pipe-cap {
+  fill: rgba(196, 150, 82, 0.22);
+  stroke: rgba(196, 150, 82, 0.46);
+}
+
+html.dark .ambient-flappy-token {
+  fill: rgba(120, 142, 220, 0.62);
+  stroke: rgba(145, 165, 236, 0.48);
+}
+
+html.dark .flappy-milestone-text {
+  fill: rgba(126, 148, 224, 0.86);
+  stroke: var(--paper, #161618);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.65));
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) .ambient-flappy-pipe {
+    fill: rgba(196, 150, 82, 0.12);
+    stroke: rgba(196, 150, 82, 0.34);
+  }
+  html:not(.light) .ambient-flappy-pipe-cap {
+    fill: rgba(196, 150, 82, 0.22);
+    stroke: rgba(196, 150, 82, 0.46);
+  }
+  html:not(.light) .ambient-flappy-token {
+    fill: rgba(120, 142, 220, 0.62);
+    stroke: rgba(145, 165, 236, 0.48);
+  }
+  html:not(.light) .flappy-milestone-text {
+    fill: rgba(126, 148, 224, 0.86);
+    stroke: var(--paper, #161618);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.65));
+  }
+}
+
 /* ==========================================================================
    Responsive & Accessibility
    ========================================================================== */

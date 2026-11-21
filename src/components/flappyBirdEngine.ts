@@ -11,111 +11,162 @@ export const FLIGHT_STAMPS = [
   "UW CE '31",
 ] as const
 
-export const WORLD_HEIGHT = 320
-export const FLOOR_Y = 294
-export const BIRD_RADIUS = 12
-export const PIPE_WIDTH = 58
-export const PIPE_GAP = 154
-const PIPE_SPACING = 246
-const SPEED = 136
-const GRAVITY = 870
-const FLAP_VELOCITY = -292
+export const BIRD_RADIUS = 9
+export const PIPE_WIDTH = 40 // matches the 40px background grid
+export const PIPE_GAP = 128
+const PIPE_SPACING = 200 // 5 grid cells
+const SPEED = 84
+const GRAVITY = 560
+const FLAP_VELOCITY = -215
 
 export interface Gate {
+  id: number
   x: number
   center: number
-  index: number
+  stampIndex: number
   passed: boolean
 }
 
-export interface Flight {
+export interface FlightEvent {
+  id: number
+  stamp: string
+  x: number
+  y: number
+}
+
+export interface AmbientFlight {
   y: number
   velocity: number
-  distance: number
-  score: number
   gates: Gate[]
-  result: 'flying' | 'crashed' | 'complete'
+  score: number
+  nextGateId: number
+  result: 'flying' | 'crashed'
+  lastEvent: FlightEvent | null
 }
 
-export function birdX(width: number) {
-  return Math.min(150, width * 0.23)
+export function birdXForLane(width: number): number {
+  return Math.max(54, Math.min(116, width * 0.28))
 }
 
-function gate(index: number, x: number): Gate {
-  return { x, index, center: 146 + Math.sin(index * 1.8) * 37, passed: false }
-}
-
-export function createFlight(width: number): Flight {
-  const firstX = birdX(width) + 300
+function makeGate(id: number, x: number, height: number): Gate {
+  const margin = Math.max(76, PIPE_GAP / 2 + 28)
+  const usable = Math.max(40, height - margin * 2)
+  // Deterministic gentle wave across the lane height
+  const wave = (Math.sin(id * 1.65 + 0.4) + 1) / 2
+  const center = margin + wave * usable
   return {
-    y: 155,
-    velocity: 0,
-    distance: 0,
-    score: 0,
-    gates: Array.from(
-      { length: Math.ceil(width / PIPE_SPACING) + 2 },
-      (_, i) => gate(i, firstX + i * PIPE_SPACING)
-    ),
-    result: 'flying',
+    id,
+    x,
+    center,
+    stampIndex: id % FLIGHT_STAMPS.length,
+    passed: false,
   }
 }
 
-export function flap(flight: Flight): Flight {
-  return flight.result === 'flying' ? { ...flight, velocity: FLAP_VELOCITY } : flight
+export function createAmbientFlight(width: number, height: number): AmbientFlight {
+  const bx = birdXForLane(width)
+  const firstX = Math.max(bx + 150, width * 0.62)
+  const count = Math.ceil((width + PIPE_SPACING * 2) / PIPE_SPACING)
+  const gates = Array.from({ length: count }, (_, i) =>
+    makeGate(i, firstX + i * PIPE_SPACING, height)
+  )
+  return {
+    y: height * 0.5,
+    velocity: 0,
+    gates,
+    score: 0,
+    nextGateId: count,
+    result: 'flying',
+    lastEvent: null,
+  }
 }
 
-function hitsGate(y: number, x: number, obstacle: Gate) {
-  if (obstacle.index >= FLIGHT_STAMPS.length) return false
-  // Circle / rectangle collision, including the slightly wider pipe caps.
-  const nearestX = Math.max(obstacle.x - 5, Math.min(x, obstacle.x + PIPE_WIDTH + 5))
+export function flapAmbient(flight: AmbientFlight): AmbientFlight {
+  if (flight.result !== 'flying') return flight
+  return { ...flight, velocity: FLAP_VELOCITY }
+}
+
+function hitsGate(y: number, x: number, gate: Gate): boolean {
+  const nearestX = Math.max(gate.x - 3, Math.min(x, gate.x + PIPE_WIDTH + 3))
   const dx = x - nearestX
-  const top = obstacle.center - PIPE_GAP / 2
-  const bottom = obstacle.center + PIPE_GAP / 2
+  const top = gate.center - PIPE_GAP / 2
+  const bottom = gate.center + PIPE_GAP / 2
   const dy = y < top ? 0 : y > bottom ? 0 : Math.min(y - top, bottom - y)
   return dx * dx + dy * dy < BIRD_RADIUS * BIRD_RADIUS
 }
 
-export function advanceFlight(flight: Flight, elapsed: number, width: number): Flight {
-  if (flight.result !== 'flying' || elapsed <= 0 || !Number.isFinite(elapsed)) return flight
-  const next: Flight = { ...flight, gates: flight.gates.map((item) => ({ ...item })) }
-  // Small steps keep collision reliable even after a slow browser frame.
-  let remaining = Math.min(elapsed, 0.1)
+export function advanceAmbientFlight(
+  flight: AmbientFlight,
+  elapsed: number,
+  width: number,
+  height: number,
+  autopilot: boolean
+): AmbientFlight {
+  if (flight.result !== 'flying' || elapsed <= 0 || !Number.isFinite(elapsed)) {
+    return { ...flight, lastEvent: null }
+  }
+
+  const bx = birdXForLane(width)
+  const next: AmbientFlight = {
+    ...flight,
+    gates: flight.gates.map((g) => ({ ...g })),
+    lastEvent: null,
+  }
+
+  let remaining = Math.min(elapsed, 0.08)
   while (remaining > 0 && next.result === 'flying') {
     const dt = Math.min(remaining, 1 / 120)
     remaining -= dt
+
+    if (autopilot) {
+      const targetGate = next.gates.find((g) => g.x + PIPE_WIDTH >= bx - BIRD_RADIUS)
+      const targetY = targetGate ? targetGate.center + 8 : height * 0.5
+      if (next.y > targetY && next.velocity > -20) {
+        next.velocity = FLAP_VELOCITY * 0.92
+      }
+      if (next.y < BIRD_RADIUS + 20 && next.velocity < 0) {
+        next.velocity = 0
+      }
+    }
+
     next.velocity += GRAVITY * dt
     next.y += next.velocity * dt
-    next.distance += SPEED * dt
-    next.gates.forEach((item) => {
-      item.x -= SPEED * dt
-    })
+    for (const g of next.gates) {
+      g.x -= SPEED * dt
+    }
 
-    if (
-      next.y - BIRD_RADIUS <= 0 ||
-      next.y + BIRD_RADIUS >= FLOOR_Y ||
-      next.gates.some((item) => hitsGate(next.y, birdX(width), item))
+    if (autopilot) {
+      // Keep autopilot gracefully inside bounds even across sudden resizes
+      next.y = Math.max(BIRD_RADIUS + 10, Math.min(height - BIRD_RADIUS - 10, next.y))
+    } else if (
+      next.y - BIRD_RADIUS <= 2 ||
+      next.y + BIRD_RADIUS >= height - 2 ||
+      next.gates.some((g) => hitsGate(next.y, bx, g))
     ) {
       next.result = 'crashed'
       break
     }
 
-    for (const item of next.gates) {
-      if (
-        item.index < FLIGHT_STAMPS.length &&
-        !item.passed &&
-        item.x + PIPE_WIDTH < birdX(width) - BIRD_RADIUS
-      ) {
-        item.passed = true
+    for (const g of next.gates) {
+      if (!g.passed && g.x + PIPE_WIDTH * 0.55 < bx) {
+        g.passed = true
         next.score += 1
-        if (next.score === FLIGHT_STAMPS.length) next.result = 'complete'
+        next.lastEvent = {
+          id: g.id,
+          stamp: FLIGHT_STAMPS[g.stampIndex],
+          x: g.x + PIPE_WIDTH / 2,
+          y: Math.max(36, g.center - 16),
+        }
       }
     }
 
-    if (next.gates.length > 0 && next.gates[0].x + PIPE_WIDTH < -12) {
+    if (next.gates.length > 0 && next.gates[0].x + PIPE_WIDTH < -48) {
       next.gates.shift()
       const last = next.gates[next.gates.length - 1]
-      next.gates.push(gate(last.index + 1, last.x + PIPE_SPACING))
+      next.gates.push(makeGate(next.nextGateId, last.x + PIPE_SPACING, height))
+      next.nextGateId += 1
     }
   }
+
   return next
 }

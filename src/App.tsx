@@ -14,7 +14,6 @@ import { ExternalLink, EmailLink } from './components/hero/SocialLink'
 import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 import { WebringBadge } from './components/WebringBadge'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
-import { FlappyBird } from './components/FlappyBird'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
 import { CompactProjectsGrid } from './components/CompactProjectsGrid'
 import { PassionsSection, PhotographyExpandedView, MinecraftExpandedView } from './components/PassionsSection'
@@ -236,7 +235,6 @@ function LongFormSection({ topicId }: { topicId: 'about' | 'projects' | 'passion
               </h2>
             </BlurFade>
             <AboutBentoGrid />
-            <FlappyBird />
           </div>
         </section>
       </div>
