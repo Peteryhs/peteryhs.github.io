@@ -35,6 +35,26 @@ import type { BlockId } from './components/hero/blocks'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
+/** Calls `done` once the window has scrolled to the top (or stopped trying); returns a cancel function. */
+function whenScrolledToTop(done: () => void, timeoutMs = 2500) {
+  const onScroll = () => {
+    if (window.scrollY <= 1) finish()
+  }
+  const finish = () => {
+    cancel()
+    done()
+  }
+  const cancel = () => {
+    window.clearTimeout(timer)
+    window.removeEventListener('scroll', onScroll)
+    window.removeEventListener('scrollend', finish)
+  }
+  const timer = window.setTimeout(finish, timeoutMs)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('scrollend', finish)
+  return cancel
+}
+
 function ExpandedSection({ topic }: { topic: Topic }) {
   const renderContent = () => {
     switch (topic.id) {
@@ -258,12 +278,25 @@ export default function App() {
     }
   }, [activeId])
 
-  // From the command palette: bring the intro into view and expand the topic.
+  // From the command palette: bring the intro into view, then expand the topic.
+  // Expanding waits for the scroll to finish: motion restores the scroll position
+  // while it measures the card's height, which cancels a smooth scroll in flight.
+  const cancelPendingTopic = useRef<(() => void) | null>(null)
   const openTopic = useCallback((id: TopicId) => {
+    cancelPendingTopic.current?.()
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
-    setActiveId(id)
+    if (reduce || window.scrollY <= 1) {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+      setActiveId(id)
+      return
+    }
+    cancelPendingTopic.current = whenScrolledToTop(() => {
+      cancelPendingTopic.current = null
+      setActiveId(id)
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
+  useEffect(() => () => cancelPendingTopic.current?.(), [])
 
   const handleSelect = (id: TopicId) => {
     setActiveId((prev) => (prev === id ? null : id))
