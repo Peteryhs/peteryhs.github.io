@@ -68,11 +68,25 @@ interface BirdWakeDot {
   life: number
 }
 
+type BlobShape = 'square' | 'triangle' | 'diamond' | 'hexagon' | 'star' | 'rectangle'
+
+interface ShapeBlob {
+  cx: number
+  cy: number
+  r: number
+  cos: number
+  sin: number
+  from: BlobShape
+  to: BlobShape
+  mix: number
+}
+
 export interface TapestryRuntime {
   wake: BirdWakeDot[]
   mouseX: number
   mouseY: number
   mouseActive: boolean
+  blobs: ShapeBlob[]
 }
 
 const WEATHER_CACHE_KEY = 'peter-waterloo-weather-v1'
@@ -187,6 +201,7 @@ export function createTapestryRuntime(): TapestryRuntime {
     mouseX: -9999,
     mouseY: -9999,
     mouseActive: false,
+    blobs: [],
   }
 }
 
@@ -295,9 +310,87 @@ function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
 }
 
-function triWave(v: number): number {
-  const m = ((v / (Math.PI * 2)) % 1 + 1) % 1
-  return 1 - 4 * Math.abs(m - 0.5)
+const BLOB_SHAPES: BlobShape[] = ['square', 'triangle', 'diamond', 'hexagon', 'star', 'rectangle']
+
+function hash01(n: number): number {
+  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453
+  return s - Math.floor(s)
+}
+
+function smoothstep(a: number, b: number, v: number): number {
+  const x = clamp01((v - a) / (b - a))
+  return x * x * (3 - 2 * x)
+}
+
+// Normalized distance: < 1 inside the shape, 1 on its edge
+function shapeDistance(shape: BlobShape, x: number, y: number, r: number): number {
+  const ax = Math.abs(x)
+  const ay = Math.abs(y)
+  switch (shape) {
+    case 'square':
+      return Math.max(ax, ay) / (r * 0.86)
+    case 'rectangle':
+      return Math.max(ax / (r * 1.25), ay / (r * 0.62))
+    case 'diamond':
+      return (ax + ay) / (r * 1.2)
+    case 'hexagon':
+      return Math.max(ax * 0.866 + ay * 0.5, ay) / (r * 0.92)
+    case 'triangle':
+      return Math.max(ax * 0.866 - y * 0.5, y) / (r * 0.6)
+    case 'star': {
+      const theta = Math.atan2(y, x) + Math.PI / 2
+      const frac = ((theta / ((Math.PI * 2) / 5)) % 1 + 1) % 1
+      const tip = Math.abs(frac - 0.5) * 2
+      return Math.hypot(x, y) / (r * 1.1 * (0.48 + 0.52 * tip * tip))
+    }
+  }
+}
+
+// Randomly seeded geometric blobs that drift with the weather flow and slowly morph between shapes
+function updateShapeBlobs(
+  runtime: TapestryRuntime,
+  cols: number,
+  rows: number,
+  t: number,
+  profile: WeatherProfile
+): void {
+  const count = Math.max(6, Math.min(16, Math.round((cols * rows) / 220)))
+  const pad = 8
+  const spanX = cols + pad * 2
+  const spanY = rows + pad * 2
+  const flowX = profile.vx / profile.sx
+  const flowY = profile.vy / profile.sy
+  const blobs: ShapeBlob[] = []
+
+  for (let i = 0; i < count; i++) {
+    const h1 = hash01(i + 1)
+    const h2 = hash01(i + 17)
+    const h3 = hash01(i + 43)
+    const h4 = hash01(i + 71)
+    const speed = 0.7 + h3 * 0.6
+    const rawX = h1 * spanX + t * flowX * speed + Math.sin(t * 0.21 + h4 * 9) * 1.6
+    const rawY = h2 * spanY + t * flowY * speed + Math.cos(t * 0.17 + h1 * 9) * 1.6
+    const cx = (((rawX % spanX) + spanX) % spanX) - pad
+    const cy = (((rawY % spanY) + spanY) % spanY) - pad
+
+    const period = 7 + h4 * 5
+    const phase = t / period + h3 * 6
+    const step = Math.floor(phase)
+    const offset = Math.floor(h2 * BLOB_SHAPES.length)
+    const rot = Math.sin(t * 0.14 + h1 * 6) * 0.38
+
+    blobs.push({
+      cx,
+      cy,
+      r: 3.4 + h4 * 3 + Math.sin(t * 0.3 + h2 * 7) * 0.4,
+      cos: Math.cos(rot),
+      sin: Math.sin(rot),
+      from: BLOB_SHAPES[(step + offset) % BLOB_SHAPES.length],
+      to: BLOB_SHAPES[(step + offset + 1) % BLOB_SHAPES.length],
+      mix: smoothstep(0.62, 1, phase - step),
+    })
+  }
+  runtime.blobs = blobs
 }
 
 function sampleFieldValue(
@@ -310,32 +403,39 @@ function sampleFieldValue(
   const px = gx * profile.sx + gy * profile.shear * 0.06 - t * profile.vx
   const py = gy * profile.sy - t * profile.vy
 
-  const faceted =
-    triWave(px * 0.92 + py * 0.34 + t * 0.14) * 0.44 +
-    triWave(py * 0.98 - px * 0.42 - t * 0.11) * 0.34 +
-    triWave((px - py) * 0.62 + t * 0.18) * 0.22
-
+  // Low-amplitude organic noise keeps the blob edges feeling hand-made rather than stamped
   const organic =
     Math.sin(px * 1.05 + Math.cos(py * 0.85 + t * 0.2)) * 0.45 +
     Math.cos(py * 1.15 - Math.sin(px * 0.78 - t * 0.16)) * 0.35 +
     Math.sin((px + py) * 0.7 + t * 0.26) * 0.2
+  const edgeNoise = organic * (0.03 + (1 - profile.rigidity) * 0.1)
 
-  let f = organic * (1 - profile.rigidity) + faceted * profile.rigidity
+  let best = 0
+  for (const b of runtime.blobs) {
+    const dx = gx + 0.5 - b.cx
+    const dy = gy + 0.5 - b.cy
+    const reach = b.r * 1.8
+    if (dx > reach || dx < -reach || dy > reach || dy < -reach) continue
+    const lx = dx * b.cos + dy * b.sin
+    const ly = -dx * b.sin + dy * b.cos
+    const dA = shapeDistance(b.from, lx, ly, b.r)
+    const d = b.mix > 0 ? dA + (shapeDistance(b.to, lx, ly, b.r) - dA) * b.mix : dA
+    const inside = 1 - (d + edgeNoise)
+    if (inside > best) best = inside
+  }
 
-  // Crisp architectural terracing
-  const terrace = Math.round(f * 5) / 5
-  f = f * 0.68 + terrace * 0.32
+  let f = best > 0 ? profile.threshold - 0.09 + best * 0.55 : 0
 
   if (runtime.mouseActive) {
-    const dx = gx * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseX
-    const dy = gy * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseY
-    const dist = Math.hypot(dx, dy)
-    if (dist < 140) {
-      f += Math.sin(dist * 0.09 - t * 4.5) * (1 - dist / 140) * 0.34
+    const mx = gx * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseX
+    const my = gy * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseY
+    const dist = Math.hypot(mx, my)
+    if (dist < 140 && f > 0) {
+      f += Math.sin(dist * 0.09 - t * 4.5) * (1 - dist / 140) * 0.17
     }
   }
 
-  return clamp01((f + 1) * 0.5)
+  return clamp01(f)
 }
 
 // Render the unified 20px Crisp + Soft Aura live-weather tapestry across the ENTIRE grid.
@@ -359,6 +459,7 @@ export function renderWeatherTapestry(
   const rows = Math.ceil(height / TAPESTRY_CELL)
   const profile = WEATHER_PROFILES[mood]
   const t = timeMs * 0.001
+  updateShapeBlobs(runtime, cols, rows, t, profile)
 
   // Generous balance of blue (core) & yellow (rim), plus a little crisp white & a sparse touch of red
   const rimStart = profile.threshold - 0.09
