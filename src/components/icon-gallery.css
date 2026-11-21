@@ -1,0 +1,221 @@
+.icon-studio {
+  min-height: 100vh;
+  padding: 84px 24px 96px;
+  background: #f6f5f1;
+  color: #1f2328;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.icon-studio[data-icon-theme='dark'] {
+  background: #14161a;
+  color: #eef1f6;
+}
+
+.icon-studio-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.icon-studio-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.icon-studio-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.icon-studio-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.icon-studio-lead {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 0.96rem;
+  line-height: 1.55;
+  opacity: 0.8;
+}
+
+.icon-studio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.icon-studio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(120, 128, 140, 0.28);
+  background: rgba(255, 255, 255, 0.75);
+  color: inherit;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.icon-studio[data-icon-theme='dark'] .icon-studio-btn {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.icon-studio-btn-primary {
+  font-weight: 600;
+}
+
+.icon-studio-rounds {
+  display: grid;
+  gap: 28px;
+}
+
+.icon-round-card {
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 128, 140, 0.22);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+}
+
+.icon-studio[data-icon-theme='dark'] .icon-round-card {
+  background: rgba(28, 31, 38, 0.88);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.icon-round-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.icon-round-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-right: 8px;
+}
+
+.icon-round-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f5c65c;
+  color: #30352f;
+}
+
+.icon-round-title {
+  margin: 4px 0 6px;
+  font-size: 1.32rem;
+  letter-spacing: -0.015em;
+}
+
+.icon-round-summary {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.78;
+}
+
+.icon-round-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  background: rgba(120, 128, 140, 0.08);
+}
+
+.icon-pill-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(28, 32, 42, 0.16);
+  background: linear-gradient(180deg, #f7f8fa 0%, #e9ecf1 100%);
+  color: #1f2328;
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.icon-studio[data-icon-theme='dark'] .icon-pill-sample {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #27292f 0%, #1d1e22 100%);
+  color: #eef1f6;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.icon-round-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 12px;
+}
+
+.icon-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 128, 140, 0.18);
+  background: rgba(255, 255, 255, 0.65);
+  text-align: center;
+}
+
+.icon-studio[data-icon-theme='dark'] .icon-swatch {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.icon-swatch-stage {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
+  background: rgba(120, 128, 140, 0.08);
+}
+
+.icon-swatch-scales {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.92;
+}
+
+.icon-swatch-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.icon-swatch-kind {
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
