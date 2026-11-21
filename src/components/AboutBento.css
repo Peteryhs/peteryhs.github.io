@@ -333,6 +333,7 @@ html.dark .about-portrait,
 }
 
 .bento-card-languages .qe-streak-trigger.is-settled .qe-flame-slot {
+  transition: none;
   animation: qeFlameLand 480ms cubic-bezier(0.22, 1.4, 0.36, 1);
 }
 

@@ -333,8 +333,14 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
     const startTime = performance.now()
     let rafId = 0
 
+    let lastNow = startTime
+
     const tick = (now: number) => {
       const elapsed = (now - startTime) / 1000
+      // Physics is tuned per 60fps frame; scale it so slower frame rates fall just as fast
+      const step = Math.min(4, Math.max(0, (now - lastNow) / (1000 / 60)))
+      lastNow = now
+      const gravity = SPARK_GRAVITY * (elapsed > TOTAL_DURATION_S ? 3 : 1)
       const p = Math.min(1, elapsed / TOTAL_DURATION_S)
 
       // --- 1. Flame position, crisp bouncy scale, and stable center hold ---
@@ -467,10 +473,10 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         for (let i = particles.length - 1; i >= 0; i--) {
           const sp = particles[i]
           // Plain ballistic motion: gravity pulls each pill down and out of the card, no fading
-          sp.vy += SPARK_GRAVITY
-          sp.vx *= 0.995
-          sp.x += sp.vx
-          sp.y += sp.vy
+          sp.vy += gravity * step
+          sp.vx *= Math.pow(0.995, step)
+          sp.x += sp.vx * step
+          sp.y += sp.vy * step
 
           const margin = sp.size * 2
           if (sp.y > cardH + margin || sp.x < -margin || sp.x > cardW + margin) {
