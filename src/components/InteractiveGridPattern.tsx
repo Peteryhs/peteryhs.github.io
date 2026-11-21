@@ -647,9 +647,12 @@ export function InteractiveGridPattern({
             startMorphOrFlap()
           }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowUp') {
               e.preventDefault()
-              startMorphOrFlap()
+              if (!e.repeat) startMorphOrFlap()
+            } else if (e.key === 'Escape' && modeRef.current !== 'tapestry') {
+              e.preventDefault()
+              dissolveBackToWeather()
             }
           }}
         />
