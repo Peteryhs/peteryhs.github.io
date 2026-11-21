@@ -1,4 +1,4 @@
-import { type ReactNode, type MouseEvent, useEffect, useId, useRef, useState } from 'react'
+import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback } from 'react'
 import { BlurFade } from './BlurFade'
 import './AboutBento.css'
 
@@ -123,213 +123,268 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
   )
 }
 
-const STREAK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-
-const BURST_SPARKS = [
-  { cx: 60, cy: 20, tx: '-26px', ty: '-22px', rot: '-40deg', color: '#ffd43b', size: 6 },
-  { cx: 88, cy: 36, tx: '24px', ty: '-18px', rot: '45deg', color: '#ff9600', size: 5.5 },
-  { cx: 95, cy: 66, tx: '22px', ty: '8px', rot: '70deg', color: '#ff5c00', size: 5 },
-  { cx: 30, cy: 36, tx: '-24px', ty: '-14px', rot: '-55deg', color: '#ff9600', size: 5.5 },
-  { cx: 24, cy: 66, tx: '-22px', ty: '10px', rot: '-75deg', color: '#ffd43b', size: 5 },
-  { cx: 60, cy: 14, tx: '6px', ty: '-26px', rot: '30deg', color: '#58cc02', size: 4.5 },
-]
-
-function StreakMascotArt({ burstKey }: { burstKey: number }) {
-  const uid = useId().replace(/:/g, '')
-  const haloId = `streakHalo-${uid}`
-  const outerId = `streakOuter-${uid}`
-  const innerId = `streakInner-${uid}`
-
+function FlameStreakIcon() {
   return (
-    <div className="about-streak-art" aria-hidden="true">
+    <span className="bento-fire-badge" aria-label="Duolingo flame streak">
       <svg
-        className="streak-vector-svg"
-        viewBox="0 0 120 120"
+        className="bento-fire-svg"
+        viewBox="0 0 44 48"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
       >
         <defs>
-          <radialGradient id={haloId} cx="50%" cy="54%" r="50%">
-            <stop offset="0%" stopColor="#ffc83d" stopOpacity="0.48" />
-            <stop offset="68%" stopColor="#ff8800" stopOpacity="0.16" />
-            <stop offset="100%" stopColor="#ff6a00" stopOpacity="0" />
-          </radialGradient>
-          <linearGradient id={outerId} x1="60" y1="16" x2="60" y2="104" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#ffe15a" />
-            <stop offset="42%" stopColor="#ff9900" />
-            <stop offset="100%" stopColor="#e83f00" />
+          <linearGradient id="fireOuterGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#d92200" />
+            <stop offset="35%" stopColor="#f54700" />
+            <stop offset="75%" stopColor="#ff8c00" />
+            <stop offset="100%" stopColor="#ffc72c" />
           </linearGradient>
-          <linearGradient id={innerId} x1="60" y1="42" x2="60" y2="98" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#fff7cc" />
-            <stop offset="55%" stopColor="#ffd23f" />
-            <stop offset="100%" stopColor="#ff8c00" />
+          <linearGradient id="fireInnerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#ff5900" />
+            <stop offset="50%" stopColor="#ffb703" />
+            <stop offset="100%" stopColor="#fff3b0" />
           </linearGradient>
         </defs>
 
-        <circle cx="60" cy="64" r="48" fill={`url(#${haloId})`} />
-
-        <g className="streak-aura-ring">
-          <circle
-            cx="60"
-            cy="64"
-            r="44"
-            stroke="#ff9600"
-            strokeOpacity="0.35"
-            strokeWidth="2.5"
-            strokeDasharray="6 9"
-            strokeLinecap="round"
-          />
-        </g>
-
-        <ellipse cx="60" cy="103" rx="25" ry="5.5" fill="#d95300" fillOpacity="0.2" />
-
-        <g key={burstKey} className="streak-burst-group">
-          <line className="streak-burst-ray" x1="60" y1="12" x2="60" y2="2" stroke="#ffb703" strokeWidth="3.2" strokeLinecap="round" />
-          <line className="streak-burst-ray" x1="94" y1="26" x2="103" y2="18" stroke="#ff7a00" strokeWidth="3" strokeLinecap="round" />
-          <line className="streak-burst-ray" x1="106" y1="62" x2="116" y2="62" stroke="#ffb703" strokeWidth="3" strokeLinecap="round" />
-          <line className="streak-burst-ray" x1="26" y1="26" x2="17" y2="18" stroke="#ff7a00" strokeWidth="3" strokeLinecap="round" />
-          <line className="streak-burst-ray" x1="14" y1="62" x2="4" y2="62" stroke="#ffb703" strokeWidth="3" strokeLinecap="round" />
-          {BURST_SPARKS.map((spark, index) => (
-            <path
-              key={index}
-              className="streak-burst-spark"
-              d={`M ${spark.cx} ${spark.cy - spark.size} L ${spark.cx + spark.size * 0.36} ${spark.cy - spark.size * 0.36} L ${spark.cx + spark.size} ${spark.cy} L ${spark.cx + spark.size * 0.36} ${spark.cy + spark.size * 0.36} L ${spark.cx} ${spark.cy + spark.size} L ${spark.cx - spark.size * 0.36} ${spark.cy + spark.size * 0.36} L ${spark.cx - spark.size} ${spark.cy} L ${spark.cx - spark.size * 0.36} ${spark.cy - spark.size * 0.36} Z`}
-              fill={spark.color}
-              style={{
-                ['--tx' as string]: spark.tx,
-                ['--ty' as string]: spark.ty,
-                ['--rot' as string]: spark.rot,
-              }}
-            />
-          ))}
-        </g>
-
-        <g className="streak-flame-body">
-          <path
-            d="M60 15C60 15 74.5 29 75.5 42C76 46 74.2 49.5 71.5 52C81.5 44.5 93 53.5 93 69.5C93 89.2 78.4 102 60 102C41.6 102 27 89.2 27 69.5C27 53.5 38.5 44.5 48.5 52C45.8 49.5 44 46 44.5 42C45.5 29 60 15 60 15Z"
-            fill={`url(#${outerId})`}
-            stroke="#c93900"
-            strokeWidth="2.5"
-            strokeLinejoin="round"
-          />
-
-          <path
-            className="streak-flame-core"
-            d="M60 40C60 40 70 49.5 70.6 58.2C71 60.8 69.6 63 67.6 64.8C74.2 59.8 82 65.5 82 76.2C82 88.8 72.2 96.5 60 96.5C47.8 96.5 38 88.8 38 76.2C38 65.5 45.8 59.8 52.4 64.8C50.4 63 49 60.8 49.4 58.2C50 49.5 60 40 60 40Z"
-            fill={`url(#${innerId})`}
-          />
-
-          {/* Tiny golden crown for 1k+ streak club */}
-          <path
-            d="M49 28L53 19L60 24L67 19L71 28Z"
-            fill="#ffd43b"
-            stroke="#b45309"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-
-          {/* Expressive Duolingo-style mascot face */}
-          <g className="streak-mascot-face">
-            <g className="streak-eye-blink">
-              <circle cx="51.5" cy="69" r="3.4" fill="#3a1900" />
-              <circle cx="68.5" cy="69" r="3.4" fill="#3a1900" />
-              <circle cx="50.4" cy="67.7" r="1.2" fill="#ffffff" />
-              <circle cx="67.4" cy="67.7" r="1.2" fill="#ffffff" />
-            </g>
-            <ellipse cx="44.5" cy="74.5" rx="3.3" ry="1.9" fill="#ff5a1f" fillOpacity="0.45" />
-            <ellipse cx="75.5" cy="74.5" rx="3.3" ry="1.9" fill="#ff5a1f" fillOpacity="0.45" />
-            <path
-              d="M54.5 75.5C56.2 78.6 63.8 78.6 65.5 75.5"
-              stroke="#3a1900"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          </g>
-        </g>
-
+        {/* Rounder Plump Outer Flame */}
         <path
-          className="streak-ambient-spark"
-          d="M25 36L27 40L31 42L27 44L25 48L23 44L19 42L23 40Z"
-          fill="#ffd43b"
+          className="flame-outer"
+          d="M22 2.5C22 2.5 28.5 10 29 15.8C29.4 17.4 28.6 18.8 27.2 20C32 16.5 38 20.5 38 28.5C38 38.8 30.8 46 22 46C13.2 46 6 38.8 6 28.5C6 20.5 12 16.5 16.8 20C15.4 18.8 14.6 17.4 15 15.8C15.5 10 22 2.5 22 2.5Z"
+          fill="url(#fireOuterGrad)"
         />
-        <circle className="streak-ambient-spark streak-ambient-spark-2" cx="95" cy="41" r="3.2" fill="#ff9600" />
-        <circle className="streak-ambient-spark streak-ambient-spark-3" cx="91" cy="87" r="2.6" fill="#ffd43b" />
+
+        {/* Inner Flame Core */}
+        <path
+          className="flame-inner"
+          d="M22 13.5C22 13.5 26.5 18.5 26.8 22.5C27.1 23.6 26.3 24.6 25.4 25.4C28.8 23 33 25.5 33 31C33 38.5 28 43 22 43C16 43 11 38.5 11 31C11 25.5 15.2 23 18.6 25.4C17.7 24.6 16.9 23.6 17.2 22.5C17.5 18.5 22 13.5 22 13.5Z"
+          fill="url(#fireInnerGrad)"
+        />
       </svg>
-    </div>
+    </span>
   )
 }
 
-export function LanguagesCard({ standalone = false }: { standalone?: boolean }) {
-  const [celebrating, setCelebrating] = useState(false)
-  const [burstKey, setBurstKey] = useState(0)
-  const timerRef = useRef<number | null>(null)
+interface FireParticle {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  radius: number
+  rotation: number
+  vRot: number
+  life: number
+  maxLife: number
+  decay: number
+  shape: 'ember' | 'spark' | 'flame'
+}
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current)
+export function LanguagesCard({ standalone = false }: { standalone?: boolean }) {
+  const cardRef = useRef<HTMLElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fireRef = useRef<HTMLSpanElement>(null)
+  const particlesRef = useRef<FireParticle[]>([])
+  const animIdRef = useRef<number | null>(null)
+  const lastBurstTimeRef = useRef(0)
+
+  const triggerExplosion = useCallback(() => {
+    const card = cardRef.current
+    const canvas = canvasRef.current
+    const fire = fireRef.current
+    if (!card || !canvas || !fire) return
+
+    const now = performance.now()
+    if (now - lastBurstTimeRef.current < 160) return
+    lastBurstTimeRef.current = now
+
+    const cardRect = card.getBoundingClientRect()
+    const fireRect = fire.getBoundingClientRect()
+
+    const dpr = window.devicePixelRatio || 1
+    const width = cardRect.width
+    const height = cardRect.height
+
+    if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+      canvas.width = Math.round(width * dpr)
+      canvas.height = Math.round(height * dpr)
+    }
+
+    const originX = fireRect.left + fireRect.width / 2 - cardRect.left
+    const originY = fireRect.top + fireRect.height / 2 - cardRect.top
+
+    // Generate burst of fire particles
+    const particleCount = 34
+    const newParticles: FireParticle[] = []
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.95)
+      const speed = Math.random() * 5.4 + 2.2
+      const maxLife = Math.random() * 45 + 50
+      const shapes: ('ember' | 'spark' | 'flame')[] = ['flame', 'flame', 'ember', 'ember', 'spark']
+      const shape = shapes[Math.floor(Math.random() * shapes.length)]
+
+      newParticles.push({
+        x: originX + (Math.random() - 0.5) * 12,
+        y: originY + (Math.random() - 0.5) * 8,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: shape === 'spark' ? Math.random() * 2 + 1.2 : Math.random() * 2.8 + 1.6,
+        rotation: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.25,
+        life: maxLife,
+        maxLife,
+        decay: 1,
+        shape,
+      })
+    }
+
+    particlesRef.current.push(...newParticles)
+
+    if (!animIdRef.current) {
+      const tick = () => {
+        const cvs = canvasRef.current
+        const crd = cardRef.current
+        if (!cvs || !crd) {
+          animIdRef.current = null
+          return
+        }
+
+        const ctx = cvs.getContext('2d')
+        if (!ctx) {
+          animIdRef.current = null
+          return
+        }
+
+        const cardH = crd.clientHeight
+        const groundY = cardH - 6
+
+        ctx.clearRect(0, 0, cvs.width, cvs.height)
+        ctx.save()
+        ctx.scale(dpr, dpr)
+
+        const particles = particlesRef.current
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i]
+
+          // Physics update
+          p.vy += 0.28 // gravity
+          p.vx *= 0.985 // drag
+          p.x += p.vx
+          p.y += p.vy
+          p.rotation += p.vRot
+
+          // Floor bounce
+          if (p.y >= groundY) {
+            p.y = groundY
+            p.vy = -p.vy * (0.34 + Math.random() * 0.08)
+            p.vx *= 0.62
+            if (Math.abs(p.vy) < 0.45) {
+              p.vy = 0
+            }
+          }
+
+          p.life -= p.decay
+
+          if (p.life <= 0) {
+            particles.splice(i, 1)
+            continue
+          }
+
+          // Render particle
+          const progress = p.life / p.maxLife
+          const alpha = Math.min(1, progress * 1.3)
+          const r = p.radius * (0.45 + progress * 0.55)
+
+          let fillColor = `rgba(255, 100, 10, ${alpha})`
+          if (progress > 0.65) {
+            fillColor = `rgba(255, 225, 75, ${alpha})`
+          } else if (progress > 0.3) {
+            fillColor = `rgba(255, 88, 12, ${alpha})`
+          } else {
+            fillColor = `rgba(185, 30, 8, ${alpha})`
+          }
+
+          ctx.save()
+          ctx.translate(p.x, p.y)
+          ctx.rotate(p.rotation)
+          ctx.fillStyle = fillColor
+          ctx.shadowColor = `rgba(255, 80, 0, ${alpha * 0.55})`
+          ctx.shadowBlur = 4
+
+          if (p.shape === 'flame') {
+            ctx.beginPath()
+            ctx.moveTo(0, -r * 1.5)
+            ctx.bezierCurveTo(r * 1.2, -r * 0.4, r, r, 0, r)
+            ctx.bezierCurveTo(-r, r, -r * 1.2, -r * 0.4, 0, -r * 1.5)
+            ctx.fill()
+          } else if (p.shape === 'spark') {
+            ctx.beginPath()
+            ctx.moveTo(0, -r * 1.6)
+            ctx.lineTo(r * 0.4, 0)
+            ctx.lineTo(0, r * 1.6)
+            ctx.lineTo(-r * 0.4, 0)
+            ctx.closePath()
+            ctx.fill()
+          } else {
+            ctx.beginPath()
+            ctx.arc(0, 0, r, 0, Math.PI * 2)
+            ctx.fill()
+          }
+
+          ctx.restore()
+        }
+
+        ctx.restore()
+
+        if (particles.length > 0) {
+          animIdRef.current = requestAnimationFrame(tick)
+        } else {
+          animIdRef.current = null
+        }
       }
+
+      animIdRef.current = requestAnimationFrame(tick)
     }
   }, [])
 
-  const triggerCelebration = () => {
-    setBurstKey((k) => k + 1)
-    setCelebrating(true)
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current)
+  useEffect(() => {
+    return () => {
+      if (animIdRef.current) {
+        cancelAnimationFrame(animIdRef.current)
+      }
     }
-    timerRef.current = window.setTimeout(() => {
-      setCelebrating(false)
-    }, 820)
-  }
+  }, [])
 
   return (
     <BentoCardWrapper
       className="bento-card-languages"
       standalone={standalone}
-      onMouseEnter={triggerCelebration}
+      cardRef={cardRef}
+      onMouseEnter={triggerExplosion}
     >
+      <canvas ref={canvasRef} className="bento-particles-canvas" aria-hidden="true" />
       <div className="bento-languages-content">
-        <div className="about-lang-header">
-          <span className="about-eyebrow">Languages</span>
-          <h3 className="bento-card-title">I speak</h3>
-          <div className="about-lang-pills">
-            <span className="about-lang-pill">English</span>
-            <span className="about-lang-pill">Chinese</span>
-            <span className="about-lang-pill about-lang-pill-learning">Spanish · learning</span>
+        <h3 className="bento-card-title">I speak:</h3>
+        <p className="bento-lang-primary">Chinese and English</p>
+        <div className="bento-streak-box">
+          <p className="bento-lang-secondary">Currently learning Spanish via Duolingo</p>
+          <div className="bento-streak-row" aria-label="I have a 1k plus Duolingo streak">
+            <span>I have a</span>
+            {' '}
+            <span
+              ref={fireRef}
+              className="bento-streak-badge-group"
+              onMouseEnter={triggerExplosion}
+              onClick={triggerExplosion}
+            >
+              <span className="bento-streak-count">1k+</span>
+              <FlameStreakIcon />
+            </span>
+            {' '}
+            <span>streak</span>
           </div>
         </div>
-
-        <button
-          type="button"
-          className={`about-streak-stage ${celebrating ? 'is-celebrating' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            triggerCelebration()
-          }}
-          aria-label="1,000 plus day Duolingo Spanish streak. Click to replay celebration."
-        >
-          <StreakMascotArt burstKey={burstKey} />
-          <div className="about-streak-copy">
-            <span className="about-streak-eyebrow">Duolingo · Streak Society</span>
-            <div className="about-streak-figure">
-              <span className="about-streak-number">1,000+</span>
-              <span className="about-streak-unit">days</span>
-            </div>
-            <p className="about-streak-sub">Spanish daily practice</p>
-            <div className="about-streak-week" aria-hidden="true">
-              {STREAK_DAYS.map((day, index) => (
-                <span
-                  key={index}
-                  className="about-streak-day"
-                  style={{ ['--day-i' as string]: index }}
-                >
-                  {day}
-                </span>
-              ))}
-            </div>
-          </div>
-        </button>
       </div>
     </BentoCardWrapper>
   )
