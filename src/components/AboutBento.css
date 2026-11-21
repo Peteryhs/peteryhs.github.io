@@ -522,13 +522,7 @@ html.dark .about-portrait,
 .streak-overlay-wash {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at 50% 50%,
-    #ff9f1a 0%,
-    #ff8400 45%,
-    #f56400 84%,
-    #e04f00 100%
-  );
+  background: #e87500;
   opacity: 0;
   clip-path: circle(0px at 50% 50%);
   pointer-events: none;

@@ -25,82 +25,74 @@ function buildMorphingFlamePaths(
   intensity: number,
   leanX = 0
 ): { outer: string; mid: string; inner: string; glowCx: number; glowCy: number; glowRx: number; glowRy: number } {
-  const f = Math.max(0, Math.min(1.4, intensity))
+  const f = Math.max(0, Math.min(1.2, intensity))
 
-  // Independent multi-harmonic waves per layer so the 3 SVG shapes visibly ripple against each other
-  const w1 = Math.sin(timeSec * 8.4)
-  const w2 = Math.sin(timeSec * 13.2 + 0.9)
-  const w3 = Math.cos(timeSec * 6.3 + 0.4)
+  // Controlled, crisp upper-tip waves with an anchored base (stable, lively, non-jello)
+  const w1 = Math.sin(timeSec * 6.8)
+  const w2 = Math.sin(timeSec * 10.4 + 0.8)
 
-  const m1 = Math.sin(timeSec * 10.6 + 1.15)
-  const m2 = Math.sin(timeSec * 15.8 + 2.1)
+  const m1 = Math.sin(timeSec * 8.2 + 1.05)
+  const m2 = Math.sin(timeSec * 12.1 + 1.9)
 
-  const c1 = Math.sin(timeSec * 12.8 + 2.05)
-  const c2 = Math.cos(timeSec * 17.4 + 0.7)
+  const c1 = Math.sin(timeSec * 9.6 + 1.85)
+  const c2 = Math.cos(timeSec * 13.4 + 0.6)
 
-  // --- Layer 1: Outer flame silhouette ---
-  const oTipX = 41.2 + (w1 * 5.8 + w2 * 2.6) * f + leanX * 9.5
-  const oTipY = 4.8 - (Math.abs(w1) * 4.4 + w3 * 2.2) * f
-  const oNotchX = 30.8 + (w2 * 3.4 - w1 * 1.8) * f + leanX * 4.5
-  const oNotchY = 27.6 + (w3 * 3.2 - w1 * 1.6) * f
-  const oLeftLickX = 26.8 + (w1 * 3.2 - w2 * 2.4) * f + leanX * 6.0
-  const oLeftLickY = 14.8 - (Math.sin(timeSec * 9.8 + 1.4) * 4.6 + 1.4) * f
-  const oLeftBellyX = 9.2 - (w3 * 2.6 + 1.2) * f
-  const oRightBellyX = 67.2 + (w1 * 2.8 + 1.4) * f
-  const oBellyY = 48.2 + w2 * 2.4 * f
+  // --- Layer 1: Outer flame silhouette (base & belly anchored, tips lick crisply) ---
+  const oTipX = 41.2 + (w1 * 2.5 + w2 * 0.9) * f + leanX * 4.5
+  const oTipY = 4.8 - (Math.abs(w1) * 2.4 + 0.6) * f
+  const oNotchX = 30.8 + (w2 * 1.2) * f + leanX * 1.8
+  const oNotchY = 27.6 + (w1 * 1.1) * f
+  const oLeftLickX = 26.8 + (w1 * 1.4 - w2 * 0.8) * f + leanX * 2.4
+  const oLeftLickY = 14.8 - (Math.sin(timeSec * 7.8 + 1.2) * 2.2 + 0.6) * f
 
   const outer = [
     `M${oTipX.toFixed(2)} ${oTipY.toFixed(2)}`,
-    `C${(42.9 + w1 * 4.2 * f + leanX * 5).toFixed(2)} ${(14.9 + w2 * 2.5 * f).toFixed(2)} ${(35.8 + w2 * 3.1 * f).toFixed(2)} ${(22.1 + w1 * 2.2 * f).toFixed(2)} ${oNotchX.toFixed(2)} ${oNotchY.toFixed(2)}`,
-    `C${(27.2 + w1 * 2.2 * f).toFixed(2)} ${(24.4 + w3 * 2.1 * f).toFixed(2)} ${(25.7 + w2 * 2.6 * f).toFixed(2)} ${(19.6 - w1 * 2.0 * f).toFixed(2)} ${oLeftLickX.toFixed(2)} ${oLeftLickY.toFixed(2)}`,
-    `C${(16.2 - w3 * 2.4 * f).toFixed(2)} ${(21.8 + w1 * 2.5 * f).toFixed(2)} ${oLeftBellyX.toFixed(2)} ${(33.8 + w2 * 2.0 * f).toFixed(2)} ${oLeftBellyX.toFixed(2)} ${oBellyY.toFixed(2)}`,
-    `C${oLeftBellyX.toFixed(2)} ${(66.8 + w3 * 1.2 * f).toFixed(2)} 22.5 81.2 38.4 81.2`,
-    `C54.8 81.2 ${oRightBellyX.toFixed(2)} ${(67.4 - w3 * 1.2 * f).toFixed(2)} ${oRightBellyX.toFixed(2)} ${(49.4 - w2 * 2.4 * f).toFixed(2)}`,
-    `C${oRightBellyX.toFixed(2)} ${(34.4 + w1 * 2.8 * f).toFixed(2)} ${(58.6 + w2 * 4.0 * f + leanX * 5).toFixed(2)} ${(19.8 - w3 * 2.8 * f).toFixed(2)} ${oTipX.toFixed(2)} ${oTipY.toFixed(2)}Z`,
+    `C${(42.9 + w1 * 1.6 * f + leanX * 2.2).toFixed(2)} ${(14.9 + w2 * 0.9 * f).toFixed(2)} ${(35.8 + w2 * 1.1 * f).toFixed(2)} ${(22.1 + w1 * 0.8 * f).toFixed(2)} ${oNotchX.toFixed(2)} ${oNotchY.toFixed(2)}`,
+    `C${(27.2 + w1 * 0.8 * f).toFixed(2)} ${(24.4 + w2 * 0.8 * f).toFixed(2)} ${(25.7 + w2 * 1.0 * f).toFixed(2)} ${(19.6 - w1 * 0.8 * f).toFixed(2)} ${oLeftLickX.toFixed(2)} ${oLeftLickY.toFixed(2)}`,
+    `C${(16.2 - w2 * 0.7 * f).toFixed(2)} ${(21.8 + w1 * 0.8 * f).toFixed(2)} 9.2 33.8 9.2 48.2`,
+    `C9.2 66.8 22.5 81.2 38.4 81.2`,
+    `C54.8 81.2 67.2 67.4 67.2 49.4`,
+    `C67.2 34.4 ${(58.6 + w2 * 1.5 * f + leanX * 2.2).toFixed(2)} ${(19.8 - w1 * 1.0 * f).toFixed(2)} ${oTipX.toFixed(2)} ${oTipY.toFixed(2)}Z`,
   ].join(' ')
 
-  // --- Layer 2: Mid amber tongue (phase-offset so it visibly ripples inside the outer layer) ---
-  const mTipX = 39.8 + (m1 * 5.2 + m2 * 2.2) * f + leanX * 7.2
-  const mTipY = 23.4 - (Math.abs(m1) * 5.2 + m2 * 2.0) * f
-  const mNotchX = 31.8 + (m2 * 2.8 - m1 * 1.6) * f + leanX * 3.2
-  const mNotchY = 40.6 + (m1 * 2.6) * f
-  const mLeftLickX = 29.3 + (m1 * 2.8 - m2 * 1.9) * f + leanX * 4.4
-  const mLeftLickY = 31.4 - (Math.cos(timeSec * 11.4 + 0.6) * 3.8 + 1.0) * f
-  const mLeftX = 18.2 - (m2 * 2.2 + 0.9) * f
-  const mRightX = 58.4 + (m1 * 2.4 + 1.0) * f
+  // --- Layer 2: Mid amber tongue (anchored base, phase-offset upper tip) ---
+  const mTipX = 39.8 + (m1 * 2.3 + m2 * 0.8) * f + leanX * 3.4
+  const mTipY = 23.4 - (Math.abs(m1) * 2.8 + 0.5) * f
+  const mNotchX = 31.8 + (m2 * 1.0) * f + leanX * 1.4
+  const mNotchY = 40.6 + (m1 * 1.0) * f
+  const mLeftLickX = 29.3 + (m1 * 1.2 - m2 * 0.7) * f + leanX * 1.8
+  const mLeftLickY = 31.4 - (Math.cos(timeSec * 8.6 + 0.6) * 1.8 + 0.4) * f
 
   const mid = [
     `M${mTipX.toFixed(2)} ${mTipY.toFixed(2)}`,
-    `C${(41.2 + m1 * 3.6 * f + leanX * 3.8).toFixed(2)} ${(31.4 + m2 * 2.2 * f).toFixed(2)} ${(35.2 + m2 * 2.4 * f).toFixed(2)} ${(36.8 + m1 * 2.0 * f).toFixed(2)} ${mNotchX.toFixed(2)} ${mNotchY.toFixed(2)}`,
-    `C${(29.4 + m1 * 1.8 * f).toFixed(2)} ${(38.2 + m2 * 1.8 * f).toFixed(2)} ${(28.5 + m2 * 2.0 * f).toFixed(2)} ${(34.8 - m1 * 1.8 * f).toFixed(2)} ${mLeftLickX.toFixed(2)} ${mLeftLickY.toFixed(2)}`,
-    `C${(22.4 - m1 * 2.0 * f).toFixed(2)} ${(36.8 + m2 * 1.8 * f).toFixed(2)} ${mLeftX.toFixed(2)} 45.2 ${mLeftX.toFixed(2)} 54.6`,
-    `C${mLeftX.toFixed(2)} 66.8 27.2 76.4 38.4 76.4`,
-    `C49.8 76.4 ${mRightX.toFixed(2)} 67.1 ${mRightX.toFixed(2)} 55.2`,
-    `C${mRightX.toFixed(2)} ${(44.6 + m1 * 2.2 * f).toFixed(2)} ${(52.1 + m2 * 3.2 * f + leanX * 3.5).toFixed(2)} ${(34.2 - m1 * 2.2 * f).toFixed(2)} ${mTipX.toFixed(2)} ${mTipY.toFixed(2)}Z`,
+    `C${(41.2 + m1 * 1.4 * f + leanX * 1.8).toFixed(2)} ${(31.4 + m2 * 0.8 * f).toFixed(2)} ${(35.2 + m2 * 0.9 * f).toFixed(2)} ${(36.8 + m1 * 0.8 * f).toFixed(2)} ${mNotchX.toFixed(2)} ${mNotchY.toFixed(2)}`,
+    `C${(29.4 + m1 * 0.7 * f).toFixed(2)} ${(38.2 + m2 * 0.7 * f).toFixed(2)} ${(28.5 + m2 * 0.8 * f).toFixed(2)} ${(34.8 - m1 * 0.7 * f).toFixed(2)} ${mLeftLickX.toFixed(2)} ${mLeftLickY.toFixed(2)}`,
+    `C${(22.4 - m1 * 0.6 * f).toFixed(2)} 36.8 18.2 45.2 18.2 54.6`,
+    `C18.2 66.8 27.2 76.4 38.4 76.4`,
+    `C49.8 76.4 58.4 67.1 58.4 55.2`,
+    `C58.4 44.6 ${(52.1 + m2 * 1.2 * f + leanX * 1.6).toFixed(2)} ${(34.2 - m1 * 0.9 * f).toFixed(2)} ${mTipX.toFixed(2)} ${mTipY.toFixed(2)}Z`,
   ].join(' ')
 
-  // --- Layer 3: Bright inner yellow-white core (fastest, punchiest core flutter) ---
-  const cTipX = 39.0 + (c1 * 4.4 + c2 * 1.8) * f + leanX * 4.5
-  const cTipY = 44.2 - (Math.abs(c1) * 4.8 + c2 * 2.2) * f
-  const cLeftX = 27.8 - (c2 * 2.0 + 0.8) * f
-  const cRightX = 49.1 + (c1 * 2.0 + 0.8) * f
+  // --- Layer 3: Bright inner yellow-white core (anchored base, crisp upward pulse) ---
+  const cTipX = 39.0 + (c1 * 1.9 + c2 * 0.6) * f + leanX * 2.0
+  const cTipY = 44.2 - (Math.abs(c1) * 2.6 + 0.5) * f
 
   const inner = [
     `M${cTipX.toFixed(2)} ${cTipY.toFixed(2)}`,
-    `C${(32.4 + c1 * 2.2 * f).toFixed(2)} ${(49.8 + c2 * 1.8 * f).toFixed(2)} ${cLeftX.toFixed(2)} 56.4 ${cLeftX.toFixed(2)} 63.4`,
-    `C${cLeftX.toFixed(2)} 70.1 32.5 75.4 38.4 75.4`,
-    `C44.4 75.4 ${cRightX.toFixed(2)} 70.1 ${cRightX.toFixed(2)} 63.6`,
-    `C${cRightX.toFixed(2)} ${(56.8 - c2 * 1.6 * f).toFixed(2)} ${(45.2 + c1 * 2.4 * f).toFixed(2)} ${(50.2 - c1 * 1.8 * f).toFixed(2)} ${cTipX.toFixed(2)} ${cTipY.toFixed(2)}Z`,
+    `C${(32.4 + c1 * 0.8 * f).toFixed(2)} ${(49.8 + c2 * 0.7 * f).toFixed(2)} 27.8 56.4 27.8 63.4`,
+    `C27.8 70.1 32.5 75.4 38.4 75.4`,
+    `C44.4 75.4 49.1 70.1 49.1 63.6`,
+    `C49.1 56.8 ${(45.2 + c1 * 0.9 * f).toFixed(2)} ${(50.2 - c1 * 0.7 * f).toFixed(2)} ${cTipX.toFixed(2)} ${cTipY.toFixed(2)}Z`,
   ].join(' ')
 
   return {
     outer,
     mid,
     inner,
-    glowCx: 38.4 + c1 * 1.2 * f,
-    glowCy: 67.5 - Math.abs(c2) * 1.4 * f,
-    glowRx: 6.2 + Math.abs(c1) * 1.6 * f,
-    glowRy: 4.8 + Math.abs(c2) * 1.4 * f,
+    glowCx: 38.4 + c1 * 0.5 * f,
+    glowCy: 67.5 - Math.abs(c2) * 0.7 * f,
+    glowRx: 6.2 + Math.abs(c1) * 0.8 * f,
+    glowRy: 4.8 + Math.abs(c2) * 0.7 * f,
   }
 }
 
@@ -192,7 +184,7 @@ interface StreakFireOverlayProps {
 }
 
 // Total choreographed sequence duration in seconds
-const TOTAL_DURATION_S = 2.25
+const TOTAL_DURATION_S = 2.1
 
 export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps) {
   const [dismissing, setDismissing] = useState(false)
@@ -260,12 +252,14 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
 
     const heroSize = Math.round(Math.max(96, Math.min(Math.min(cardW, cardH) * 0.56, 134)))
     const startScale = origin.width / heroSize
-    const maxWashRadius = Math.ceil(Math.hypot(cardW / 2, cardH / 2) + 18)
+    const maxWashRadius = Math.ceil(
+      Math.hypot(Math.max(origin.x, cardW - origin.x), Math.max(origin.y, cardH - origin.y)) + 18
+    )
 
     const particles: BouncingSparkle[] = []
     let burst1Fired = false
     let burst2Fired = false
-    let lastEmitT = 0.56
+    let lastEmitT = 0.42
 
     const spawnOffFlame = (count: number, speedMul = 1) => {
       const kinds: BouncingSparkle['kind'][] = ['star', 'star', 'droplet', 'dot']
@@ -306,76 +300,52 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
       const elapsed = (now - startTime) / 1000
       const p = Math.min(1, elapsed / TOTAL_DURATION_S)
 
-      // --- 1. Flame position, scale, squash-and-stretch, and motion lean ---
+      // --- 1. Flame position, crisp bouncy scale, and stable center hold ---
       let fx = origin.x
       let fy = origin.y
       let scaleX = startScale
       let scaleY = startScale
       let leanX = 0
-      let morphIntensity = 0.25
+      let morphIntensity = 0.2
 
-      if (elapsed < 0.09) {
-        // Anticipation squash at the slot before springing up
-        const u = elapsed / 0.09
-        const sq = Math.sin(u * Math.PI)
-        scaleX = startScale * (1 + 0.16 * sq)
-        scaleY = startScale * (1 - 0.14 * sq)
-        morphIntensity = 0.25 + 0.35 * u
-      } else if (elapsed < 0.44) {
-        // Spring & grow smoothly from the slot to center of the card
-        const u = (elapsed - 0.09) / 0.35
-        const ePos = easeOutBack(u)
-        const eScale = easeOutCubic(u)
+      if (elapsed < 0.44) {
+        // Spring & pop smoothly from slot to center right from frame 1
+        const u = elapsed / 0.44
+        const ePos = easeOutCubic(u)
+        const eScale = easeOutBack(u)
         fx = lerp(origin.x, centerX, ePos)
-        // Slight graceful upward arc toward center
-        fy = lerp(origin.y, centerY, ePos) - Math.sin(u * Math.PI) * 14
+        fy = lerp(origin.y, centerY - 2, ePos) - Math.sin(u * Math.PI) * 10
         const baseScale = lerp(startScale, 1.0, eScale)
-        const stretch = Math.sin(u * Math.PI) * 0.16
-        scaleX = baseScale * (1 - stretch * 0.55)
-        scaleY = baseScale * (1 + stretch)
-        // Flame tip trails behind horizontal travel direction
+        // Subtle crisp bounce stretch on arrival
+        const bounce = Math.sin(u * Math.PI) * 0.08
+        scaleX = baseScale * (1 - bounce * 0.45)
+        scaleY = baseScale * (1 + bounce)
         const dir = Math.sign(centerX - origin.x) || 1
-        leanX = -dir * Math.sin(u * Math.PI) * 0.9
-        morphIntensity = lerp(0.5, 0.9, u)
-      } else if (elapsed < 0.62) {
-        // Ignition surge: brief crouch then big energetic flare!
-        const u = (elapsed - 0.44) / 0.18
+        leanX = -dir * Math.sin(u * Math.PI) * 0.5
+        morphIntensity = lerp(0.25, 0.9, ePos)
+      } else if (elapsed < 1.48) {
+        // Stable, crisp center stance with a gentle elastic vertical breath (no sideways shaking!)
+        const u = (elapsed - 0.44) / 1.04
         fx = centerX
-        if (u < 0.42) {
-          const c = u / 0.42
-          fy = centerY + c * 6
-          scaleX = 1.0 + 0.12 * c
-          scaleY = 1.0 - 0.11 * c
-          morphIntensity = lerp(0.9, 1.1, c)
-        } else {
-          const s = easeOutBack((u - 0.42) / 0.58)
-          fy = lerp(centerY + 6, centerY - 5, s)
-          scaleX = lerp(1.12, 1.06, s)
-          scaleY = lerp(0.89, 1.12, s)
-          morphIntensity = 1.25
-        }
-      } else if (elapsed < 1.56) {
-        // Roaring morphing dance at center while the card glows orange
-        const u = (elapsed - 0.62) / 0.94
-        fx = centerX + Math.sin(elapsed * 7.2) * 2.2
-        fy = centerY - 4 + Math.cos(elapsed * 6.4) * 3.0
-        const pulse = Math.sin(elapsed * 9.5) * 0.045
-        scaleX = 1.04 - pulse * 0.6
-        scaleY = 1.06 + pulse
-        morphIntensity = lerp(1.25, 0.95, u)
+        // Crisp single bounce-pop right after landing, then steady gentle buoyancy
+        const settlePop = u < 0.24 ? Math.sin((u / 0.24) * Math.PI) * 0.075 : 0
+        const breath = Math.sin(u * Math.PI * 2) * 0.025
+        fy = centerY - 2 - settlePop * 18 - breath * 14
+        scaleX = 1.0 - (settlePop + breath) * 0.35
+        scaleY = 1.0 + settlePop + breath
+        morphIntensity = lerp(0.95, 0.8, u)
       } else {
         // Smooth geometric return from center back into the resting flame slot
-        const u = Math.min(1, (elapsed - 1.56) / (TOTAL_DURATION_S - 1.56))
+        const u = Math.min(1, (elapsed - 1.48) / (TOTAL_DURATION_S - 1.48))
         const e = easeInOutCubic(u)
         fx = lerp(centerX, origin.x, e)
-        fy = lerp(centerY - 4, origin.y, e) - Math.sin(u * Math.PI) * 8
-        const baseScale = lerp(1.04, startScale, e)
-        const stretch = Math.sin(u * Math.PI) * 0.1
-        scaleX = baseScale * (1 - stretch * 0.4)
-        scaleY = baseScale * (1 + stretch)
+        fy = lerp(centerY - 2, origin.y, e) - Math.sin(u * Math.PI) * 6
+        const baseScale = lerp(1.0, startScale, e)
+        scaleX = baseScale
+        scaleY = baseScale
         const dir = Math.sign(origin.x - centerX) || -1
-        leanX = -dir * Math.sin(u * Math.PI) * 0.65
-        morphIntensity = lerp(0.9, 0.0, e)
+        leanX = -dir * Math.sin(u * Math.PI) * 0.35
+        morphIntensity = lerp(0.8, 0.0, e)
       }
 
       if (heroRef.current) {
@@ -394,20 +364,20 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         coreEllipseRef.current.setAttribute('ry', paths.glowRy.toFixed(2))
       }
 
-      // --- 3. Orange card flood driven directly by the flame's ignition surge ---
+      // --- 3. Solid orange background blooms IN SYNC with the flame from frame 1 and contracts back together ---
       let washRadius = 0
-      let washOpacity = 0
-      if (elapsed >= 0.48 && elapsed < 0.86) {
-        const u = easeOutCubic((elapsed - 0.48) / 0.38)
+      let washOpacity = 1
+      if (elapsed < 0.44) {
+        const u = easeOutCubic(elapsed / 0.44)
         washRadius = maxWashRadius * u
-        washOpacity = Math.min(1, u * 1.35)
-      } else if (elapsed >= 0.86 && elapsed < 1.56) {
+        washOpacity = Math.min(1, 0.25 + u * 0.75)
+      } else if (elapsed < 1.48) {
         washRadius = maxWashRadius
         washOpacity = 1
-      } else if (elapsed >= 1.56) {
-        const u = easeInOutCubic((elapsed - 1.56) / (TOTAL_DURATION_S - 1.56))
+      } else {
+        const u = easeInOutCubic((elapsed - 1.48) / (TOTAL_DURATION_S - 1.48))
         washRadius = maxWashRadius * (1 - u)
-        washOpacity = Math.max(0, 1 - u * 0.95)
+        washOpacity = Math.max(0, 1 - u * 0.92)
       }
 
       if (washRef.current) {
@@ -416,17 +386,17 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
       }
 
       // --- 4. Sparkles & droplets popping and bouncing physically off the fire ---
-      if (!burst1Fired && elapsed >= 0.54) {
+      if (!burst1Fired && elapsed >= 0.34) {
         burst1Fired = true
-        spawnOffFlame(18, 1.15)
+        spawnOffFlame(16, 1.1)
       }
-      if (!burst2Fired && elapsed >= 0.84) {
+      if (!burst2Fired && elapsed >= 0.68) {
         burst2Fired = true
-        spawnOffFlame(12, 0.95)
+        spawnOffFlame(10, 0.92)
       }
-      if (elapsed > 0.6 && elapsed < 1.48 && elapsed - lastEmitT >= 0.14) {
+      if (elapsed > 0.42 && elapsed < 1.38 && elapsed - lastEmitT >= 0.16) {
         lastEmitT = elapsed
-        spawnOffFlame(3, 0.82)
+        spawnOffFlame(3, 0.8)
       }
 
       if (ctx && canvas) {
@@ -550,7 +520,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          <path ref={outerPathRef} d={RESTING_PATHS.outer} fill="#FF9600" stroke="#FFF4C2" strokeOpacity="0.42" strokeWidth="1.2" />
+          <path ref={outerPathRef} d={RESTING_PATHS.outer} fill="#FF9600" />
           <path ref={midPathRef} d={RESTING_PATHS.mid} fill="#FFC800" />
           <path ref={innerPathRef} d={RESTING_PATHS.inner} fill="#FFF1B8" />
           <ellipse ref={coreEllipseRef} cx="38.4" cy="67.5" rx="6.2" ry="4.8" fill="#FFFDF2" opacity="0.78" />
