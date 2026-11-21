@@ -5,8 +5,8 @@ import {
   type AmbientFlight,
 } from './flappyBirdEngine'
 
-export const TAPESTRY_CELL = 8
-export const MORPH_DURATION_MS = 580
+export const TAPESTRY_CELL = 20
+export const MORPH_DURATION_MS = 560
 
 export type StageMode = 'tapestry' | 'morphing' | 'playing' | 'crashed'
 export type WeatherMood = 'clear' | 'rain' | 'fog' | 'wind' | 'snow' | 'dusk'
@@ -84,96 +84,97 @@ const BAYER4 = [
   [15, 7, 13, 5],
 ] as const
 
+// Vibrant, joyful weather palettes (no muddy browns) tuned for light paper & dark obsidian
 const WEATHER_PROFILES: Record<WeatherMood, WeatherProfile> = {
   clear: {
-    vx: 0.24,
-    vy: -0.1,
-    sx: 0.082,
-    sy: 0.082,
-    shear: 0.12,
-    threshold: 0.55,
-    rigidity: 0.52,
-    coreLight: [142, 158, 204],
-    rimLight: [208, 172, 124],
-    accentLight: [96, 120, 186],
-    coreDark: [128, 150, 224],
-    rimDark: [212, 162, 94],
-    accentDark: [152, 174, 240],
+    vx: 0.16,
+    vy: -0.07,
+    sx: 0.17,
+    sy: 0.17,
+    shear: 0.14,
+    threshold: 0.56,
+    rigidity: 0.54,
+    coreLight: [78, 134, 246],    // vibrant sky cobalt
+    rimLight: [64, 198, 188],     // luminous aqua-mint
+    accentLight: [246, 168, 62],  // sunlit coral-gold
+    coreDark: [96, 152, 255],
+    rimDark: [72, 212, 200],
+    accentDark: [252, 182, 82],
   },
   rain: {
-    vx: -0.48,
-    vy: 1.35,
-    sx: 0.135,
-    sy: 0.045,
-    shear: 0.48,
-    threshold: 0.52,
+    vx: -0.32,
+    vy: 0.85,
+    sx: 0.25,
+    sy: 0.1,
+    shear: 0.45,
+    threshold: 0.54,
     rigidity: 0.64,
-    coreLight: [108, 134, 186],
-    rimLight: [154, 174, 190],
-    accentLight: [82, 108, 172],
-    coreDark: [104, 140, 212],
-    rimDark: [124, 166, 186],
-    accentDark: [138, 172, 236],
+    coreLight: [62, 124, 240],    // vivid sapphire
+    rimLight: [52, 194, 208],     // electric cyan-teal
+    accentLight: [122, 116, 242], // crisp indigo
+    coreDark: [84, 146, 255],
+    rimDark: [66, 210, 224],
+    accentDark: [148, 140, 255],
   },
   fog: {
-    vx: 0.14,
-    vy: 0.04,
-    sx: 0.06,
-    sy: 0.068,
+    vx: 0.1,
+    vy: 0.03,
+    sx: 0.13,
+    sy: 0.14,
     shear: 0.08,
-    threshold: 0.47,
-    rigidity: 0.42,
-    coreLight: [148, 164, 174],
-    rimLight: [176, 184, 166],
-    accentLight: [110, 136, 148],
-    coreDark: [132, 148, 164],
-    rimDark: [140, 162, 146],
-    accentDark: [164, 182, 198],
+    threshold: 0.5,
+    rigidity: 0.46,
+    coreLight: [108, 146, 240],   // fresh periwinkle
+    rimLight: [92, 198, 178],     // clean seafoam
+    accentLight: [146, 132, 236], // soft iris
+    coreDark: [124, 162, 252],
+    rimDark: [104, 214, 194],
+    accentDark: [168, 154, 250],
   },
   wind: {
-    vx: 1.35,
-    vy: -0.14,
-    sx: 0.052,
-    sy: 0.13,
-    shear: -0.28,
-    threshold: 0.55,
+    vx: 0.86,
+    vy: -0.1,
+    sx: 0.11,
+    sy: 0.24,
+    shear: -0.26,
+    threshold: 0.56,
     rigidity: 0.68,
-    coreLight: [132, 152, 198],
-    rimLight: [204, 164, 114],
-    accentLight: [90, 114, 178],
-    coreDark: [126, 150, 220],
-    rimDark: [212, 156, 88],
-    accentDark: [150, 174, 238],
+    coreLight: [68, 148, 246],    // bright azure
+    rimLight: [242, 128, 118],    // vibrant coral-peach
+    accentLight: [126, 114, 244], // electric violet
+    coreDark: [88, 168, 255],
+    rimDark: [250, 142, 132],
+    accentDark: [152, 140, 255],
   },
   snow: {
-    vx: 0.16,
-    vy: 0.46,
-    sx: 0.115,
-    sy: 0.105,
+    vx: 0.11,
+    vy: 0.3,
+    sx: 0.21,
+    sy: 0.2,
     shear: 0.16,
     threshold: 0.6,
     rigidity: 0.58,
-    coreLight: [154, 172, 204],
-    rimLight: [202, 194, 180],
-    accentLight: [112, 138, 188],
-    coreDark: [162, 184, 224],
-    rimDark: [202, 194, 180],
-    accentDark: [186, 204, 238],
+    coreLight: [88, 174, 246],    // glacier sky
+    rimLight: [152, 136, 242],    // cool lavender
+    accentLight: [64, 198, 212],  // crisp ice-cyan
+    coreDark: [112, 192, 255],
+    rimDark: [172, 156, 252],
+    accentDark: [86, 216, 228],
   },
   dusk: {
-    vx: 0.2,
-    vy: -0.08,
-    sx: 0.076,
-    sy: 0.082,
+    vx: 0.14,
+    vy: -0.06,
+    sx: 0.16,
+    sy: 0.17,
     shear: 0.14,
-    threshold: 0.54,
+    threshold: 0.55,
     rigidity: 0.54,
-    coreLight: [116, 128, 184],
-    rimLight: [210, 148, 102],
-    accentLight: [88, 104, 168],
-    coreDark: [124, 136, 214],
-    rimDark: [222, 150, 94],
-    accentDark: [154, 168, 236],
+    coreLight: [108, 108, 238],   // vivid indigo-violet
+    rimLight: [242, 114, 146],    // sunset rose-coral
+    accentLight: [248, 174, 72],  // warm amber
+    coreDark: [130, 132, 252],
+    rimDark: [252, 132, 162],
+    accentDark: [255, 190, 92],
   },
 }
 
@@ -276,8 +277,8 @@ export function getTapestryPalette(mood: WeatherMood): TapestryPalette {
     core: isDark ? p.coreDark : p.coreLight,
     rim: isDark ? p.rimDark : p.rimLight,
     accent: isDark ? p.accentDark : p.accentLight,
-    birdBody: isDark ? [216, 166, 92] : [192, 140, 66],
-    birdBeak: isDark ? [220, 126, 86] : [196, 106, 70],
+    birdBody: isDark ? [252, 186, 78] : [244, 162, 48],
+    birdBeak: isDark ? [250, 118, 102] : [236, 96, 84],
     paper: isDark ? '#161618' : '#fbfaf7',
   }
 }
@@ -290,13 +291,11 @@ function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v
 }
 
-// Structured architectural triangle wave (sharper facets than pure sine blobs)
 function triWave(v: number): number {
   const m = ((v / (Math.PI * 2)) % 1 + 1) % 1
   return 1 - 4 * Math.abs(m - 0.5)
 }
 
-// Evaluate structured abstract weather scalar [0..1] at grid cell (gx, gy)
 function sampleFieldValue(
   gx: number,
   gy: number,
@@ -304,10 +303,9 @@ function sampleFieldValue(
   profile: WeatherProfile,
   runtime: TapestryRuntime
 ): number {
-  const px = gx * profile.sx + gy * profile.shear * 0.055 - t * profile.vx
+  const px = gx * profile.sx + gy * profile.shear * 0.06 - t * profile.vx
   const py = gy * profile.sy - t * profile.vy
 
-  // Blend crisp faceted diamond/diagonal bands with gentle harmonic wave so shapes feel structured
   const faceted =
     triWave(px * 0.92 + py * 0.34 + t * 0.14) * 0.44 +
     triWave(py * 0.98 - px * 0.42 - t * 0.11) * 0.34 +
@@ -320,25 +318,25 @@ function sampleFieldValue(
 
   let f = organic * (1 - profile.rigidity) + faceted * profile.rigidity
 
-  // Subtle architectural terracing for crisp edge definition
+  // Crisp architectural terracing
   const terrace = Math.round(f * 5) / 5
   f = f * 0.68 + terrace * 0.32
 
-  // Gentle cursor ripple across the grid
   if (runtime.mouseActive) {
     const dx = gx * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseX
     const dy = gy * TAPESTRY_CELL + TAPESTRY_CELL * 0.5 - runtime.mouseY
     const dist = Math.hypot(dx, dy)
-    if (dist < 115) {
-      f += Math.sin(dist * 0.11 - t * 4.8) * (1 - dist / 115) * 0.34
+    if (dist < 140) {
+      f += Math.sin(dist * 0.09 - t * 4.5) * (1 - dist / 140) * 0.34
     }
   }
 
   return clamp01((f + 1) * 0.5)
 }
 
-// Render the full-bleed 8px Crisp + Soft Aura abstract weather tapestry across the ENTIRE grid
-// (zero edge-box fade, zero white gap between outer rim and inner core!)
+// Render the unified 20px Crisp + Soft Aura live-weather tapestry across the ENTIRE grid.
+// Never carves a rectangular hole — when Flappy is active, softly dims uniformly so the game
+// integrates directly onto the same living 20px canvas.
 export function renderWeatherTapestry(
   bloomCtx: CanvasRenderingContext2D,
   pixelCtx: CanvasRenderingContext2D,
@@ -348,7 +346,7 @@ export function renderWeatherTapestry(
   pal: TapestryPalette,
   timeMs: number,
   runtime: TapestryRuntime,
-  excludeLane?: LaneRect | null
+  dimFactor = 1
 ): void {
   bloomCtx.clearRect(0, 0, width, height)
   pixelCtx.clearRect(0, 0, width, height)
@@ -358,61 +356,43 @@ export function renderWeatherTapestry(
   const profile = WEATHER_PROFILES[mood]
   const t = timeMs * 0.001
 
-  const rimStart = profile.threshold - 0.07
-  const coreStart = profile.threshold + 0.06
-  const coreFull = profile.threshold + 0.28
-
-  const exLeft = excludeLane ? Math.floor(excludeLane.left / TAPESTRY_CELL) : -1
-  const exRight = excludeLane ? Math.ceil((excludeLane.left + excludeLane.width) / TAPESTRY_CELL) : -1
-  const exTop = excludeLane ? Math.floor(excludeLane.top / TAPESTRY_CELL) : -1
-  const exBottom = excludeLane ? Math.ceil((excludeLane.top + excludeLane.height) / TAPESTRY_CELL) : -1
+  // Tight rim band so vibrant core colors dominate with seamless rim->core dither
+  const rimStart = profile.threshold - 0.05
+  const coreStart = profile.threshold + 0.02
+  const coreFull = profile.threshold + 0.24
 
   for (let gy = 0; gy < rows; gy++) {
     const y = gy * TAPESTRY_CELL
     for (let gx = 0; gx < cols; gx++) {
-      if (
-        excludeLane &&
-        gx >= exLeft &&
-        gx < exRight &&
-        gy >= exTop &&
-        gy < exBottom
-      ) {
-        continue
-      }
-
       const val = sampleFieldValue(gx, gy, t, profile, runtime)
       if (val <= rimStart) continue
 
-      // ONE continuous silhouette density -> eliminates any white moat between rim and core!
       const density = clamp01((val - rimStart) / (coreFull - rimStart))
       const bayerVal = (BAYER4[gy & 3][gx & 3] + 0.5) / 16
-      if (density <= bayerVal * 0.9) continue
+      if (density <= bayerVal * 0.88) continue
 
       const x = gx * TAPESTRY_CELL
-
-      // Seamless ordered-dither transition from warm rim -> cool core
       const coreMix = clamp01((val - coreStart) / (coreFull - coreStart))
-      const isCore = coreMix > bayerVal * 0.85
+      const isCore = coreMix > bayerVal * 0.72
+      const isAccentSpark = val > coreFull + 0.1 && ((gx * 7 + gy * 13) & 7) === 0
 
-      const rgb = isCore ? pal.core : pal.rim
+      const rgb = isAccentSpark ? pal.accent : isCore ? pal.core : pal.rim
       const baseAlpha = isCore
         ? pal.isDark
-          ? 0.4 + coreMix * 0.36
-          : 0.34 + coreMix * 0.36
+          ? 0.34 + coreMix * 0.34
+          : 0.26 + coreMix * 0.34
         : pal.isDark
-          ? 0.28 + density * 0.28
-          : 0.26 + density * 0.28
+          ? 0.24 + density * 0.24
+          : 0.2 + density * 0.24
 
-      // Dim subtly outside the active Flappy lane while playing so gameplay reads crisply
-      const finalAlpha = excludeLane ? baseAlpha * 0.55 : baseAlpha
+      const finalAlpha = baseAlpha * dimFactor
 
-      // Soft Gaussian aura behind core clusters
-      if (isCore) {
-        bloomCtx.fillStyle = rgba(rgb, finalAlpha * 0.72)
+      if (isCore || isAccentSpark) {
+        bloomCtx.fillStyle = rgba(rgb, finalAlpha * 0.68)
         bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
       }
 
-      // Crisp 8px grid-locked pixel tile (1px hairline grout aligned with the 8px sub-grid)
+      // Crisp 18x18 tile centered in the 20px grid cell
       pixelCtx.fillStyle = rgba(rgb, finalAlpha)
       pixelCtx.fillRect(x + 1, y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
     }
@@ -434,7 +414,7 @@ function collectFlappyTargets(flight: AmbientFlight, lane: LaneRect): TargetPixe
 
   for (const gate of flight.gates) {
     const gxStart = Math.floor((lane.left + gate.x) / TAPESTRY_CELL)
-    const gxEnd = Math.ceil((lane.left + gate.x + PIPE_WIDTH) / TAPESTRY_CELL)
+    const gxEnd = Math.max(gxStart + 2, Math.ceil((lane.left + gate.x + PIPE_WIDTH) / TAPESTRY_CELL))
     const gapTopRow = Math.floor((lane.top + gate.center - PIPE_GAP / 2) / TAPESTRY_CELL)
     const gapBotRow = Math.ceil((lane.top + gate.center + PIPE_GAP / 2) / TAPESTRY_CELL)
 
@@ -442,24 +422,23 @@ function collectFlappyTargets(flight: AmbientFlight, lane: LaneRect): TargetPixe
       for (let gy = startRow; gy < endRow; gy++) {
         if (gy < gapTopRow || gy >= gapBotRow) {
           const isCap = gy === gapTopRow - 1 || gy === gapBotRow
-          const isEdge = gx === gxStart || gx === gxEnd - 1
           targets.push({
             x: gx * TAPESTRY_CELL,
             y: gy * TAPESTRY_CELL,
-            kind: isCap || isEdge ? 'cap' : 'pipe',
+            kind: isCap ? 'cap' : 'pipe',
           })
         }
       }
     }
   }
 
-  // Pixel bird cluster
   const bx = Math.round((lane.left + birdXForLane(lane.width)) / TAPESTRY_CELL)
   const by = Math.round((lane.top + flight.y) / TAPESTRY_CELL)
   const birdOffsets = [
-    [-1, -1], [0, -1], [1, -1],
-    [-1, 0],  [0, 0],  [1, 0], [2, 0],
-    [-1, 1],  [0, 1],  [1, 1],
+    [0, 0],
+    [-1, 0],
+    [0, -1],
+    [1, 0],
   ]
   for (const [dx, dy] of birdOffsets) {
     targets.push({
@@ -481,8 +460,8 @@ export function buildWeatherMorphParticles(
 ): MorphParticle[] {
   const profile = WEATHER_PROFILES[mood]
   const t = timeMs * 0.001
-  const rimStart = profile.threshold - 0.07
-  const coreFull = profile.threshold + 0.28
+  const rimStart = profile.threshold - 0.05
+  const coreFull = profile.threshold + 0.24
 
   const sources: Array<{ x: number; y: number }> = []
   const startCol = Math.floor(lane.left / TAPESTRY_CELL)
@@ -496,13 +475,12 @@ export function buildWeatherMorphParticles(
       if (val <= rimStart) continue
       const density = clamp01((val - rimStart) / (coreFull - rimStart))
       const bayerVal = (BAYER4[gy & 3][gx & 3] + 0.5) / 16
-      if (density > bayerVal * 0.9) {
+      if (density > bayerVal * 0.88) {
         sources.push({ x: gx * TAPESTRY_CELL, y: gy * TAPESTRY_CELL })
       }
     }
   }
 
-  // Deterministic Fisher-Yates shuffle
   for (let i = sources.length - 1; i > 0; i--) {
     const j = Math.floor(((Math.sin(i * 19.31 + 0.7) + 1) * 0.5) * (i + 1))
     const tmp = sources[i]
@@ -525,7 +503,7 @@ export function buildWeatherMorphParticles(
 
     const dx = tgt.x - src.x
     const dy = tgt.y - src.y
-    const perpScale = (i % 2 === 0 ? 1 : -1) * Math.min(44, Math.hypot(dx, dy) * 0.22)
+    const perpScale = (i % 2 === 0 ? 1 : -1) * Math.min(48, Math.hypot(dx, dy) * 0.22)
     const len = Math.max(1, Math.hypot(dx, dy))
 
     particles.push({
@@ -535,25 +513,8 @@ export function buildWeatherMorphParticles(
       ty: tgt.y,
       arcX: (-dy / len) * perpScale,
       arcY: (dx / len) * perpScale,
-      delay: Math.min(0.24, (i / Math.max(1, targets.length)) * 0.22),
+      delay: Math.min(0.22, (i / Math.max(1, targets.length)) * 0.2),
       kind: tgt.kind,
-    })
-  }
-
-  // Extra weather pixels drift softly away as dust
-  const extraCount = Math.min(48, Math.max(0, sources.length - targets.length))
-  for (let i = 0; i < extraCount; i++) {
-    const src = sources[targets.length + i]
-    if (!src) break
-    particles.push({
-      sx: src.x,
-      sy: src.y,
-      tx: src.x + (i % 2 === 0 ? 18 : -18),
-      ty: src.y - 22,
-      arcX: 0,
-      arcY: -8,
-      delay: (i / Math.max(1, extraCount)) * 0.28,
-      kind: 'dust',
     })
   }
 
@@ -574,27 +535,16 @@ export function renderMorphOverlay(
     const x = p.sx + (p.tx - p.sx) * ease + p.arcX * arc
     const y = p.sy + (p.ty - p.sy) * ease + p.arcY * arc
 
-    if (p.kind === 'dust') {
-      const a = (1 - ease) * 0.4
-      if (a > 0.02) {
-        pixelCtx.fillStyle = rgba(pal.rim, a)
-        pixelCtx.fillRect(x + 1, y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
-      }
-      continue
-    }
-
     const rgb =
       p.kind === 'bird'
         ? pal.birdBody
         : p.kind === 'cap'
           ? pal.rim
           : pal.core
-    const alpha = p.kind === 'bird' ? 0.92 : p.kind === 'cap' ? 0.78 : 0.56
+    const alpha = p.kind === 'bird' ? 0.94 : p.kind === 'cap' ? 0.82 : 0.62
 
-    if (p.kind !== 'pipe') {
-      bloomCtx.fillStyle = rgba(rgb, alpha * 0.65)
-      bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
-    }
+    bloomCtx.fillStyle = rgba(rgb, alpha * 0.62)
+    bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
     pixelCtx.fillStyle = rgba(rgb, alpha)
     pixelCtx.fillRect(x + 1, y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
   }
@@ -615,31 +565,26 @@ export function renderFlappyInLane(
   const endCol = Math.floor((lane.left + lane.width) / TAPESTRY_CELL)
   const startRow = Math.floor(lane.top / TAPESTRY_CELL)
   const endRow = Math.floor((lane.top + lane.height) / TAPESTRY_CELL)
-  const shimmer = Math.floor(timeMs / 170)
 
-  // 1. Grid-locked 8px pixel-block pillars
+  // 1. Vibrant 20px grid-locked pixel pillars spanning the full right-side height
   for (const gate of flight.gates) {
     const gxStart = Math.floor((lane.left + gate.x) / TAPESTRY_CELL)
-    const gxEnd = Math.ceil((lane.left + gate.x + PIPE_WIDTH) / TAPESTRY_CELL)
+    const gxEnd = Math.max(gxStart + 2, Math.ceil((lane.left + gate.x + PIPE_WIDTH) / TAPESTRY_CELL))
     const gapTopRow = Math.floor((lane.top + gate.center - PIPE_GAP / 2) / TAPESTRY_CELL)
     const gapBotRow = Math.ceil((lane.top + gate.center + PIPE_GAP / 2) / TAPESTRY_CELL)
-    const dim = gate.passed ? 0.45 : 1
+    const dim = gate.passed ? 0.42 : 1
 
     for (let gx = Math.max(startCol, gxStart); gx < Math.min(endCol, gxEnd); gx++) {
       for (let gy = startRow; gy < endRow; gy++) {
         if (gy >= gapTopRow && gy < gapBotRow) continue
         const isCap = gy === gapTopRow - 1 || gy === gapBotRow
-        const isEdge = gx === gxStart || gx === gxEnd - 1
-        const cellHash = (gx * 31 + gy * 17 + gate.id * 13 + shimmer) & 15
-        if (!isCap && !isEdge && cellHash === 0) continue
-
         const x = gx * TAPESTRY_CELL
         const y = gy * TAPESTRY_CELL
         const rgb = isCap ? pal.rim : pal.core
-        const alpha = (isCap ? 0.84 : isEdge ? 0.64 : 0.46) * dim
+        const alpha = (isCap ? 0.88 : 0.64) * dim
 
         if (isCap) {
-          bloomCtx.fillStyle = rgba(rgb, alpha * 0.65)
+          bloomCtx.fillStyle = rgba(rgb, alpha * 0.72)
           bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
         }
         pixelCtx.fillStyle = rgba(rgb, alpha)
@@ -647,79 +592,74 @@ export function renderFlappyInLane(
       }
     }
 
-    // Subtle pulsing milestone beacon in gap center
+    // Pulsing milestone beacon in gap center
     if (!gate.passed) {
       const cx = lane.left + gate.x + PIPE_WIDTH * 0.5
       const cy = lane.top + gate.center
-      if (cx > lane.left + 8 && cx < lane.left + lane.width - 8) {
+      if (cx > lane.left + 12 && cx < lane.left + lane.width - 12) {
         const bx = Math.floor(cx / TAPESTRY_CELL) * TAPESTRY_CELL
         const by = Math.floor(cy / TAPESTRY_CELL) * TAPESTRY_CELL
         const pulse = 0.45 + 0.35 * Math.sin(timeMs * 0.005 + gate.id)
         bloomCtx.fillStyle = rgba(pal.accent, pulse * 0.85)
         bloomCtx.fillRect(bx, by, TAPESTRY_CELL, TAPESTRY_CELL)
         pixelCtx.fillStyle = rgba(pal.accent, pulse)
-        pixelCtx.fillRect(bx + 1, by + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
+        pixelCtx.fillRect(bx + 4, by + 4, TAPESTRY_CELL - 8, TAPESTRY_CELL - 8)
       }
     }
   }
 
-  // 2. Bird cellular wake trail
+  // 2. Subtle cellular wake trail
   const birdGx = Math.round((lane.left + birdXForLane(lane.width)) / TAPESTRY_CELL)
   const birdGy = Math.round((lane.top + flight.y) / TAPESTRY_CELL)
 
   if (!isCrashed) {
     const last = runtime.wake[runtime.wake.length - 1]
-    if (!last || last.gx !== birdGx - 2 || last.gy !== birdGy) {
-      runtime.wake.push({ gx: birdGx - 2, gy: birdGy, life: 1 })
-      if (runtime.wake.length > 14) runtime.wake.shift()
+    if (!last || last.gx !== birdGx - 1 || last.gy !== birdGy) {
+      runtime.wake.push({ gx: birdGx - 1, gy: birdGy, life: 1 })
+      if (runtime.wake.length > 9) runtime.wake.shift()
     }
   }
 
   const nextWake: BirdWakeDot[] = []
   for (const d of runtime.wake) {
-    const nextLife = d.life - dtSeconds * 1.9
-    if (nextLife > 0.04) {
+    const nextLife = d.life - dtSeconds * 2.1
+    if (nextLife > 0.05) {
       d.life = nextLife
-      d.gx -= dtSeconds * 8.5
+      d.gx -= dtSeconds * 4.2
       nextWake.push(d)
       const wx = Math.round(d.gx) * TAPESTRY_CELL
       const wy = Math.round(d.gy) * TAPESTRY_CELL
       if (wx >= lane.left && wx < lane.left + lane.width) {
-        pixelCtx.fillStyle = rgba(pal.rim, nextLife * 0.5)
-        pixelCtx.fillRect(wx + 1, wy + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
+        pixelCtx.fillStyle = rgba(pal.accent, nextLife * 0.45)
+        pixelCtx.fillRect(wx + 3, wy + 3, TAPESTRY_CELL - 6, TAPESTRY_CELL - 6)
       }
     }
   }
   runtime.wake = nextWake
 
-  // 3. Crisp 8px grid-locked pixel bird with soft aura
+  // 3. Crisp 20px grid-locked pixel bird with warm glow
   const flashOff = isCrashed && Math.floor(timeMs / 110) % 2 === 0
   if (flashOff) return
 
-  const wingY = flight.velocity < -20 ? -1 : 1
-  const birdCells: Array<[number, number, [number, number, number], number]> = [
-    [-1, -1, pal.birdBody, 0.82],
-    [0, -1, pal.birdBody, 0.94],
-    [1, -1, pal.birdBody, 0.94],
-    [-1, 0, pal.accent, 0.88],
-    [0, 0, pal.birdBody, 0.98],
-    [1, 0, pal.birdBody, 0.98],
-    [2, 0, pal.birdBeak, 0.96],
-    [-1, wingY, pal.accent, 0.78],
-    [0, 1, pal.birdBody, 0.9],
-    [1, 1, pal.birdBody, 0.86],
-  ]
+  const wingDy = flight.velocity < -20 ? -1 : 0
+  const bx = birdGx * TAPESTRY_CELL
+  const by = birdGy * TAPESTRY_CELL
 
-  for (const [dx, dy, rgb, a] of birdCells) {
-    const px = (birdGx + dx) * TAPESTRY_CELL
-    const py = (birdGy + dy) * TAPESTRY_CELL
-    bloomCtx.fillStyle = rgba(rgb, a * 0.75)
-    bloomCtx.fillRect(px, py, TAPESTRY_CELL, TAPESTRY_CELL)
-    pixelCtx.fillStyle = rgba(rgb, a)
-    pixelCtx.fillRect(px + 1, py + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
-  }
+  // Tail / wing tile
+  pixelCtx.fillStyle = rgba(pal.rim, 0.86)
+  pixelCtx.fillRect((birdGx - 1) * TAPESTRY_CELL + 2, (birdGy + wingDy) * TAPESTRY_CELL + 2, TAPESTRY_CELL - 4, TAPESTRY_CELL - 4)
+
+  // Main bird body tile (full 20px cell)
+  bloomCtx.fillStyle = rgba(pal.birdBody, 0.85)
+  bloomCtx.fillRect(bx, by, TAPESTRY_CELL, TAPESTRY_CELL)
+  pixelCtx.fillStyle = rgba(pal.birdBody, 0.96)
+  pixelCtx.fillRect(bx + 1, by + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
+
+  // Beak accent on right edge
+  pixelCtx.fillStyle = rgba(pal.birdBeak, 0.96)
+  pixelCtx.fillRect(bx + TAPESTRY_CELL + 1, by + 5, 8, 9)
 
   // Crisp paper eye dot
   pixelCtx.fillStyle = pal.paper
-  pixelCtx.fillRect((birdGx + 1) * TAPESTRY_CELL + 2, (birdGy - 1) * TAPESTRY_CELL + 2, 3, 3)
+  pixelCtx.fillRect(bx + 11, by + 4, 4, 4)
 }

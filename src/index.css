@@ -1407,7 +1407,7 @@ main {
 .interactive-grid-line {
   stroke: var(--line);
   stroke-dasharray: 0;
-  opacity: 0.85;
+  opacity: 0.32;
 }
 
 .interactive-grid-square {
@@ -1430,10 +1430,7 @@ main {
   }
 }
 
-/* Full-Bleed Crisp + Soft Aura 8px Live-Weather Pixel Tapestry -> Flappy Bird */
-.interactive-grid-subline {
-  opacity: 0.42;
-}
+/* Full-Bleed Crisp + Soft Aura 20px Live-Weather Pixel Tapestry -> Flappy Bird */
 
 .interactive-grid-container.is-dissolving .tapestry-canvas-pixels {
   filter: blur(6px);

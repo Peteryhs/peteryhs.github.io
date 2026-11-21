@@ -53,10 +53,7 @@ function readBest(): number {
 
 export function InteractiveGridPattern({
   sectionRef,
-  width = 40,
-  height = 40,
   className = '',
-  squaresClassName = '',
 }: InteractiveGridPatternProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const bloomCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -65,11 +62,6 @@ export function InteractiveGridPattern({
 
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 1280, h: 720 })
   const sizeRef = useRef<{ w: number; h: number }>({ w: 1280, h: 720 })
-  const [dimensions, setDimensions] = useState<{ cols: number; rows: number }>({
-    cols: 32,
-    rows: 18,
-  })
-  const [hoveredSquare, setHoveredSquare] = useState<string | null>(null)
   const [laneHovered, setLaneHovered] = useState(false)
   const [lane, setLane] = useState<LaneRect | null>(null)
   const laneRef = useRef<LaneRect | null>(null)
@@ -126,7 +118,7 @@ export function InteractiveGridPattern({
     return () => controller.abort()
   }, [])
 
-  // Measure the full About grid container + the open right-side desktop Flappy lane
+  // Measure the full About grid container + the FULL-HEIGHT open right-side desktop Flappy area
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -141,12 +133,6 @@ export function InteractiveGridPattern({
         setSize({ w, h })
       }
 
-      const cols = Math.max(8, Math.floor(w / width))
-      const rows = Math.max(6, Math.floor(h / height))
-      setDimensions((prev) =>
-        prev.cols === cols && prev.rows === rows ? prev : { cols, rows }
-      )
-
       const aboutSection = sectionRef.current?.querySelector('.about-longform-section')
       if (!aboutSection) {
         laneRef.current = null
@@ -155,25 +141,27 @@ export function InteractiveGridPattern({
       }
 
       const contentRect = aboutSection.getBoundingClientRect()
-      const rightStart = Math.ceil((contentRect.right - containerRect.left + 24) / TAPESTRY_CELL) * TAPESTRY_CELL
-      const rightEnd = Math.floor((w - 16) / TAPESTRY_CELL) * TAPESTRY_CELL
+      const rightStart = Math.ceil((contentRect.right - containerRect.left + 20) / TAPESTRY_CELL) * TAPESTRY_CELL
+      const rightEnd = Math.floor(w / TAPESTRY_CELL) * TAPESTRY_CELL
       const availWidth = rightEnd - rightStart
 
-      // Desktop open-space only for playable Flappy lane; hide cleanly on narrow/mobile viewports
-      if (availWidth < 210 || h < 340) {
+      // Desktop open-space only for playable Flappy area; hide cleanly on narrow/mobile viewports
+      if (availWidth < 200 || h < 340) {
         laneRef.current = null
         setLane(null)
         return
       }
 
-      const laneHeight =
-        Math.min(464, Math.max(304, Math.floor((h - 120) / TAPESTRY_CELL) * TAPESTRY_CELL))
-      const laneTop =
-        Math.round(((h - laneHeight) / 2) / TAPESTRY_CELL) * TAPESTRY_CELL
+      // Span the ENTIRE vertical right-side grid area (leaving just enough room for the quiet bottom status line)
+      const laneTop = TAPESTRY_CELL
+      const laneHeight = Math.max(
+        300,
+        Math.floor((h - TAPESTRY_CELL * 3) / TAPESTRY_CELL) * TAPESTRY_CELL
+      )
 
       const nextLane: LaneRect = {
         left: rightStart,
-        top: Math.max(height * 2, laneTop),
+        top: laneTop,
         width: availWidth,
         height: laneHeight,
       }
@@ -206,7 +194,7 @@ export function InteractiveGridPattern({
       window.removeEventListener('resize', updateLayout)
       ro.disconnect()
     }
-  }, [sectionRef, width, height, syncMode, clearTimers])
+  }, [sectionRef, syncMode, clearTimers])
 
   // Pause rendering when About section is off-screen
   useEffect(() => {
@@ -326,7 +314,7 @@ export function InteractiveGridPattern({
         pal,
         0,
         runtimeRef.current,
-        null
+        1
       )
       return
     }
@@ -358,7 +346,7 @@ export function InteractiveGridPattern({
           pal,
           now,
           runtimeRef.current,
-          null
+          1
         )
       } else if (curMode === 'morphing') {
         const morph = morphRef.current
@@ -367,10 +355,11 @@ export function InteractiveGridPattern({
           syncMode('playing')
         } else {
           const progress = Math.min(1, (now - morph.startTime) / MORPH_DURATION_MS)
-          // Gentle blur-focus pulse at midpoint matching the site's blur transitions
-          const blurPx = Math.sin(progress * Math.PI) * 2.8
+          const blurPx = Math.sin(progress * Math.PI) * 2.6
           pixelCanvas.style.filter = blurPx > 0.08 ? `blur(${blurPx.toFixed(2)}px)` : ''
 
+          // Seamlessly dim the full-bleed tapestry (zero hole cutout!) as Flappy tiles form on top
+          const dim = 1 - progress * 0.72
           renderWeatherTapestry(
             bloomCtx,
             pixelCtx,
@@ -380,7 +369,7 @@ export function InteractiveGridPattern({
             pal,
             now,
             runtimeRef.current,
-            activeLane
+            dim
           )
           renderMorphOverlay(bloomCtx, pixelCtx, morph.particles, progress, pal)
 
@@ -426,7 +415,7 @@ export function InteractiveGridPattern({
               const minX = activeLane.left + 78
               const maxX = Math.max(minX, activeLane.left + activeLane.width - 78)
               const clampedX = Math.max(minX, Math.min(maxX, activeLane.left + ev.x))
-              const liftedY = Math.max(activeLane.top + 20, activeLane.top + ev.y - 38)
+              const liftedY = Math.max(activeLane.top + 24, activeLane.top + ev.y - 42)
               setFloatingStamps((prev) => [
                 ...prev.slice(-3),
                 {
@@ -450,6 +439,7 @@ export function InteractiveGridPattern({
             }
           }
 
+          // Continuous full-bleed dimmed weather tapestry underneath — ZERO rectangular hole!
           renderWeatherTapestry(
             bloomCtx,
             pixelCtx,
@@ -459,7 +449,7 @@ export function InteractiveGridPattern({
             pal,
             now,
             runtimeRef.current,
-            activeLane
+            0.26
           )
           renderFlappyInLane(
             bloomCtx,
@@ -511,27 +501,14 @@ export function InteractiveGridPattern({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mode, startMorphOrFlap, dissolveBackToWeather])
 
-  const handleGridMouseMove = useCallback(
-    (e: React.MouseEvent<SVGSVGElement>) => {
-      const svg = e.currentTarget
-      const rect = svg.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      runtimeRef.current.mouseX = x
-      runtimeRef.current.mouseY = y
-      runtimeRef.current.mouseActive = true
-
-      const col = Math.floor(x / width)
-      const row = Math.floor(y / height)
-      if (col >= 0 && col < dimensions.cols && row >= 0 && row < dimensions.rows) {
-        setHoveredSquare(`${col}-${row}`)
-      }
-    },
-    [width, height, dimensions.cols, dimensions.rows]
-  )
+  const handleGridMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    runtimeRef.current.mouseX = e.clientX - rect.left
+    runtimeRef.current.mouseY = e.clientY - rect.top
+    runtimeRef.current.mouseActive = true
+  }, [])
 
   const handleGridMouseLeave = useCallback(() => {
-    setHoveredSquare(null)
     runtimeRef.current.mouseActive = false
   }, [])
 
@@ -551,6 +528,7 @@ export function InteractiveGridPattern({
       className={`interactive-grid-container ${isDissolving ? 'is-dissolving' : ''} ${className}`}
       style={{ opacity: shouldReduceMotion ? 1 : opacity }}
     >
+      {/* Single clean, whisper-soft 20px unified grid (no old 40px squares) */}
       <svg
         className="interactive-grid-svg"
         width="100%"
@@ -559,9 +537,8 @@ export function InteractiveGridPattern({
         onMouseLeave={handleGridMouseLeave}
       >
         <defs>
-          {/* Fine 8px sub-grid nested 5x5 inside the 40px major graph-paper grid */}
           <pattern
-            id="interactive-grid-sub"
+            id="interactive-grid-unified"
             width={TAPESTRY_CELL}
             height={TAPESTRY_CELL}
             patternUnits="userSpaceOnUse"
@@ -570,48 +547,16 @@ export function InteractiveGridPattern({
               d={`M ${TAPESTRY_CELL} 0 L 0 0 0 ${TAPESTRY_CELL}`}
               fill="none"
               stroke="currentColor"
-              className="interactive-grid-subline"
-              strokeWidth="1"
-            />
-          </pattern>
-          <pattern
-            id="interactive-grid-base"
-            width={width}
-            height={height}
-            patternUnits="userSpaceOnUse"
-          >
-            <rect width={width} height={height} fill="url(#interactive-grid-sub)" />
-            <path
-              d={`M ${width} 0 L 0 0 0 ${height}`}
-              fill="none"
-              stroke="currentColor"
               className="interactive-grid-line"
               strokeWidth="1"
             />
           </pattern>
         </defs>
 
-        <rect width="100%" height="100%" fill="url(#interactive-grid-base)" />
-
-        {Array.from({ length: dimensions.rows }).map((_, r) =>
-          Array.from({ length: dimensions.cols }).map((_, c) => {
-            const key = `${c}-${r}`
-            const isHovered = hoveredSquare === key
-            return (
-              <rect
-                key={key}
-                x={c * width}
-                y={r * height}
-                width={width}
-                height={height}
-                className={`interactive-grid-square ${isHovered ? 'is-active' : ''} ${squaresClassName}`}
-              />
-            )
-          })
-        )}
+        <rect width="100%" height="100%" fill="url(#interactive-grid-unified)" />
       </svg>
 
-      {/* Full-bleed Crisp + Soft Aura 8px live-weather tapestry spanning the ENTIRE About grid */}
+      {/* Full-bleed Crisp + Soft Aura 20px live-weather tapestry spanning the ENTIRE About grid */}
       <canvas
         ref={bloomCanvasRef}
         className="tapestry-canvas-bloom"
@@ -623,7 +568,7 @@ export function InteractiveGridPattern({
         aria-hidden="true"
       />
 
-      {/* Interactive right-side desktop hitbox (zero visual box, wakes Flappy morph on click) */}
+      {/* Full-height right-side desktop interactive area (zero visual box or hole) */}
       {lane && (
         <div
           className="tapestry-play-hitbox"
@@ -658,7 +603,7 @@ export function InteractiveGridPattern({
         />
       )}
 
-      {/* Floating 8-Bit Milestone Text Layer rendered ABOVE both canvases so nothing occludes it */}
+      {/* Floating 8-Bit Milestone Text Layer rendered ABOVE both canvases */}
       {floatingStamps.length > 0 && (
         <div className="flappy-milestone-layer" aria-hidden="true">
           {floatingStamps.map((msg) => (
@@ -673,13 +618,13 @@ export function InteractiveGridPattern({
         </div>
       )}
 
-      {/* Whisper-quiet inline micro-status anchored below the right margin (invisible until hover/play) */}
+      {/* Whisper-quiet inline micro-status anchored neatly at the bottom of the right grid */}
       {lane && (
         <div
           className={`ambient-flappy-hud ${laneHovered || mode !== 'tapestry' ? 'is-visible' : ''}`}
           style={{
             left: `${lane.left + 14}px`,
-            top: `${lane.top + lane.height + 8}px`,
+            top: `${lane.top + lane.height + 6}px`,
             width: `${lane.width - 28}px`,
           }}
         >
