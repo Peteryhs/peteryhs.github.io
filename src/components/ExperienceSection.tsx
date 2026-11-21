@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { useMotionValueEvent, useScroll } from 'motion/react'
 import { BlurFade } from './BlurFade'
 import { CompassRose } from './CompassRose'
@@ -78,6 +78,8 @@ function ExperienceCard({
   onMouseLeave,
   onMouseMove,
   onClick,
+  interactive = false,
+  ariaLabel,
   innerRef,
   dataExpId,
 }: {
@@ -87,6 +89,8 @@ function ExperienceCard({
   onMouseLeave?: (e: MouseEvent<HTMLElement>) => void
   onMouseMove?: (e: MouseEvent<HTMLElement>) => void
   onClick?: () => void
+  interactive?: boolean
+  ariaLabel?: string
   innerRef?: React.Ref<HTMLElement>
   dataExpId?: string
 }) {
@@ -99,6 +103,12 @@ function ExperienceCard({
     onMouseMove?.(e)
   }
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    onClick?.()
+  }
+
   return (
     <article
       ref={innerRef}
@@ -108,6 +118,12 @@ function ExperienceCard({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
+      {...(interactive && {
+        role: 'link',
+        tabIndex: 0,
+        'aria-label': ariaLabel,
+        onKeyDown: handleKeyDown,
+      })}
     >
       <div className="bento-card-spotlight" aria-hidden="true" />
       <div className="bento-card-content">{children}</div>
@@ -173,10 +189,13 @@ export function ExperienceTimeline({
                 onMouseEnter={() => onHoverId?.(item.id)}
                 onMouseMove={() => onManualHoverId?.(item.id)}
                 onMouseLeave={onLeaveId}
+                interactive={!!filterId}
+                ariaLabel={`${item.org}: view in Experience section`}
                 onClick={() => {
                   onHoverId?.(item.id)
                   if (filterId) {
                     document.getElementById('experience')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    document.getElementById('experience-heading')?.focus({ preventScroll: true })
                   }
                 }}
               >
@@ -410,7 +429,7 @@ export function ExperienceSection() {
       >
         <div className="truenorth-content-wrap">
           <BlurFade delay={0.06} duration={0.5} yOffset={10}>
-            <h2 id="experience-heading" className="longform-heading">
+            <h2 id="experience-heading" className="longform-heading" tabIndex={-1}>
               Experience
             </h2>
           </BlurFade>
