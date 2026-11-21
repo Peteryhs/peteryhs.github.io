@@ -98,7 +98,6 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
   const [dismissing, setDismissing] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const completedRef = useRef(false)
-  const dismissTimerRef = useRef<number | null>(null)
 
   const finishOnce = () => {
     if (completedRef.current) return
@@ -108,27 +107,27 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
 
   const triggerEarlyDismiss = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (dismissing) return
     setDismissing(true)
-    dismissTimerRef.current = window.setTimeout(finishOnce, 240)
   }
+
+  // Complete unmount cleanly once early dismissal fade finishes
+  useEffect(() => {
+    if (!dismissing) return
+    const id = window.setTimeout(finishOnce, 240)
+    return () => window.clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dismissing])
 
   // Allow Escape key to dismiss cleanly
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        triggerEarlyDismiss()
+        setDismissing(true)
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      if (dismissTimerRef.current) {
-        window.clearTimeout(dismissTimerRef.current)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dismissing])
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   // Card-contained canvas burst for Duolingo vector sparks & embers
   useEffect(() => {
@@ -260,6 +259,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
   return (
     <motion.div
       className="streak-overlay"
+      style={{ pointerEvents: dismissing ? 'none' : 'auto' }}
       role="presentation"
       aria-hidden="true"
       onClick={triggerEarlyDismiss}
