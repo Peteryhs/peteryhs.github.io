@@ -307,16 +307,22 @@ export function InteractiveGridPattern({
   useEffect(() => {
     if (mode === 'auto') return
     const onKeyDown = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement | null)?.isContentEditable) {
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) {
+        return
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        returnToAuto()
+        return
+      }
+      if (target?.closest('button, a, [role="button"]')) {
         return
       }
       if (e.key === ' ' || e.key === 'ArrowUp') {
         e.preventDefault()
         if (!e.repeat) takeControlAndFlap()
-      } else if (e.key === 'Escape') {
-        e.preventDefault()
-        returnToAuto()
       }
     }
     window.addEventListener('keydown', onKeyDown)
