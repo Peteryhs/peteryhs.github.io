@@ -326,8 +326,10 @@ html.dark .about-portrait,
 
 .bento-card-languages .qe-streak-trigger.is-launched .qe-flame-slot {
   opacity: 0;
+  visibility: hidden;
   transform: scale(0.2);
-  transition: opacity 90ms ease-in, transform 110ms ease-in;
+  transition: none;
+  animation: none;
 }
 
 .bento-card-languages .qe-streak-trigger.is-settled .qe-flame-slot {
