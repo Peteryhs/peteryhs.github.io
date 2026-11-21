@@ -1,6 +1,8 @@
 import { CategoryIcon, type IconKind } from './CategoryIcon'
-import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback } from 'react'
+import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback, useState } from 'react'
 import { BlurFade } from './BlurFade'
+import { DuolingoVectorFlame, StreakFireOverlay, type FlameOrigin } from './StreakFireOverlay'
+import './AboutBento.css'
 
 function scrollToAbout() {
   const el = document.getElementById('about')
@@ -11,6 +13,7 @@ function scrollToAbout() {
 
 interface BentoCardProps {
   children: ReactNode
+  overlay?: ReactNode
   className?: string
   standalone?: boolean
   cardRef?: React.RefObject<HTMLElement | null>
@@ -21,6 +24,7 @@ interface BentoCardProps {
 
 function BentoCardWrapper({
   children,
+  overlay,
   className = '',
   standalone = false,
   cardRef,
@@ -63,6 +67,7 @@ function BentoCardWrapper({
     >
       <div className="bento-card-spotlight" aria-hidden="true" />
       <div className="bento-card-content">{children}</div>
+      {overlay}
     </article>
   )
 }
@@ -71,36 +76,45 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
   return (
     <BentoCardWrapper className="bento-card-profile" standalone={standalone}>
       <div className="bento-profile-wrap">
-        <div className="bento-photo-container">
-          <img
-            src={`${import.meta.env.BASE_URL}peter-photo.jpg`}
-            alt="Peter Shao"
-            className="bento-profile-img"
-            loading="lazy"
-          />
+        <div className="about-portrait">
+          <div className="bento-photo-container">
+            <img
+              src={`${import.meta.env.BASE_URL}peter-photo.jpg`}
+              alt="Peter Shao"
+              className="bento-profile-img"
+              loading="lazy"
+            />
+          </div>
+          <span className="about-photo-caption">Usually building something.</span>
+          <svg className="about-portrait-spark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <path
+              d="M20 3 24 15 37 20 24 24 20 37 15 24 3 20 15 15Z"
+              fill="#f9c950"
+              stroke="#7d5423"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
         <div className="bento-profile-info">
+          <span className="about-eyebrow">A little about me</span>
           <h3 className="bento-card-title">Peter Shao</h3>
-          <p className="bento-card-subtitle">Toronto, Canada | CE @ uWaterloo</p>
+          <p className="bento-card-subtitle">Toronto, Canada · CE @ uWaterloo</p>
           <p className="bento-card-body">
-            I love building soft/hardware projects that people find value in.
+            I love building software &amp; hardware that people find value in.
           </p>
-          <div className="bento-freetime">
-            <span className="bento-freetime-label">In my freetime, I am a:</span>
-            <div className="bento-focus-list bento-freetime-list">
-              <div className="bento-focus-row">
-                <CategoryIcon kind="systems" className="category-icon-bullet" />
-                <div className="bento-focus-text">
-                  <span className="bento-focus-name">Homelab Nerd</span>
-                </div>
-              </div>
-              <div className="bento-focus-row">
-                <CategoryIcon kind="photography" className="category-icon-bullet" />
-                <div className="bento-focus-text">
-                  <span className="bento-focus-name">Audio/camera aficionado</span>
-                </div>
-              </div>
-            </div>
+          <div className="about-offline">
+            <span className="about-eyebrow">Away from the keyboard</span>
+            <ul className="about-hobbies" aria-label="In my free time">
+              <li>
+                <CategoryIcon kind="systems" size={18} />
+                Homelab nerd
+              </li>
+              <li>
+                <CategoryIcon kind="photography" size={18} />
+                Audio &amp; camera aficionado
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -108,235 +122,127 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
   )
 }
 
-function FlameStreakIcon() {
-  return (
-    <span className="bento-fire-badge" aria-label="Duolingo flame streak">
-      <svg
-        className="bento-fire-svg"
-        viewBox="0 0 44 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="fireOuterGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#d92200" />
-            <stop offset="35%" stopColor="#f54700" />
-            <stop offset="75%" stopColor="#ff8c00" />
-            <stop offset="100%" stopColor="#ffc72c" />
-          </linearGradient>
-          <linearGradient id="fireInnerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#ff5900" />
-            <stop offset="50%" stopColor="#ffb703" />
-            <stop offset="100%" stopColor="#fff3b0" />
-          </linearGradient>
-        </defs>
-
-        {/* Rounder Plump Outer Flame */}
-        <path
-          className="flame-outer"
-          d="M22 2.5C22 2.5 28.5 10 29 15.8C29.4 17.4 28.6 18.8 27.2 20C32 16.5 38 20.5 38 28.5C38 38.8 30.8 46 22 46C13.2 46 6 38.8 6 28.5C6 20.5 12 16.5 16.8 20C15.4 18.8 14.6 17.4 15 15.8C15.5 10 22 2.5 22 2.5Z"
-          fill="url(#fireOuterGrad)"
-        />
-
-        {/* Inner Flame Core */}
-        <path
-          className="flame-inner"
-          d="M22 13.5C22 13.5 26.5 18.5 26.8 22.5C27.1 23.6 26.3 24.6 25.4 25.4C28.8 23 33 25.5 33 31C33 38.5 28 43 22 43C16 43 11 38.5 11 31C11 25.5 15.2 23 18.6 25.4C17.7 24.6 16.9 23.6 17.2 22.5C17.5 18.5 22 13.5 22 13.5Z"
-          fill="url(#fireInnerGrad)"
-        />
-      </svg>
-    </span>
-  )
-}
-
-interface FireParticle {
-  x: number
-  y: number
-  vx: number
-  vy: number
-  radius: number
-  rotation: number
-  vRot: number
-  life: number
-  maxLife: number
-  decay: number
-  shape: 'ember' | 'spark' | 'flame'
-}
+let hasAutoPlayedLanguagesStreak = false
 
 export function LanguagesCard({ standalone = false }: { standalone?: boolean }) {
   const cardRef = useRef<HTMLElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const fireRef = useRef<HTMLSpanElement>(null)
-  const particlesRef = useRef<FireParticle[]>([])
-  const animIdRef = useRef<number | null>(null)
-  const lastBurstTimeRef = useRef(0)
+  const flameSlotRef = useRef<HTMLSpanElement>(null)
+  const settleTimerRef = useRef<number | null>(null)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+  const [overlayOrigin, setOverlayOrigin] = useState<FlameOrigin | null>(null)
+  const [justSettled, setJustSettled] = useState(false)
 
-  const triggerExplosion = useCallback(() => {
-    const card = cardRef.current
-    const canvas = canvasRef.current
-    const fire = fireRef.current
-    if (!card || !canvas || !fire) return
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = () => setPrefersReducedMotion(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
-    const now = performance.now()
-    if (now - lastBurstTimeRef.current < 160) return
-    lastBurstTimeRef.current = now
-
-    const cardRect = card.getBoundingClientRect()
-    const fireRect = fire.getBoundingClientRect()
-
-    const dpr = window.devicePixelRatio || 1
-    const width = cardRect.width
-    const height = cardRect.height
-
-    if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
-      canvas.width = Math.round(width * dpr)
-      canvas.height = Math.round(height * dpr)
+  // Immediately clear an active animation if reduced motion is enabled mid-playback
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setOverlayOrigin(null)
     }
+  }, [prefersReducedMotion])
 
-    const originX = fireRect.left + fireRect.width / 2 - cardRect.left
-    const originY = fireRect.top + fireRect.height / 2 - cardRect.top
-
-    // Generate burst of fire particles
-    const particleCount = 34
-    const newParticles: FireParticle[] = []
-
-    for (let i = 0; i < particleCount; i++) {
-      const angle = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.95)
-      const speed = Math.random() * 5.4 + 2.2
-      const maxLife = Math.random() * 45 + 50
-      const shapes: ('ember' | 'spark' | 'flame')[] = ['flame', 'flame', 'ember', 'ember', 'spark']
-      const shape = shapes[Math.floor(Math.random() * shapes.length)]
-
-      newParticles.push({
-        x: originX + (Math.random() - 0.5) * 12,
-        y: originY + (Math.random() - 0.5) * 8,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        radius: shape === 'spark' ? Math.random() * 2 + 1.2 : Math.random() * 2.8 + 1.6,
-        rotation: Math.random() * Math.PI * 2,
-        vRot: (Math.random() - 0.5) * 0.25,
-        life: maxLife,
-        maxLife,
-        decay: 1,
-        shape,
-      })
-    }
-
-    particlesRef.current.push(...newParticles)
-
-    if (!animIdRef.current) {
-      const tick = () => {
-        const cvs = canvasRef.current
-        const crd = cardRef.current
-        if (!cvs || !crd) {
-          animIdRef.current = null
-          return
-        }
-
-        const ctx = cvs.getContext('2d')
-        if (!ctx) {
-          animIdRef.current = null
-          return
-        }
-
-        const cardH = crd.clientHeight
-        const groundY = cardH - 6
-
-        ctx.clearRect(0, 0, cvs.width, cvs.height)
-        ctx.save()
-        ctx.scale(dpr, dpr)
-
-        const particles = particlesRef.current
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const p = particles[i]
-
-          // Physics update
-          p.vy += 0.28 // gravity
-          p.vx *= 0.985 // drag
-          p.x += p.vx
-          p.y += p.vy
-          p.rotation += p.vRot
-
-          // Floor bounce
-          if (p.y >= groundY) {
-            p.y = groundY
-            p.vy = -p.vy * (0.34 + Math.random() * 0.08)
-            p.vx *= 0.62
-            if (Math.abs(p.vy) < 0.45) {
-              p.vy = 0
-            }
-          }
-
-          p.life -= p.decay
-
-          if (p.life <= 0) {
-            particles.splice(i, 1)
-            continue
-          }
-
-          // Render particle
-          const progress = p.life / p.maxLife
-          const alpha = Math.min(1, progress * 1.3)
-          const r = p.radius * (0.45 + progress * 0.55)
-
-          let fillColor = `rgba(255, 100, 10, ${alpha})`
-          if (progress > 0.65) {
-            fillColor = `rgba(255, 225, 75, ${alpha})`
-          } else if (progress > 0.3) {
-            fillColor = `rgba(255, 88, 12, ${alpha})`
-          } else {
-            fillColor = `rgba(185, 30, 8, ${alpha})`
-          }
-
-          ctx.save()
-          ctx.translate(p.x, p.y)
-          ctx.rotate(p.rotation)
-          ctx.fillStyle = fillColor
-          ctx.shadowColor = `rgba(255, 80, 0, ${alpha * 0.55})`
-          ctx.shadowBlur = 4
-
-          if (p.shape === 'flame') {
-            ctx.beginPath()
-            ctx.moveTo(0, -r * 1.5)
-            ctx.bezierCurveTo(r * 1.2, -r * 0.4, r, r, 0, r)
-            ctx.bezierCurveTo(-r, r, -r * 1.2, -r * 0.4, 0, -r * 1.5)
-            ctx.fill()
-          } else if (p.shape === 'spark') {
-            ctx.beginPath()
-            ctx.moveTo(0, -r * 1.6)
-            ctx.lineTo(r * 0.4, 0)
-            ctx.lineTo(0, r * 1.6)
-            ctx.lineTo(-r * 0.4, 0)
-            ctx.closePath()
-            ctx.fill()
-          } else {
-            ctx.beginPath()
-            ctx.arc(0, 0, r, 0, Math.PI * 2)
-            ctx.fill()
-          }
-
-          ctx.restore()
-        }
-
-        ctx.restore()
-
-        if (particles.length > 0) {
-          animIdRef.current = requestAnimationFrame(tick)
-        } else {
-          animIdRef.current = null
-        }
-      }
-
-      animIdRef.current = requestAnimationFrame(tick)
+  const measureFlameOrigin = useCallback((): FlameOrigin | null => {
+    const cardEl = cardRef.current
+    const slotEl = flameSlotRef.current
+    if (!cardEl || !slotEl) return null
+    const cardRect = cardEl.getBoundingClientRect()
+    const slotRect = slotEl.getBoundingClientRect()
+    if (cardRect.width <= 0 || cardRect.height <= 0) return null
+    return {
+      x: slotRect.left - cardRect.left + slotRect.width / 2,
+      y: slotRect.top - cardRect.top + slotRect.height / 2,
+      width: slotRect.width || 44,
+      height: slotRect.height || 50,
+      cardWidth: cardRect.width,
+      cardHeight: cardRect.height,
     }
   }, [])
 
+  const triggerSettleBounce = useCallback(() => {
+    setJustSettled(true)
+    if (settleTimerRef.current) {
+      window.clearTimeout(settleTimerRef.current)
+    }
+    settleTimerRef.current = window.setTimeout(() => {
+      setJustSettled(false)
+      settleTimerRef.current = null
+    }, 520)
+  }, [])
+
+  const launchAnimation = useCallback(() => {
+    if (prefersReducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const origin = measureFlameOrigin()
+    if (origin) {
+      setOverlayOrigin(origin)
+    }
+  }, [measureFlameOrigin, prefersReducedMotion])
+
+  // Auto-trigger once per page load when the card first enters view
+  useEffect(() => {
+    if (prefersReducedMotion || hasAutoPlayedLanguagesStreak) return
+    const cardEl = cardRef.current
+    if (!cardEl) return
+
+    let autoTimer: number | null = null
+    const triggerOnce = () => {
+      if (hasAutoPlayedLanguagesStreak) return
+      hasAutoPlayedLanguagesStreak = true
+      autoTimer = window.setTimeout(() => {
+        launchAnimation()
+      }, 280)
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      triggerOnce()
+      return () => {
+        if (autoTimer) window.clearTimeout(autoTimer)
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect()
+          triggerOnce()
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(cardEl)
+
+    return () => {
+      observer.disconnect()
+      if (autoTimer) window.clearTimeout(autoTimer)
+    }
+  }, [launchAnimation, prefersReducedMotion])
+
+  const handleIgnite = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+      if (overlayOrigin) return
+      launchAnimation()
+    },
+    [launchAnimation, overlayOrigin]
+  )
+
+  const handleOverlayComplete = useCallback(() => {
+    setOverlayOrigin(null)
+    triggerSettleBounce()
+  }, [triggerSettleBounce])
+
   useEffect(() => {
     return () => {
-      if (animIdRef.current) {
-        cancelAnimationFrame(animIdRef.current)
+      if (settleTimerRef.current) {
+        window.clearTimeout(settleTimerRef.current)
       }
     }
   }, [])
@@ -346,30 +252,42 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
       className="bento-card-languages"
       standalone={standalone}
       cardRef={cardRef}
-      onMouseEnter={triggerExplosion}
+      overlay={
+        overlayOrigin ? (
+          <StreakFireOverlay origin={overlayOrigin} onComplete={handleOverlayComplete} />
+        ) : null
+      }
     >
-      <canvas ref={canvasRef} className="bento-particles-canvas" aria-hidden="true" />
-      <div className="bento-languages-content">
+      <div className="bento-languages-content qe-languages-content">
         <h3 className="bento-card-title">I speak:</h3>
-        <p className="bento-lang-primary">Chinese and English</p>
-        <div className="bento-streak-box">
-          <p className="bento-lang-secondary">Currently learning Spanish via Duolingo</p>
-          <div className="bento-streak-row" aria-label="I have a 1k plus Duolingo streak">
-            <span>I have a</span>
-            {' '}
-            <span
-              ref={fireRef}
-              className="bento-streak-badge-group"
-              onMouseEnter={triggerExplosion}
-              onClick={triggerExplosion}
-            >
-              <span className="bento-streak-count">1k+</span>
-              <FlameStreakIcon />
+        <p className="qe-lang-native">Chinese and English</p>
+        <p className="qe-lang-learning">Learning Spanish on Duolingo</p>
+        {prefersReducedMotion ? (
+          <div className="qe-streak-trigger is-static" aria-label="1,000+ day Duolingo streak">
+            <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
+              <DuolingoVectorFlame size={44} mode="idle" />
             </span>
-            {' '}
-            <span>streak</span>
+            <span className="qe-streak-copy">
+              <span className="qe-streak-number">1,000+</span>
+              <span className="qe-streak-caption">day streak</span>
+            </span>
           </div>
-        </div>
+        ) : (
+          <button
+            type="button"
+            className={`qe-streak-trigger ${overlayOrigin ? 'is-launched' : ''} ${justSettled ? 'is-settled' : ''}`.trim()}
+            onClick={handleIgnite}
+            aria-label="1,000+ day Duolingo streak — click to replay fire animation"
+          >
+            <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
+              <DuolingoVectorFlame size={44} mode="idle" />
+            </span>
+            <span className="qe-streak-copy">
+              <span className="qe-streak-number">1,000+</span>
+              <span className="qe-streak-caption">day streak</span>
+            </span>
+          </button>
+        )}
       </div>
     </BentoCardWrapper>
   )
@@ -393,7 +311,7 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
             Waterloo, Ontario | First Year Computer Engineering
           </p>
           <p className="bento-card-body">
-            Awesome school with the largest co-op program in NA. I am learning & applying my skills
+            Awesome school with the largest co-op program in NA. I am learning &amp; applying my skills
             in the workforce here.
           </p>
           <button
@@ -444,9 +362,11 @@ export function CompEngFocusCard({ standalone = false }: { standalone?: boolean 
       <div className="bento-focus-list">
         {focusAreas.map((area) => (
           <div key={area.title} className="bento-focus-row">
-            <CategoryIcon kind={area.kind} className="category-icon-bullet" />
             <div className="bento-focus-text">
-              <span className="bento-focus-name">{area.title}</span>{' '}
+              <span className="bento-focus-name">
+                <CategoryIcon kind={area.kind} className="category-icon-heading" />
+                {area.title}
+              </span>{' '}
               <span className="bento-focus-desc">({area.details})</span>
             </div>
           </div>
