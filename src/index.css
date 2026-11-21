@@ -1447,22 +1447,31 @@ main {
           mask-composite: intersect;
 }
 
-.flappy-milestone-text {
+.flappy-milestone-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.flappy-milestone-chip {
+  position: absolute;
   font-family: 'Press Start 2P', 'Courier New', monospace !important;
   font-size: 10px;
-  fill: rgba(96, 119, 198, 0.86);
+  line-height: 1;
+  color: rgba(74, 96, 174, 0.94);
   letter-spacing: 0.04em;
   font-weight: 700;
-  pointer-events: none;
-  user-select: none;
   white-space: nowrap;
-  paint-order: stroke fill;
-  stroke: var(--paper, #fbfaf7);
-  stroke-width: 3.5px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transform-box: fill-box;
-  transform-origin: center;
+  user-select: none;
+  text-shadow:
+    0 0 4px var(--paper, #fbfaf7),
+    0 0 8px var(--paper, #fbfaf7),
+    1px 1px 0 var(--paper, #fbfaf7),
+    -1px -1px 0 var(--paper, #fbfaf7),
+    1px -1px 0 var(--paper, #fbfaf7),
+    -1px 1px 0 var(--paper, #fbfaf7);
   will-change: transform, opacity;
   animation: flappyMilestoneFloat 2.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -1470,19 +1479,19 @@ main {
 @keyframes flappyMilestoneFloat {
   0% {
     opacity: 0;
-    transform: translate3d(0, 4px, 0);
+    transform: translate3d(-50%, 4px, 0);
   }
   14% {
     opacity: 1;
-    transform: translate3d(0, -8px, 0);
+    transform: translate3d(-50%, -8px, 0);
   }
   75% {
     opacity: 1;
-    transform: translate3d(0, -24px, 0);
+    transform: translate3d(-50%, -24px, 0);
   }
   100% {
     opacity: 0;
-    transform: translate3d(0, -34px, 0);
+    transform: translate3d(-50%, -34px, 0);
   }
 }
 
@@ -1532,16 +1541,14 @@ main {
   opacity: 0.72;
 }
 
-html.dark .flappy-milestone-text {
-  fill: rgba(126, 148, 224, 0.86);
-  stroke: var(--paper, #161618);
+html.dark .flappy-milestone-chip {
+  color: rgba(138, 160, 236, 0.94);
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.65));
 }
 
 @media (prefers-color-scheme: dark) {
-  html:not(.light) .flappy-milestone-text {
-    fill: rgba(126, 148, 224, 0.86);
-    stroke: var(--paper, #161618);
+  html:not(.light) .flappy-milestone-chip {
+    color: rgba(138, 160, 236, 0.94);
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.65));
   }
 }

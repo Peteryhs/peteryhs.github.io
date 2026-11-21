@@ -344,13 +344,17 @@ export function InteractiveGridPattern({
               if (next.lastEvent) {
                 const id = ++stampIdRef.current
                 const ev = next.lastEvent
+                const minX = activeLane.left + 78
+                const maxX = Math.max(minX, activeLane.left + activeLane.width - 78)
+                const clampedX = Math.max(minX, Math.min(maxX, activeLane.left + ev.x))
+                const liftedY = Math.max(activeLane.top + 20, activeLane.top + ev.y - 38)
                 setFloatingStamps((prev) => [
                   ...prev.slice(-3),
                   {
                     id,
                     text: ev.stamp,
-                    x: activeLane.left + ev.x,
-                    y: activeLane.top + ev.y,
+                    x: clampedX,
+                    y: liftedY,
                   },
                 ])
                 window.setTimeout(() => {
@@ -487,18 +491,6 @@ export function InteractiveGridPattern({
           })
         )}
 
-        {/* Floating 8-Bit Achievement Milestone Text Layer */}
-        {floatingStamps.map((msg) => (
-          <text
-            key={msg.id}
-            x={msg.x}
-            y={msg.y}
-            textAnchor="middle"
-            className="flappy-milestone-text"
-          >
-            {msg.text}
-          </text>
-        ))}
       </svg>
 
       {/* Artistic Game of Life -> Dynamic Flappy Bird Canvas (desktop right margin only) */}
@@ -521,6 +513,21 @@ export function InteractiveGridPattern({
             startMorphOrFlap()
           }}
         />
+      )}
+
+      {/* Floating 8-Bit Milestone Text Layer rendered ABOVE the canvas so bird/pillars never occlude it */}
+      {floatingStamps.length > 0 && (
+        <div className="flappy-milestone-layer" aria-hidden="true">
+          {floatingStamps.map((msg) => (
+            <span
+              key={msg.id}
+              className="flappy-milestone-chip"
+              style={{ left: `${msg.x}px`, top: `${msg.y}px` }}
+            >
+              {msg.text}
+            </span>
+          ))}
+        </div>
       )}
 
       {/* Whisper-quiet inline micro-status anchored below the right margin (invisible until hover/play) */}
