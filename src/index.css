@@ -2679,7 +2679,7 @@ html.dark .gear-device-item.is-active,
   left: calc(100% - 1px);
   top: 0;
   bottom: 0;
-  width: 58px;
+  width: 60px;
   height: 100%;
   pointer-events: none;
   z-index: 8;
@@ -2707,9 +2707,9 @@ html.dark .gear-device-item.is-active,
 }
 
 /* Responsive Scaling for Devices & Coiled Cable */
-@media (max-width: 768px) {
+@media (max-width: 860px) {
   .mic-wire-connector-wrapper {
-    width: 48px;
+    display: none;
   }
 }
 
@@ -2728,10 +2728,6 @@ html.dark .gear-device-item.is-active,
     min-height: 2.2em;
     line-height: 1.18;
     white-space: normal;
-  }
-
-  .mic-wire-connector-wrapper {
-    display: none;
   }
 }
 

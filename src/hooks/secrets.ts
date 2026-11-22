@@ -6,6 +6,7 @@ import { useSyncExternalStore } from 'react'
  * the count is there for whoever scrolls to the end and wonders what they missed.
  */
 export const SECRETS = [
+  { id: 'highfive', name: 'High-fived Peter', where: 'Intro' },
   { id: 'flappy', name: 'Flew through the weather', where: 'About' },
   { id: 'streak', name: 'Lit the streak', where: 'About' },
   { id: 'derez', name: 'De-rezzed Peter', where: 'About' },

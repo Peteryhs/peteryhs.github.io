@@ -137,105 +137,202 @@ export function GearDeviceIcon({ id, className = '' }: { id: string; className?:
   }
 }
 
-// 5. Microphone Coiled Wire Connector
-// 1) Smooth 90° curve from Photo Card base towards gear card
-// 2) Single continuous vertical downward spiral spring (like the user reference drawing)
-// 3) Connects with L-shaped 90° right-angle connector plugged into Gear Card
+// Build smooth 3D-projected helical turns for a true-to-life coiled 3.5mm TRS audio cable.
+function buildHelixArcs(
+  cx: number,
+  y0: number,
+  radius: number,
+  pitch: number,
+  tilt: number,
+  turns: number,
+) {
+  const sample = (tStart: number, tEnd: number, steps: number) => {
+    let d = ''
+    for (let i = 0; i <= steps; i++) {
+      const th = tStart + ((tEnd - tStart) * i) / steps
+      const x = (cx + radius * Math.cos(th)).toFixed(2)
+      const y = (y0 + (pitch / (2 * Math.PI)) * th + tilt * Math.sin(th)).toFixed(2)
+      d += `${i === 0 ? 'M' : ' L'}${x} ${y}`
+    }
+    return d
+  }
+
+  const back: string[] = []
+  const front: string[] = []
+  const mask: string[] = []
+
+  for (let k = 0; k < turns; k++) {
+    const base = k * 2 * Math.PI
+    // Keep the outer left/right silhouette turns at full strength; only the recessed rear diagonal dims.
+    const frontStart = k === 0 ? base : base - 0.36
+    front.push(sample(frontStart, base + Math.PI + 0.36, 20))
+    mask.push(sample(base + 0.24, base + Math.PI - 0.24, 14))
+    back.push(sample(base + Math.PI, base + 2 * Math.PI, 18))
+  }
+
+  // Bring the final outer right turn back to full strength right before the bottom lead begins.
+  const endTheta = turns * 2 * Math.PI
+  const exitRim = sample(endTheta - 0.36, endTheta, 6)
+  const yEnd = y0 + turns * pitch
+  return { back, front, mask, exitRim, yEnd }
+}
+
+const COIL_CX = 42
+const COIL_R = 9
+const COIL_Y0 = 76
+const COIL_HELIX = buildHelixArcs(COIL_CX, COIL_Y0, COIL_R, 11.5, 4.1, 7)
+
+// 5. Microphone Coiled Wire Connector (on-camera shotgun mic coiled 3.5mm TRS patch cable)
+// 1) Straight 3.5mm TRS output plug + ribbed strain-relief boot on the Photography card
+// 2) True 3D helical coiled audio cable with front/back overlap depth
+// 3) 90° right-angle 3.5mm TRS headphone jack (with TRS insulator bands) into the Gear Dock
 export function MicrophoneCoiledWire({ className = '' }: { className?: string }) {
-  // Continuous single wire path with 90° top curve, vertical spring coils, and lead into L-plug
-  const springWirePath = `
-    M 8 52
-    L 20 52
-    C 34 52, 44 58, 44 72
-    L 44 82
-    C 47 85, 57 89, 57 94
-    C 57 100, 37 102, 30 97
-    C 26 93, 38 100, 44 104
-    C 47 107, 57 111, 57 116
-    C 57 122, 37 124, 30 119
-    C 26 115, 38 122, 44 126
-    C 47 129, 57 133, 57 138
-    C 57 144, 37 146, 30 141
-    C 26 137, 38 144, 44 148
-    C 47 151, 57 155, 57 160
-    C 57 166, 37 168, 30 163
-    C 26 159, 38 166, 44 170
-    L 44 204
-  `
+  const rightEdge = COIL_CX + COIL_R
+  // Top lead exits the straight plug horizontally and curves C1-smoothly into the first coil tangent.
+  const topLead = `M 30.5 44 H 36 C 45.5 44, ${rightEdge} 51, ${rightEdge} 64 V ${COIL_Y0}`
+  // Bottom lead exits the last coil turn vertically and S-curves cleanly onto the right-angle boot axis.
+  const bottomLead = `M ${rightEdge} ${COIL_HELIX.yEnd} C ${rightEdge} ${COIL_HELIX.yEnd + 10}, ${COIL_CX} ${COIL_HELIX.yEnd + 11}, ${COIL_CX} ${COIL_HELIX.yEnd + 22} V 186`
 
   return (
     <div className={`mic-wire-connector-wrapper ${className}`} aria-hidden="true">
       <svg
         className="mic-coiled-cable-svg"
         viewBox="0 0 68 260"
+        preserveAspectRatio="xMinYMid meet"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* 1. Base Connector on Photo Card right edge (x=0, y=52) */}
+        {/* 1. Top Straight 3.5mm TRS Output Plug seated flush on Photography Card (x=0, y=44) */}
         <g className="mic-card-base">
-          <rect
-            x="0"
-            y="43"
-            width="8"
-            height="18"
-            rx="3"
+          {/* Recessed 3.5mm jack socket bezel on card edge */}
+          <path
+            d="M 0 36.5 H 2.4 A 1.2 1.2 0 0 1 3.6 37.7 V 50.3 A 1.2 1.2 0 0 1 2.4 51.5 H 0 Z"
             fill="var(--bento-bg)"
             stroke="currentColor"
             strokeWidth="1.4"
+            strokeLinejoin="round"
           />
-          <line x1="8" y1="46" x2="8" y2="58" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </g>
-
-        {/* 2. Continuous Spring Cable Path */}
-        <motion.path
-          d={springWirePath}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="mic-cable-stroke"
-        />
-
-        {/* 3. L-Shaped (Right-Angle) Connector Plug into Gear Card (flush at x=0) */}
-        <g className="mic-l-connector-plug">
-          {/* Top Strain Relief Collar where vertical spring wire enters */}
+          {/* Stepped metallic plug shoulder */}
           <rect
-            x="41"
-            y="203"
-            width="6"
-            height="5"
-            rx="1.2"
-            fill="currentColor"
+            x="3.6"
+            y="40.6"
+            width="3.8"
+            height="6.8"
+            fill="var(--bento-bg)"
+            stroke="currentColor"
+            strokeWidth="1.35"
           />
-
-          {/* Vertical elbow block */}
+          {/* Cylindrical molded plug barrel with subtle knurled grip grooves */}
           <rect
-            x="38"
-            y="207"
-            width="12"
-            height="15"
+            x="7.4"
+            y="38.5"
+            width="13"
+            height="11"
             rx="2"
             fill="var(--bento-bg)"
             stroke="currentColor"
-            strokeWidth="1.4"
+            strokeWidth="1.45"
+          />
+          <line x1="10.8" y1="40.8" x2="10.8" y2="47.2" stroke="currentColor" strokeWidth="0.9" opacity="0.5" strokeLinecap="round" />
+          <line x1="13.9" y1="40.8" x2="13.9" y2="47.2" stroke="currentColor" strokeWidth="0.9" opacity="0.5" strokeLinecap="round" />
+          <line x1="17.0" y1="40.8" x2="17.0" y2="47.2" stroke="currentColor" strokeWidth="0.9" opacity="0.5" strokeLinecap="round" />
+          {/* Tapered 3-rib flexible strain-relief boot */}
+          <path
+            d="M 20.4 40.5 L 30.5 42.2 V 45.8 L 20.4 47.5 Z"
+            fill="var(--bento-bg)"
+            stroke="currentColor"
+            strokeWidth="1.35"
+            strokeLinejoin="round"
+          />
+          <line x1="23.4" y1="41.3" x2="23.4" y2="46.7" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
+          <line x1="26.1" y1="41.7" x2="26.1" y2="46.3" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
+          <line x1="28.5" y1="42.0" x2="28.5" y2="46.0" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
+        </g>
+
+        {/* 2. Coiled Audio Cable — back loops first, then front loops with paper knockout for 3D depth */}
+        <g className="mic-cable-back" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity="0.46">
+          {COIL_HELIX.back.map((d, i) => (
+            <path key={`back-${i}`} d={d} />
+          ))}
+        </g>
+
+        <g className="mic-cable-knockout" stroke="var(--paper)" strokeWidth="4.2" strokeLinecap="butt">
+          {COIL_HELIX.mask.map((d, i) => (
+            <path key={`mask-${i}`} d={d} />
+          ))}
+        </g>
+
+        <g className="mic-cable-stroke" stroke="currentColor" strokeWidth="2.05" strokeLinecap="round" strokeLinejoin="round">
+          <path d={topLead} />
+          {COIL_HELIX.front.map((d, i) => (
+            <path key={`front-${i}`} d={d} />
+          ))}
+          <path d={COIL_HELIX.exitRim} />
+          <path d={bottomLead} />
+        </g>
+
+        {/* 3. Bottom 90° Right-Angle 3.5mm TRS Headphone Jack plugged into Gear Dock (x=0, y=216) */}
+        <g className="mic-l-connector-plug">
+          {/* Vertical tapered 3-rib flexible strain-relief boot */}
+          <path
+            d="M 40.2 186 H 43.8 L 45.4 200 H 38.6 Z"
+            fill="var(--bento-bg)"
+            stroke="currentColor"
+            strokeWidth="1.35"
+            strokeLinejoin="round"
+          />
+          <line x1="40.0" y1="189.8" x2="44.0" y2="189.8" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
+          <line x1="39.6" y1="193.3" x2="44.4" y2="193.3" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
+          <line x1="39.2" y1="196.8" x2="44.8" y2="196.8" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
+
+          {/* Unified molded 90° right-angle plug housing */}
+          <path
+            d="M 37.4 200 H 46.6 A 1.4 1.4 0 0 1 48 201.4 V 218.5 A 3.5 3.5 0 0 1 44.5 222 H 23.4 A 1.4 1.4 0 0 1 22 220.6 V 211.4 A 1.4 1.4 0 0 1 23.4 210 H 36 A 1.4 1.4 0 0 0 37.4 208.6 Z"
+            fill="var(--bento-bg)"
+            stroke="currentColor"
+            strokeWidth="1.45"
+            strokeLinejoin="round"
+          />
+          {/* Subtle grip ribs on the horizontal barrel + corner relief mark */}
+          <line x1="26.4" y1="212.4" x2="26.4" y2="219.6" stroke="currentColor" strokeWidth="0.9" opacity="0.5" strokeLinecap="round" />
+          <line x1="29.8" y1="212.4" x2="29.8" y2="219.6" stroke="currentColor" strokeWidth="0.9" opacity="0.5" strokeLinecap="round" />
+          <line x1="33.2" y1="212.4" x2="33.2" y2="219.6" stroke="currentColor" strokeWidth="0.9" opacity="0.5" strokeLinecap="round" />
+          <circle cx="42" cy="216" r="1.45" stroke="currentColor" strokeWidth="0.9" opacity="0.38" />
+
+          {/* Stepped metallic plug shoulder */}
+          <rect
+            x="16.8"
+            y="212.2"
+            width="5.2"
+            height="7.6"
+            rx="0.9"
+            fill="var(--bento-bg)"
+            stroke="currentColor"
+            strokeWidth="1.35"
           />
 
-          {/* Horizontal box meeting and clipping directly at card edge (x=0) */}
+          {/* 3.5mm TRS metallic shaft with two signature Tip-Ring-Sleeve insulator bands */}
           <rect
-            x="0"
-            y="210"
-            width="40"
-            height="9"
+            x="3.6"
+            y="213.8"
+            width="13.2"
+            height="4.4"
+            fill="var(--bento-bg)"
+            stroke="currentColor"
+            strokeWidth="1.35"
+          />
+          <rect x="7.4" y="213.8" width="1.6" height="4.4" fill="currentColor" />
+          <rect x="11.4" y="213.8" width="1.6" height="4.4" fill="currentColor" />
+
+          {/* Recessed 3.5mm MIC-IN socket bezel flush at Gear Dock right edge (x=0) */}
+          <path
+            d="M 0 208.5 H 2.4 A 1.2 1.2 0 0 1 3.6 209.7 V 222.3 A 1.2 1.2 0 0 1 2.4 223.5 H 0 Z"
             fill="var(--bento-bg)"
             stroke="currentColor"
             strokeWidth="1.4"
+            strokeLinejoin="round"
           />
-
-          {/* Grip groove lines on L-connector body */}
-          <line x1="14" y1="212" x2="14" y2="217" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
-          <line x1="20" y1="212" x2="20" y2="217" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
-          <line x1="26" y1="212" x2="26" y2="217" stroke="currentColor" strokeWidth="0.9" opacity="0.6" />
+          <line x1="1.7" y1="211.2" x2="1.7" y2="220.8" stroke="currentColor" strokeWidth="0.85" opacity="0.45" strokeLinecap="round" />
         </g>
       </svg>
     </div>

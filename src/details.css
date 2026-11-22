@@ -10,6 +10,173 @@
 }
 
 /* -------------------------------------------------------------------------- */
+/* Intro: waving hand high-five                                                */
+/* -------------------------------------------------------------------------- */
+
+.wave-btn {
+  position: relative;
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  margin: 0 0.04em 0 0.02em;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 1em;
+  line-height: 0;
+  cursor: pointer;
+  transition: scale 150ms ease-out;
+}
+
+.wave-btn .intro-wave-hand {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  vertical-align: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wave-btn:hover {
+    scale: 1.1;
+  }
+}
+
+.wave-btn:active {
+  scale: 0.96;
+}
+
+.wave-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.wave-btn.is-clapping .intro-wave-hand {
+  animation: waveClap 300ms var(--px-ease) both;
+}
+
+@keyframes waveClap {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  28% {
+    transform: rotate(-16deg) scale(0.92);
+  }
+  62% {
+    transform: rotate(15deg) scale(1.16);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.wave-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wave-chip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 8px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ink);
+  text-shadow:
+    1px 1px 0 var(--paper),
+    -1px -1px 0 var(--paper),
+    1px -1px 0 var(--paper),
+    -1px 1px 0 var(--paper);
+  animation: waveChip 820ms var(--px-ease) both;
+}
+
+@keyframes waveChip {
+  0% {
+    translate: -50% 4px;
+    opacity: 0;
+  }
+  18% {
+    translate: -50% -4px;
+    opacity: 1;
+  }
+  78% {
+    translate: -50% -11px;
+    opacity: 1;
+  }
+  100% {
+    translate: -50% -15px;
+    opacity: 0;
+  }
+}
+
+.wave-spark {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 2;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  background: light-dark(#d89328, #f5c65c);
+  animation: waveSpark 480ms steps(5, end) both;
+}
+
+.wave-spark-1 {
+  --sx: -0.95em;
+  --sy: -0.58em;
+  background: light-dark(#e09e2d, #f5c65c);
+}
+
+.wave-spark-2 {
+  --sx: -0.42em;
+  --sy: -0.95em;
+  width: 3px;
+  height: 3px;
+  background: light-dark(#b87424, #d99d43);
+}
+
+.wave-spark-3 {
+  --sx: 0.48em;
+  --sy: -0.92em;
+  background: light-dark(#e09e2d, #f5c65c);
+}
+
+.wave-spark-4 {
+  --sx: 0.96em;
+  --sy: -0.34em;
+  width: 3px;
+  height: 3px;
+  background: light-dark(#c6822b, #fff2c8);
+}
+
+.wave-spark-5 {
+  --sx: 0.78em;
+  --sy: 0.36em;
+  width: 3px;
+  height: 3px;
+  background: light-dark(#b87424, #d99d43);
+}
+
+@keyframes waveSpark {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--sx), var(--sy)) scale(0.65);
+    opacity: 0;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* Swap: two lines of copy in one cell, the hero block's rest/hover motion     */
 /* -------------------------------------------------------------------------- */
 
@@ -834,11 +1001,13 @@ button.hobbies-ign-badge:focus-visible {
     translate: calc(-50% + var(--tip-shift, 0px)) 0;
   }
 
+  .wave-spark,
   .mine-bit,
   .minecraft-mountain-glint {
     display: none;
   }
 
+  .wave-btn.is-clapping .intro-wave-hand,
   .minecraft-mountain-block.is-breaking,
   .minecraft-mountain-block.is-regrown,
   .contact-clock-colon,
@@ -853,10 +1022,17 @@ button.hobbies-ign-badge:focus-visible {
     transform: none;
   }
 
+  .wave-chip {
+    animation: none;
+    translate: -50% -2px;
+    opacity: 1;
+  }
+
   .footer-goose {
     transition: none;
   }
 
+  .wave-btn,
   .about-portrait-btn,
   button.exp-tag,
   .secrets-chip,
