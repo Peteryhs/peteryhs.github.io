@@ -32,10 +32,10 @@ export const topics: Topic[] = [
     id: 'about',
     title: 'About Me',
     shortTitle: 'About',
-    preview: 'Peter Shao / PeterYHS, Toronto based tech nerd',
+    preview: 'Peter Shao / PeterYHS, Oakville & Waterloo tech nerd',
     description: 'A snapshot of who I am, what I build, and what I speak.',
     items: [
-      { title: 'Location', text: 'Toronto, Canada' },
+      { title: 'Location', text: 'Oakville & Waterloo, ON' },
       { title: 'Program', text: 'Computer Engineering @ University of Waterloo' },
       { title: 'Freetime', text: 'Homelab Nerd & Audio/camera aficionado' },
     ],

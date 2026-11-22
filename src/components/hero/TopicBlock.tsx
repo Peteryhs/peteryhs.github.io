@@ -4,7 +4,7 @@ import { Surface } from './surfaces'
 
 function RestIcon({ icon }: { icon: BlockIcon }) {
   if (icon.type === 'photo') return <span className="tb-photo" />
-  if (icon.type === 'crest') return <img className="tb-crest" src={`${import.meta.env.BASE_URL}waterloo-crest.png`} alt="" />
+  if (icon.type === 'crest') return <img className="tb-crest" src={`${import.meta.env.BASE_URL}waterloo-shield.svg`} alt="" />
   return <DemoIcon kind={icon.kind} />
 }
 

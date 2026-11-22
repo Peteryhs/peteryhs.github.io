@@ -146,6 +146,8 @@ interface FallingSparkle {
   vy: number
   size: number
   color: string
+  age: number
+  maxAge?: number
 }
 
 const SPARKLE_COLORS = ['#FFFFFF', '#FFF8D1', '#FFE14D', '#FFC800']
@@ -192,20 +194,21 @@ function layerTransform(k: number): string {
 }
 
 // Burst kick: the tip shoots above its normal height, falls back, squashes, then settles
-const KICK = { rise: 0.15, fall: 0.17, settle: 0.2, stretch: 0.38, narrow: 0.1, lift: 10, squash: 0.28 }
+const KICK_FULL = { rise: 0.15, fall: 0.17, settle: 0.2, stretch: 0.38, narrow: 0.1, lift: 10, squash: 0.28 }
+const KICK_INPLACE = { rise: 0.14, fall: 0.18, settle: 0.22, stretch: 0.26, narrow: 0.08, lift: 5, squash: 0.18 }
 
-function burstKick(t: number): number {
+function burstKick(t: number, cfg = KICK_FULL): number {
   if (t <= 0) return 0
-  if (t < KICK.rise) return easeOutCubic(t / KICK.rise)
-  t -= KICK.rise
-  if (t < KICK.fall) {
-    const x = t / KICK.fall
+  if (t < cfg.rise) return easeOutCubic(t / cfg.rise)
+  t -= cfg.rise
+  if (t < cfg.fall) {
+    const x = t / cfg.fall
     return 1 - x * x
   }
-  t -= KICK.fall
-  if (t < KICK.settle) {
-    const x = t / KICK.settle
-    return -KICK.squash * Math.sin(Math.PI * x) * (1 - x * 0.6)
+  t -= cfg.fall
+  if (t < cfg.settle) {
+    const x = t / cfg.settle
+    return -cfg.squash * Math.sin(Math.PI * x) * (1 - x * 0.6)
   }
   return 0
 }
@@ -213,22 +216,36 @@ function burstKick(t: number): number {
 const SPARK_SPEED = 1.45
 const SPARK_GRAVITY = 0.3
 
+export type StreakVariant = 'full' | 'inplace'
+
 interface StreakFireOverlayProps {
   origin: FlameOrigin
+  variant?: StreakVariant
   onComplete: () => void
 }
 
-// Total choreographed sequence duration in seconds
-const TOTAL_DURATION_S = 2.2
-// Ignition timeline: spark kindles, flame bursts open, holds, then glides home
-const SPARK_END_S = 0.16
-const BURST_END_S = 0.52
-const HOLD_END_S = 1.5
-const LAST_EMIT_S = 1.05
-// Lets the last pills fall out of the card after the flame is back at rest
-const SPARKLE_TAIL_S = 0.9
+// Choreographed sequence durations in seconds
+const TIMING = {
+  full: {
+    sparkEnd: 0.16,
+    burstEnd: 0.52,
+    holdEnd: 1.5,
+    total: 2.2,
+    lastEmit: 1.05,
+    tail: 0.9,
+  },
+  inplace: {
+    sparkEnd: 0.14,
+    burstEnd: 0.44,
+    holdEnd: 0.94,
+    total: 1.32,
+    lastEmit: 0.56,
+    tail: 0.6,
+  },
+} as const
 
-export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps) {
+export function StreakFireOverlay({ origin, variant = 'full', onComplete }: StreakFireOverlayProps) {
+  const isInplace = variant === 'inplace'
   const [dismissing, setDismissing] = useState(false)
   const completedRef = useRef(false)
   const dismissingRef = useRef(false)
@@ -251,6 +268,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
   }
 
   const triggerEarlyDismiss = (e?: React.MouseEvent) => {
+    if (isInplace) return
     if (e) e.stopPropagation()
     dismissingRef.current = true
     setDismissing(true)
@@ -264,6 +282,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
   }, [dismissing])
 
   useEffect(() => {
+    if (isInplace) return
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         dismissingRef.current = true
@@ -272,78 +291,83 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [isInplace])
 
-  // Single unified 60fps animation engine:
-  // 1) Springs the flame from its slot to card center with squash-and-stretch
-  // 2) Dynamically morphs all 3 SVG flame paths (outer, mid, inner) in real time
-  // 3) Floods the entire card warm Duolingo orange when the flame surges
-  // 4) Emits crisp sparkles & droplets that pop and bounce physically off the fire
-  // 5) Smoothly draws the orange back and glides the flame home to its slot
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d') ?? null
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const tCfg = TIMING[variant]
+    const kickCfg = isInplace ? KICK_INPLACE : KICK_FULL
 
     const cardW = Math.max(1, origin.cardWidth)
     const cardH = Math.max(1, origin.cardHeight)
-    const centerX = cardW / 2
-    const centerY = cardH / 2
+    const targetX = isInplace ? origin.x : cardW / 2
+    const targetY = isInplace ? origin.y : cardH / 2
 
     if (canvas) {
       canvas.width = Math.round(cardW * dpr)
       canvas.height = Math.round(cardH * dpr)
     }
 
-    const heroSize = Math.round(Math.max(96, Math.min(Math.min(cardW, cardH) * 0.56, 134)))
+    const heroSize = isInplace
+      ? Math.max(36, Math.round(origin.width))
+      : Math.round(Math.max(68, Math.min(Math.min(cardW, cardH) * 0.62, 134)))
     const heroHeight = Math.round(heroSize * 1.14)
     const startScale = origin.width / heroSize
-    const maxWashRadius = Math.ceil(
-      Math.hypot(Math.max(origin.x, cardW - origin.x), Math.max(origin.y, cardH - origin.y)) + 18
-    )
+    const maxWashRadius = isInplace
+      ? Math.round(heroSize * 1.25)
+      : Math.ceil(
+          Math.hypot(Math.max(origin.x, cardW - origin.x), Math.max(origin.y, cardH - origin.y)) + 18
+        )
 
     const particles: FallingSparkle[] = []
     let burst1Fired = false
     let burst2Fired = false
-    let lastEmitT = BURST_END_S
+    let lastEmitT: number = tCfg.burstEnd
 
     const spawnOffFlame = (count: number, speedMul = 1) => {
       for (let i = 0; i < count; i++) {
-        // Spawn directly around the roaring flame perimeter so sparkles visibly pop off the fire
-        const spawnAngle = -Math.PI * 0.88 + Math.random() * Math.PI * 1.76
-        const spawnR = heroSize * (0.28 + Math.random() * 0.24)
-        const sx = centerX + Math.cos(spawnAngle) * spawnR
-        const sy = centerY + Math.sin(spawnAngle) * spawnR * 0.9 - 4
+        const spawnAngle = isInplace
+          ? -Math.PI * 0.92 + Math.random() * Math.PI * 1.84
+          : -Math.PI * 0.88 + Math.random() * Math.PI * 1.76
+        const spawnR = heroSize * (isInplace ? 0.34 + Math.random() * 0.16 : 0.28 + Math.random() * 0.24)
+        const sx = targetX + Math.cos(spawnAngle) * spawnR
+        const sy = targetY + Math.sin(spawnAngle) * spawnR * 0.9 - (isInplace ? 2 : 4)
 
-        const speed = (2.1 + Math.random() * 3.4) * speedMul * SPARK_SPEED
-        const vx = Math.cos(spawnAngle) * speed + (Math.random() - 0.5) * 1.1
-        const vy = Math.sin(spawnAngle) * speed - (1.6 + Math.random() * 1.9) * speedMul * SPARK_SPEED
+        const speedScale = isInplace ? 0.56 : 1
+        const speed = (2.1 + Math.random() * 3.4) * speedMul * SPARK_SPEED * speedScale
+        const vx = Math.cos(spawnAngle) * speed + (Math.random() - 0.5) * (isInplace ? 0.55 : 1.1)
+        const vy =
+          Math.sin(spawnAngle) * speed -
+          (1.6 + Math.random() * 1.9) * speedMul * SPARK_SPEED * speedScale
 
         particles.push({
           x: sx,
           y: sy,
           vx,
           vy,
-          size: 6.2 + Math.random() * 5.2,
+          size: isInplace ? 3.2 + Math.random() * 2.4 : 6.2 + Math.random() * 5.2,
           color: SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)],
+          age: 0,
+          maxAge: isInplace ? 0.52 + Math.random() * 0.2 : undefined,
         })
       }
     }
 
     const startTime = performance.now()
     let rafId = 0
-
     let lastNow = startTime
 
     const tick = (now: number) => {
       const elapsed = (now - startTime) / 1000
-      // Physics is tuned per 60fps frame; scale it so slower frame rates fall just as fast
+      const dt = Math.min(0.064, Math.max(0, (now - lastNow) / 1000))
       const step = Math.min(4, Math.max(0, (now - lastNow) / (1000 / 60)))
       lastNow = now
-      const gravity = SPARK_GRAVITY * (elapsed > TOTAL_DURATION_S ? 3 : 1)
-      const p = Math.min(1, elapsed / TOTAL_DURATION_S)
+      const gravity = (isInplace ? SPARK_GRAVITY * 0.72 : SPARK_GRAVITY) * (elapsed > tCfg.total ? 3 : 1)
+      const p = Math.min(1, elapsed / tCfg.total)
 
-      // --- 1. Flame position, crisp bouncy scale, and stable center hold ---
+      // --- 1. Flame position, crisp bouncy scale, and stable hold ---
       let fx = origin.x
       let fy = origin.y
       let scaleX = startScale
@@ -356,57 +380,52 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
       let layerInner = 1
       let layerMid = 1
       let layerOuter = 1
-      if (elapsed < SPARK_END_S) {
-        // Nothing but a kindling spark at center; the flame has not lit yet
-        fx = centerX
-        fy = centerY - 2
+      if (elapsed < tCfg.sparkEnd) {
+        fx = targetX
+        fy = targetY - (isInplace ? 0 : 2)
         scaleX = 0
         scaleY = 0
-        sparkAmount = easeOutCubic(elapsed / SPARK_END_S)
+        sparkAmount = easeOutCubic(elapsed / tCfg.sparkEnd)
         morphIntensity = 0.2
-      } else if (elapsed < BURST_END_S) {
-        // Layers bloom one after another out of the white core, with a bright flash that cools
-        const u = (elapsed - SPARK_END_S) / (BURST_END_S - SPARK_END_S)
-        fx = centerX
-        fy = centerY - 2
+      } else if (elapsed < tCfg.burstEnd) {
+        const u = (elapsed - tCfg.sparkEnd) / (tCfg.burstEnd - tCfg.sparkEnd)
+        fx = targetX
+        fy = targetY - (isInplace ? 0 : 2)
         scaleX = 1
         scaleY = 1
         layerInner = layerBloom(u, LAYER_STAGGER.inner)
         layerMid = layerBloom(u, LAYER_STAGGER.mid)
         layerOuter = layerBloom(u, LAYER_STAGGER.outer)
-        brightness = lerp(1.75, 1, easeOutCubic(u))
+        brightness = lerp(isInplace ? 1.45 : 1.75, 1, easeOutCubic(u))
         sparkAmount = Math.max(0, 1 - u * 3)
-        morphIntensity = lerp(0.3, 0.95, easeOutCubic(u))
-      } else if (elapsed < HOLD_END_S) {
-        // Stable center stance with a gentle vertical breath (no sideways shaking)
-        const u = (elapsed - BURST_END_S) / (HOLD_END_S - BURST_END_S)
-        fx = centerX
-        const breath = Math.sin(u * Math.PI * 2) * 0.025
-        fy = centerY - 2 - breath * 14
+        morphIntensity = lerp(0.3, isInplace ? 0.65 : 0.95, easeOutCubic(u))
+      } else if (elapsed < tCfg.holdEnd) {
+        const u = (elapsed - tCfg.burstEnd) / (tCfg.holdEnd - tCfg.burstEnd)
+        fx = targetX
+        const breath = Math.sin(u * Math.PI * 2) * (isInplace ? 0.018 : 0.025)
+        fy = targetY - (isInplace ? 0 : 2) - breath * (isInplace ? 6 : 14)
         scaleX = 1.0 - breath * 0.35
         scaleY = 1.0 + breath
-        morphIntensity = lerp(0.95, 0.8, u)
+        morphIntensity = lerp(isInplace ? 0.65 : 0.95, isInplace ? 0.3 : 0.8, u)
       } else {
-        // Smooth geometric return from center back into the resting flame slot
-        const u = Math.min(1, (elapsed - HOLD_END_S) / (TOTAL_DURATION_S - HOLD_END_S))
+        const u = Math.min(1, (elapsed - tCfg.holdEnd) / (tCfg.total - tCfg.holdEnd))
         const e = easeInOutCubic(u)
-        fx = lerp(centerX, origin.x, e)
-        fy = lerp(centerY - 2, origin.y, e) - Math.sin(u * Math.PI) * 6
+        fx = lerp(targetX, origin.x, e)
+        fy = lerp(targetY - (isInplace ? 0 : 2), origin.y, e) - (isInplace ? 0 : Math.sin(u * Math.PI) * 6)
         const baseScale = lerp(1.0, startScale, e)
         scaleX = baseScale
         scaleY = baseScale
-        const dir = Math.sign(origin.x - centerX) || -1
-        leanX = -dir * Math.sin(u * Math.PI) * 0.35
-        morphIntensity = lerp(0.8, 0.0, e)
+        const dir = Math.sign(origin.x - targetX) || -1
+        leanX = isInplace ? 0 : -dir * Math.sin(u * Math.PI) * 0.35
+        morphIntensity = lerp(isInplace ? 0.3 : 0.8, 0.0, e)
       }
 
-      const kick = burstKick(elapsed - SPARK_END_S)
+      const kick = burstKick(elapsed - tCfg.sparkEnd, kickCfg)
       if (kick !== 0) {
-        const kickScaleY = 1 + KICK.stretch * kick
+        const kickScaleY = 1 + kickCfg.stretch * kick
         scaleY *= kickScaleY
-        scaleX *= 1 - KICK.narrow * kick
-        // Keep the base planted while the tip stretches up
-        fy -= (kickScaleY - 1) * heroHeight * 0.42 + Math.max(0, kick) * KICK.lift
+        scaleX *= 1 - kickCfg.narrow * kick
+        fy -= (kickScaleY - 1) * heroHeight * 0.42 + Math.max(0, kick) * kickCfg.lift
       }
 
       outerGroupRef.current?.setAttribute('transform', layerTransform(layerOuter))
@@ -415,7 +434,10 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
 
       if (heroRef.current) {
         heroRef.current.style.transform = `translate3d(${fx.toFixed(2)}px, ${fy.toFixed(2)}px, 0) translate(-50%, -50%) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`
-        heroRef.current.style.filter = `brightness(${brightness.toFixed(3)}) drop-shadow(0 12px 22px rgba(135, 38, 0, 0.28))`
+        const shadow = isInplace
+          ? 'drop-shadow(0 5px 12px rgba(255, 150, 0, 0.3))'
+          : 'drop-shadow(0 12px 22px rgba(135, 38, 0, 0.28))'
+        heroRef.current.style.filter = `brightness(${brightness.toFixed(3)}) ${shadow}`
       }
 
       // --- 2. Morph the 3 actual SVG flame paths every frame ---
@@ -430,37 +452,36 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         coreEllipseRef.current.setAttribute('ry', paths.glowRy.toFixed(2))
       }
 
-      // --- 3. Solid orange background blooms IN SYNC with the flame from frame 1 and contracts back together ---
-      let washRadius = 0
-      let washOpacity = 1
-      if (elapsed < BURST_END_S) {
-        const u = easeOutCubic(elapsed / BURST_END_S)
-        washRadius = maxWashRadius * u
-        washOpacity = Math.min(1, 0.25 + u * 0.75)
-      } else if (elapsed < HOLD_END_S) {
-        washRadius = maxWashRadius
-        washOpacity = 1
-      } else {
-        const u = easeInOutCubic(Math.min(1, (elapsed - HOLD_END_S) / (TOTAL_DURATION_S - HOLD_END_S)))
-        washRadius = maxWashRadius * (1 - u)
-        washOpacity = Math.max(0, 1 - u * 0.92)
-      }
-
-      if (washRef.current) {
+      // --- 3. Wash (full-card orange flood in full mode only; inplace stays completely clear) ---
+      if (!isInplace && washRef.current) {
+        let washRadius = 0
+        let washOpacity = 1
+        if (elapsed < tCfg.burstEnd) {
+          const u = easeOutCubic(elapsed / tCfg.burstEnd)
+          washRadius = maxWashRadius * u
+          washOpacity = Math.min(1, 0.25 + u * 0.75)
+        } else if (elapsed < tCfg.holdEnd) {
+          washRadius = maxWashRadius
+          washOpacity = 1
+        } else {
+          const u = easeInOutCubic(Math.min(1, (elapsed - tCfg.holdEnd) / (tCfg.total - tCfg.holdEnd)))
+          washRadius = maxWashRadius * (1 - u)
+          washOpacity = Math.max(0, 1 - u * 0.92)
+        }
         washRef.current.style.clipPath = `circle(${washRadius.toFixed(1)}px at ${fx.toFixed(1)}px ${fy.toFixed(1)}px)`
         washRef.current.style.opacity = washOpacity.toFixed(3)
       }
 
-      // --- 4. Fewer, larger pill sparkles thrown off the fire ---
-      if (!burst1Fired && elapsed >= SPARK_END_S + 0.06) {
+      // --- 4. Pill sparkles thrown off the fire ---
+      if (!burst1Fired && elapsed >= tCfg.sparkEnd + 0.05) {
         burst1Fired = true
-        spawnOffFlame(7, 1.15)
+        spawnOffFlame(isInplace ? 5 : 7, isInplace ? 0.95 : 1.15)
       }
-      if (!burst2Fired && elapsed >= 0.72) {
+      if (!isInplace && !burst2Fired && elapsed >= 0.72) {
         burst2Fired = true
         spawnOffFlame(4, 0.9)
       }
-      if (elapsed > BURST_END_S && elapsed < LAST_EMIT_S && elapsed - lastEmitT >= 0.28) {
+      if (!isInplace && elapsed > tCfg.burstEnd && elapsed < tCfg.lastEmit && elapsed - lastEmitT >= 0.28) {
         lastEmitT = elapsed
         spawnOffFlame(1, 0.8)
       }
@@ -472,22 +493,29 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
 
         for (let i = particles.length - 1; i >= 0; i--) {
           const sp = particles[i]
-          // Plain ballistic motion: gravity pulls each pill down and out of the card, no fading
+          sp.age += dt
           sp.vy += gravity * step
-          sp.vx *= Math.pow(0.995, step)
+          sp.vx *= Math.pow(0.992, step)
           sp.x += sp.vx * step
           sp.y += sp.vy * step
 
           const margin = sp.size * 2
-          if (sp.y > cardH + margin || sp.x < -margin || sp.x > cardW + margin) {
+          if (
+            (sp.maxAge !== undefined && sp.age >= sp.maxAge) ||
+            sp.y > cardH + margin ||
+            sp.x < -margin ||
+            sp.x > cardW + margin
+          ) {
             particles.splice(i, 1)
             continue
           }
 
-          // Round pill stretched along its direction of travel
-          const len = sp.size * 2.1
+          const alpha =
+            sp.maxAge !== undefined ? Math.max(0, 1 - Math.pow(sp.age / sp.maxAge, 1.8)) : 1
+          const len = sp.size * (isInplace ? 1.85 : 2.1)
           const r = (sp.size * 0.85) / 2
           ctx.save()
+          ctx.globalAlpha = alpha
           ctx.translate(sp.x, sp.y)
           ctx.rotate(Math.atan2(sp.vy, sp.vx))
           ctx.fillStyle = sp.color
@@ -503,9 +531,9 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         }
 
         if (sparkAmount > 0.01) {
-          const r = 4 + sparkAmount * 9
+          const r = (isInplace ? 3 : 4) + sparkAmount * (isInplace ? 6 : 9)
           ctx.save()
-          ctx.translate(centerX, centerY + heroSize * 0.18)
+          ctx.translate(targetX, targetY + heroSize * 0.14)
           ctx.rotate(elapsed * 6)
           ctx.globalAlpha = Math.min(1, sparkAmount * 1.4)
           ctx.fillStyle = '#FFF8D1'
@@ -527,7 +555,7 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
         ctx.restore()
       }
 
-      const sparklesInFlight = particles.length > 0 && elapsed < TOTAL_DURATION_S + SPARKLE_TAIL_S
+      const sparklesInFlight = particles.length > 0 && elapsed < tCfg.total + tCfg.tail
       if ((p < 1 || sparklesInFlight) && !dismissingRef.current) {
         rafId = window.requestAnimationFrame(tick)
       } else if (!dismissingRef.current) {
@@ -538,17 +566,19 @@ export function StreakFireOverlay({ origin, onComplete }: StreakFireOverlayProps
     rafId = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(rafId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [origin])
+  }, [origin, variant])
 
   const cardW = Math.max(1, origin.cardWidth)
   const cardH = Math.max(1, origin.cardHeight)
-  const heroSize = Math.round(Math.max(96, Math.min(Math.min(cardW, cardH) * 0.56, 134)))
+  const heroSize = isInplace
+    ? Math.max(36, Math.round(origin.width))
+    : Math.round(Math.max(68, Math.min(Math.min(cardW, cardH) * 0.62, 134)))
   const heroHeight = Math.round(heroSize * 1.14)
 
   return (
     <div
-      className={`streak-overlay ${dismissing ? 'is-dismissing' : ''}`.trim()}
-      style={{ pointerEvents: dismissing ? 'none' : 'auto' }}
+      className={`streak-overlay ${isInplace ? 'streak-overlay-inplace' : ''} ${dismissing ? 'is-dismissing' : ''}`.trim()}
+      style={{ pointerEvents: isInplace || dismissing ? 'none' : 'auto' }}
       role="presentation"
       aria-hidden="true"
       onClick={triggerEarlyDismiss}

@@ -700,27 +700,7 @@ main {
   font-size: 1.08rem !important;
 }
 
-/* Full About Bento Grid Structure (exact match to max-width: 58rem) */
-.about-bento-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-  width: 100%;
-  max-width: 58rem;
-  margin-top: 0.5rem;
-}
-
-.about-bento-row-top {
-  display: grid;
-  grid-template-columns: 1.8fr 1fr;
-  gap: 1.1rem;
-  width: 100%;
-}
-
-.about-bento-row-middle,
-.about-bento-row-bottom {
-  width: 100%;
-}
+/* About Me grid layout lives in src/components/AboutBento.css */
 
 /* ==========================================================================
    Direct Expanded Cards in Intro (Smooth height collapse & padding containment)

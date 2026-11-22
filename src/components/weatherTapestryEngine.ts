@@ -7,6 +7,8 @@ import {
 } from './flappyBirdEngine'
 
 export const TAPESTRY_CELL = 20
+export const PIXEL_TAPESTRY_CELL = 15
+export const PIXEL_GRID_MAJOR = 30
 export const MORPH_DURATION_MS = 560
 
 export type StageMode = 'tapestry' | 'morphing' | 'playing' | 'crashed'
@@ -86,6 +88,9 @@ export interface TapestryRuntime {
   wake: BirdWakeDot[]
   mouseX: number
   mouseY: number
+  smoothMouseX: number
+  smoothMouseY: number
+  mouseStrength: number
   mouseActive: boolean
   blobs: ShapeBlob[]
 }
@@ -201,6 +206,9 @@ export function createTapestryRuntime(): TapestryRuntime {
     wake: [],
     mouseX: -9999,
     mouseY: -9999,
+    smoothMouseX: -9999,
+    smoothMouseY: -9999,
+    mouseStrength: 0,
     mouseActive: false,
     blobs: [],
   }
@@ -439,9 +447,281 @@ function sampleFieldValue(
   return clamp01(f)
 }
 
-// Render the unified 20px Crisp + Soft Aura live-weather tapestry across the ENTIRE grid.
+type RGB = [number, number, number]
+
+type SculptShape = 'diamond' | 'squircle' | 'hexagon' | 'ring' | 'pill' | 'cross'
+
+const SCULPT_SHAPES: SculptShape[] = ['diamond', 'squircle', 'hexagon', 'ring', 'pill', 'cross']
+
+interface SculptPalette {
+  ochre: RGB
+  slate: RGB
+  ink: RGB
+  vx: number
+  vy: number
+}
+
+function getSculptPalette(mood: WeatherMood, isDark: boolean): SculptPalette {
+  // Grounded in the archival ochre / slate / ink palette, subtly nudged by live Waterloo weather.
+  // vx/vy are in px/sec so both the Pixel Tide and emergent morphing shapes travel cohesively.
+  const baseOchre: RGB = isDark ? [212, 161, 86] : [176, 128, 58]
+  const baseSlate: RGB = isDark ? [131, 154, 230] : [74, 96, 174]
+  const ink: RGB = isDark ? [241, 237, 230] : [34, 34, 34]
+
+  switch (mood) {
+    case 'rain':
+      return {
+        ochre: isDark ? [126, 186, 172] : [76, 138, 126],
+        slate: baseSlate,
+        ink,
+        vx: -10,
+        vy: 30,
+      }
+    case 'wind':
+      return {
+        ochre: baseOchre,
+        slate: isDark ? [116, 184, 166] : [64, 132, 118],
+        ink,
+        vx: 36,
+        vy: -5,
+      }
+    case 'dusk':
+      return {
+        ochre: isDark ? [224, 142, 94] : [188, 110, 66],
+        slate: isDark ? [140, 146, 232] : [78, 86, 168],
+        ink,
+        vx: 14,
+        vy: -5,
+      }
+    case 'snow':
+      return {
+        ochre: isDark ? [168, 194, 224] : [114, 142, 178],
+        slate: baseSlate,
+        ink,
+        vx: 7,
+        vy: 18,
+      }
+    case 'fog':
+      return {
+        ochre: isDark ? [196, 168, 122] : [156, 132, 92],
+        slate: isDark ? [146, 166, 198] : [96, 116, 152],
+        ink,
+        vx: 10,
+        vy: 2.5,
+      }
+    default:
+      return {
+        ochre: baseOchre,
+        slate: baseSlate,
+        ink,
+        vx: 18,
+        vy: -6.5,
+      }
+  }
+}
+
+/** Normalized signed-distance-like metric: 0 at center, 1 at boundary, >1 outside. */
+function sculptDistance(shape: SculptShape, x: number, y: number, r: number): number {
+  const ax = Math.abs(x)
+  const ay = Math.abs(y)
+  switch (shape) {
+    case 'diamond':
+      return (ax + ay) / (r * 1.18)
+    case 'squircle': {
+      const nx = ax / (r * 0.88)
+      const ny = ay / (r * 0.88)
+      return Math.pow(nx * nx * nx * nx + ny * ny * ny * ny, 0.25)
+    }
+    case 'hexagon':
+      return Math.max(ax * 0.866 + ay * 0.5, ay) / (r * 0.92)
+    case 'ring': {
+      const dist = Math.hypot(x, y)
+      return Math.abs(dist - r * 0.68) / (r * 0.34)
+    }
+    case 'pill': {
+      const px = Math.max(0, ax - r * 0.46)
+      return Math.hypot(px, ay) / (r * 0.62)
+    }
+    case 'cross': {
+      const barH = Math.max(ax / (r * 1.04), ay / (r * 0.4))
+      const barV = Math.max(ax / (r * 0.4), ay / (r * 1.04))
+      return Math.min(barH, barV)
+    }
+  }
+}
+
+/** Continuous flowing Pixel Tide wave field moving coherently with pal.vx / pal.vy. */
+function samplePixelTide(px: number, py: number, t: number, pal: SculptPalette): number {
+  const fx = px - t * pal.vx
+  const fy = py - t * pal.vy
+  const a = Math.sin(fx * 0.0095 + t * 0.34) * Math.cos(fy * 0.011 - t * 0.24)
+  const b = Math.sin((fx + fy) * 0.0072 - t * 0.22) * 0.65
+  const c = Math.cos(fx * 0.016 - fy * 0.013 + t * 0.35) * 0.35
+  return (a + b + c) * 0.5 + 0.5
+}
+
+/**
+ * Pixel Tide + Emergent Morphing Shapes on a 15px (1.5x) Bayer-dithered grid.
+ * The flowing pixel tide travels continuously while staggered pockets coalesce into
+ * semi-recognizable geometric shapes, morph mid-flight, and dissolve back into the tide.
+ */
+function renderPixelSculptTapestry(
+  pixelCtx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  mood: WeatherMood,
+  isDark: boolean,
+  t: number,
+  runtime: TapestryRuntime,
+  dimFactor: number
+): void {
+  const cell = PIXEL_TAPESTRY_CELL
+  const cols = Math.ceil(width / cell)
+  const rows = Math.ceil(height / cell)
+  const pal = getSculptPalette(mood, isDark)
+
+  const padPx = 150
+  const spanW = width + padPx * 2
+  const spanH = height + padPx * 2
+
+  const pocketCount = 7
+  const activeForms: Array<{
+    cx: number
+    cy: number
+    r: number
+    cos: number
+    sin: number
+    from: SculptShape
+    to: SculptShape
+    morph: number
+    presence: number
+    polarity: number
+  }> = []
+
+  for (let i = 0; i < pocketCount; i++) {
+    const h1 = hash01(i * 13 + 5)
+    const h2 = hash01(i * 29 + 19)
+    const h3 = hash01(i * 47 + 31)
+
+    // Each pocket travels at the tide's velocity with subtle organic meander
+    const speedMul = 0.88 + h1 * 0.34
+    const rawX = ((i + 0.35) / pocketCount) * spanW + t * pal.vx * speedMul + Math.sin(t * 0.25 + h2 * 7) * 26
+    const rawY = ((h2 * 0.78 + 0.11) * spanH) + t * pal.vy * speedMul + Math.cos(t * 0.21 + h3 * 7) * 22
+    const cx = (((rawX % spanW) + spanW) % spanW) - padPx
+    const cy = (((rawY % spanH) + spanH) % spanH) - padPx
+
+    // Staggered coalesce -> morph -> dissolve cycle so shapes appear from the tide and melt back
+    const cycleSec = 8.8 + h3 * 4.0
+    const cyclePos = t / cycleSec + i / pocketCount
+    const cycleIdx = Math.floor(cyclePos)
+    const u = cyclePos - cycleIdx
+
+    // 0..0.24 coalesce, 0.24..0.56 hold & morph, 0.56..0.80 dissolve, 0.80..1.00 pure tide
+    let presence = 0
+    if (u < 0.24) {
+      presence = smoothstep(0, 0.24, u)
+    } else if (u < 0.56) {
+      presence = 1
+    } else if (u < 0.8) {
+      presence = 1 - smoothstep(0.56, 0.8, u)
+    }
+
+    if (presence <= 0.02) continue
+
+    const morph = smoothstep(0.24, 0.58, u)
+    const shapeOffset = Math.floor(h1 * SCULPT_SHAPES.length)
+    const rot = t * (i % 2 === 0 ? 0.16 : -0.15) + h2 * 4
+    const r = (78 + h3 * 40) * (0.86 + presence * 0.14)
+
+    activeForms.push({
+      cx,
+      cy,
+      r,
+      cos: Math.cos(rot),
+      sin: Math.sin(rot),
+      from: SCULPT_SHAPES[(cycleIdx * 2 + shapeOffset) % SCULPT_SHAPES.length],
+      to: SCULPT_SHAPES[(cycleIdx * 2 + shapeOffset + 1) % SCULPT_SHAPES.length],
+      morph,
+      presence,
+      polarity: (cycleIdx + i) & 1,
+    })
+  }
+
+  const slateStr = rgba(pal.slate, (isDark ? 0.34 : 0.28) * dimFactor)
+  const ochreStr = rgba(pal.ochre, (isDark ? 0.32 : 0.26) * dimFactor)
+  const inkStr = rgba(pal.ink, (isDark ? 0.14 : 0.12) * dimFactor)
+  const dustStr = rgba(pal.ochre, (isDark ? 0.15 : 0.12) * dimFactor)
+
+  for (let gy = 1; gy < rows - 1; gy++) {
+    const py = gy * cell
+    const cyPx = py + cell * 0.5
+    const edgeY = Math.min(gy / 4, (rows - gy) / 4, 1)
+    for (let gx = 1; gx < cols - 1; gx++) {
+      const px = gx * cell
+      const cxPx = px + cell * 0.5
+      const edge = Math.min(gx / 5, (cols - gx) / 5, edgeY)
+
+      // Flowing Pixel Tide base
+      const tide = samplePixelTide(cxPx, cyPx, t, pal)
+      let v = tide
+
+      // Blend in any traveling pocket currently crystallizing into a recognizable form
+      let bestPresence = 0
+      let bestPol = 0
+      for (const f of activeForms) {
+        const dx = cxPx - f.cx
+        const dy = cyPx - f.cy
+        const reach = f.r * 1.4
+        if (dx > reach || dx < -reach || dy > reach || dy < -reach) continue
+
+        const lx = dx * f.cos + dy * f.sin
+        const ly = -dx * f.sin + dy * f.cos
+        const dA = sculptDistance(f.from, lx, ly, f.r)
+        const d = f.morph > 0 ? dA + (sculptDistance(f.to, lx, ly, f.r) - dA) * f.morph : dA
+
+        // Let the tide slightly modulate the silhouette edge so it feels born from the current
+        const shapeField = clamp01(1.16 - d + (tide - 0.5) * 0.14)
+        // Smooth local mask around the pocket so the tide reorganizes into the shape
+        const pocketMask = smoothstep(reach, f.r * 0.6, Math.hypot(dx, dy)) * f.presence
+        if (pocketMask > 0.01) {
+          v = v + (shapeField - v) * pocketMask * 0.85
+          if (pocketMask > bestPresence) {
+            bestPresence = pocketMask
+            bestPol = f.polarity
+          }
+        }
+      }
+
+      v *= edge
+
+      if (runtime.mouseStrength > 0.01) {
+        const dist = Math.hypot(cxPx - runtime.smoothMouseX, cyPx - runtime.smoothMouseY)
+        if (dist < 150) {
+          v += Math.sin(dist * 0.08 - t * 4.4) * (1 - dist / 150) * 0.34 * runtime.mouseStrength
+        }
+      }
+
+      const thresh = BAYER4[gy & 3][gx & 3] / 16
+      if (v > 0.5 + thresh * 0.28) {
+        if (v > 0.8) {
+          pixelCtx.fillStyle = bestPresence > 0.35 && bestPol === 1 ? ochreStr : slateStr
+        } else if (v > 0.65) {
+          pixelCtx.fillStyle = bestPresence > 0.35 && bestPol === 1 ? slateStr : ochreStr
+        } else {
+          pixelCtx.fillStyle = inkStr
+        }
+        pixelCtx.fillRect(px + 1, py + 1, cell - 2, cell - 2)
+      } else if (v > 0.42 && (gx + gy) % 5 === 0) {
+        pixelCtx.fillStyle = dustStr
+        pixelCtx.fillRect(px + 5, py + 5, 5, 5)
+      }
+    }
+  }
+}
+
+// Render the live-weather 15px Pixel Tide + Emergent Shapes tapestry across the ENTIRE grid.
 // Never carves a rectangular hole — when Flappy is active, softly dims uniformly so the game
-// integrates directly onto the same living 20px canvas.
+// integrates directly onto the same living canvas.
 export function renderWeatherTapestry(
   bloomCtx: CanvasRenderingContext2D,
   pixelCtx: CanvasRenderingContext2D,
@@ -456,77 +736,7 @@ export function renderWeatherTapestry(
   bloomCtx.clearRect(0, 0, width, height)
   pixelCtx.clearRect(0, 0, width, height)
 
-  const cols = Math.ceil(width / TAPESTRY_CELL)
-  const rows = Math.ceil(height / TAPESTRY_CELL)
-  const profile = WEATHER_PROFILES[mood]
-  const t = timeMs * 0.001
-  updateShapeBlobs(runtime, cols, rows, t, profile)
-
-  // Generous balance of blue (core) & yellow (rim), plus a little crisp white & a sparse touch of red
-  const rimStart = profile.threshold - 0.09
-  const coreStart = profile.threshold + 0.05
-  const coreFull = profile.threshold + 0.26
-
-  for (let gy = 0; gy < rows; gy++) {
-    const y = gy * TAPESTRY_CELL
-    for (let gx = 0; gx < cols; gx++) {
-      const val = sampleFieldValue(gx, gy, t, profile, runtime)
-      if (val <= rimStart) continue
-
-      const density = clamp01((val - rimStart) / (coreFull - rimStart))
-      const bayerVal = (BAYER4[gy & 3][gx & 3] + 0.5) / 16
-      if (density <= bayerVal * 0.88) continue
-
-      const x = gx * TAPESTRY_CELL
-      const coreMix = clamp01((val - coreStart) / (coreFull - coreStart))
-      const isCore = coreMix > bayerVal * 0.85
-      const hash = ((gx * 17 + gy * 31) & 31)
-      const isRedAccent = val > coreStart + 0.06 && hash === 0
-      const isWhiteTile = !isRedAccent && val > rimStart + 0.06 && (hash === 7 || hash === 19 || hash === 27)
-
-      const rgb = isRedAccent
-        ? pal.accent
-        : isWhiteTile
-          ? pal.white
-          : isCore
-            ? pal.core
-            : pal.rim
-
-      const baseAlpha = isRedAccent
-        ? pal.isDark
-          ? 0.58
-          : 0.48
-        : isWhiteTile
-          ? pal.isDark
-            ? 0.42
-            : 0.86
-          : isCore
-            ? pal.isDark
-              ? 0.36 + coreMix * 0.34
-              : 0.28 + coreMix * 0.34
-            : pal.isDark
-              ? 0.32 + density * 0.28
-              : 0.3 + density * 0.28
-
-      const finalAlpha = baseAlpha * dimFactor
-
-      if (isCore || isRedAccent || (!isWhiteTile && density > 0.55)) {
-        bloomCtx.fillStyle = rgba(rgb, finalAlpha * 0.62)
-        bloomCtx.fillRect(x, y, TAPESTRY_CELL, TAPESTRY_CELL)
-      }
-
-      // Crisp 18x18 tile centered in the 20px grid cell
-      pixelCtx.fillStyle = rgba(rgb, finalAlpha)
-      pixelCtx.fillRect(x + 1, y + 1, TAPESTRY_CELL - 2, TAPESTRY_CELL - 2)
-
-      // Subtle crisp rim on white tiles in light mode so they read cleanly on warm paper
-      if (isWhiteTile && !pal.isDark) {
-        pixelCtx.strokeStyle = rgba(pal.core, 0.22 * dimFactor)
-        pixelCtx.lineWidth = 1
-        pixelCtx.strokeRect(x + 1.5, y + 1.5, TAPESTRY_CELL - 3, TAPESTRY_CELL - 3)
-      }
-    }
-  }
+  renderPixelSculptTapestry(pixelCtx, width, height, mood, pal.isDark, timeMs * 0.001, runtime, dimFactor)
 }
 
 interface TargetPixel {
@@ -584,29 +794,28 @@ function collectFlappyTargets(flight: AmbientFlight, lane: LaneRect): TargetPixe
 export function buildWeatherMorphParticles(
   mood: WeatherMood,
   timeMs: number,
-  runtime: TapestryRuntime,
+  _runtime: TapestryRuntime,
   flight: AmbientFlight,
   lane: LaneRect
 ): MorphParticle[] {
-  const profile = WEATHER_PROFILES[mood]
+  const pal = getSculptPalette(mood, false)
+  const cell = PIXEL_TAPESTRY_CELL
   const t = timeMs * 0.001
-  const rimStart = profile.threshold - 0.05
-  const coreFull = profile.threshold + 0.24
 
   const sources: Array<{ x: number; y: number }> = []
-  const startCol = Math.floor(lane.left / TAPESTRY_CELL)
-  const endCol = Math.floor((lane.left + lane.width) / TAPESTRY_CELL)
-  const startRow = Math.floor(lane.top / TAPESTRY_CELL)
-  const endRow = Math.floor((lane.top + lane.height) / TAPESTRY_CELL)
+  const startCol = Math.floor(lane.left / cell)
+  const endCol = Math.floor((lane.left + lane.width) / cell)
+  const startRow = Math.floor(lane.top / cell)
+  const endRow = Math.floor((lane.top + lane.height) / cell)
 
   for (let gy = startRow; gy < endRow; gy++) {
+    const cyPx = gy * cell + cell * 0.5
     for (let gx = startCol; gx < endCol; gx++) {
-      const val = sampleFieldValue(gx, gy, t, profile, runtime)
-      if (val <= rimStart) continue
-      const density = clamp01((val - rimStart) / (coreFull - rimStart))
-      const bayerVal = (BAYER4[gy & 3][gx & 3] + 0.5) / 16
-      if (density > bayerVal * 0.88) {
-        sources.push({ x: gx * TAPESTRY_CELL, y: gy * TAPESTRY_CELL })
+      const cxPx = gx * cell + cell * 0.5
+      const v = samplePixelTide(cxPx, cyPx, t, pal)
+      const thresh = BAYER4[gy & 3][gx & 3] / 16
+      if (v > 0.5 + thresh * 0.28) {
+        sources.push({ x: gx * cell, y: gy * cell })
       }
     }
   }

@@ -61,9 +61,9 @@ function ExpandedSection({ topic }: { topic: Topic }) {
     switch (topic.id) {
       case 'about':
         return (
-          <div className="expanded-cards-dual">
+          <div className="about-expanded-stack">
             <ProfileCard />
-            <LanguagesCard />
+            <LanguagesCard autoPlayOnMount />
           </div>
         )
       case 'truenorth':

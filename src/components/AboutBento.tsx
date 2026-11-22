@@ -1,37 +1,55 @@
 import { CategoryIcon, type IconKind } from './CategoryIcon'
 import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback, useState } from 'react'
 import { BlurFade } from './BlurFade'
-import { DuolingoVectorFlame, StreakFireOverlay, type FlameOrigin } from './StreakFireOverlay'
+import { DuolingoVectorFlame, StreakFireOverlay, type FlameOrigin, type StreakVariant } from './StreakFireOverlay'
+import { openProject, projectHref } from '../hooks/useRoute'
 import './AboutBento.css'
 
-function scrollToAbout() {
-  const el = document.getElementById('about')
+function scrollToSection(id: string) {
+  const el = document.getElementById(id)
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 
-interface BentoCardProps {
+function ArrowRightIcon() {
+  return (
+    <svg
+      className="about-arrow-inline"
+      viewBox="0 0 16 16"
+      width="13"
+      height="13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3.5 8h9M8.5 4l4 4-4 4" />
+    </svg>
+  )
+}
+
+interface AboutCardProps {
   children: ReactNode
   overlay?: ReactNode
   className?: string
   standalone?: boolean
   cardRef?: React.RefObject<HTMLElement | null>
+  ariaLabel?: string
   onClick?: (e: MouseEvent<HTMLElement>) => void
-  onMouseEnter?: (e: MouseEvent<HTMLElement>) => void
-  onMouseLeave?: (e: MouseEvent<HTMLElement>) => void
 }
 
-function BentoCardWrapper({
+function AboutCardShell({
   children,
   overlay,
   className = '',
   standalone = false,
   cardRef,
+  ariaLabel,
   onClick,
-  onMouseEnter,
-  onMouseLeave,
-}: BentoCardProps) {
+}: AboutCardProps) {
   const handleMouseMove = (e: MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
@@ -44,29 +62,34 @@ function BentoCardWrapper({
     if (onClick) {
       onClick(e)
     } else if (standalone) {
-      scrollToAbout()
+      scrollToSection('about')
     }
   }
+
+  const interactive = Boolean(standalone || onClick)
 
   return (
     <article
       ref={cardRef as any}
-      className={`bento-card ${className} ${standalone ? 'is-standalone is-clickable' : ''}`}
+      className={`about-card ${className} ${standalone ? 'is-standalone is-clickable' : ''}`.trim()}
+      aria-label={ariaLabel}
       onMouseMove={handleMouseMove}
-      onClick={handleClick}
-      role={standalone || onClick ? 'button' : undefined}
-      tabIndex={standalone || onClick ? 0 : undefined}
-      onKeyDown={(e) => {
-        if ((standalone || onClick) && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault()
-          handleClick(e as any)
-        }
-      }}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onClick={interactive ? handleClick : undefined}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleClick(e as any)
+              }
+            }
+          : undefined
+      }
     >
-      <div className="bento-card-spotlight" aria-hidden="true" />
-      <div className="bento-card-content">{children}</div>
+      <div className="about-card-spotlight" aria-hidden="true" />
+      <div className="about-card-body">{children}</div>
       {overlay}
     </article>
   )
@@ -74,65 +97,69 @@ function BentoCardWrapper({
 
 export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
   return (
-    <BentoCardWrapper className="bento-card-profile" standalone={standalone}>
-      <div className="bento-profile-wrap">
-        <div className="about-portrait">
-          <div className="bento-photo-container">
-            <img
-              src={`${import.meta.env.BASE_URL}peter-photo.jpg`}
-              alt="Peter Shao"
-              className="bento-profile-img"
-              loading="lazy"
-            />
-          </div>
-          <span className="about-photo-caption">Usually building something.</span>
-          <svg className="about-portrait-spark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-            <path
-              d="M20 3 24 15 37 20 24 24 20 37 15 24 3 20 15 15Z"
-              fill="#f9c950"
-              stroke="#7d5423"
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <div className="bento-profile-info">
-          <span className="about-eyebrow">A little about me</span>
-          <h3 className="bento-card-title">Peter Shao</h3>
-          <p className="bento-card-subtitle">Toronto, Canada · CE @ uWaterloo</p>
-          <p className="bento-card-body">
-            I love building software &amp; hardware that people find value in.
+    <AboutCardShell className="about-card-profile" standalone={standalone}>
+      <div className="about-profile-grid">
+        <figure className="about-portrait-frame">
+          <img
+            src={`${import.meta.env.BASE_URL}peter-photo.jpg`}
+            alt="Peter Shao"
+            className="about-portrait-img"
+            loading="lazy"
+          />
+        </figure>
+        <div className="about-bio">
+          <p className="about-lead">
+            I&rsquo;m Peter, splitting my time between Oakville and Waterloo. I like building
+            software and hardware that people actually get use out of, and most of my free time
+            goes into my homelab, cameras, and audio gear.
           </p>
-          <div className="about-offline">
-            <span className="about-eyebrow">Away from the keyboard</span>
-            <ul className="about-hobbies" aria-label="In my free time">
-              <li>
-                <CategoryIcon kind="systems" />
-                Homelab nerd
-              </li>
-              <li>
-                <CategoryIcon kind="photography" />
-                Audio &amp; camera aficionado
-              </li>
-            </ul>
-          </div>
         </div>
       </div>
-    </BentoCardWrapper>
+    </AboutCardShell>
+  )
+}
+
+export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
+  return (
+    <AboutCardShell className="about-card-school" standalone={standalone}>
+      <div className="about-school-inner">
+        <img
+          src={`${import.meta.env.BASE_URL}waterloo-shield.svg`}
+          alt="University of Waterloo shield"
+          className="about-shield"
+          loading="lazy"
+        />
+        <div className="about-school-copy">
+          <h3 className="about-card-heading">University of Waterloo</h3>
+          <p className="about-school-program">Computer Engineering &rsquo;31</p>
+          <p className="about-school-sub">
+            <span className="about-mono">ECE Co-op · Stream 8</span>
+          </p>
+        </div>
+      </div>
+    </AboutCardShell>
   )
 }
 
 let hasAutoPlayedLanguagesStreak = false
 
-export function LanguagesCard({ standalone = false }: { standalone?: boolean }) {
+export function LanguagesCard({
+  standalone = false,
+  autoPlayOnMount = false,
+}: {
+  standalone?: boolean
+  autoPlayOnMount?: boolean
+}) {
   const cardRef = useRef<HTMLElement>(null)
   const flameSlotRef = useRef<HTMLSpanElement>(null)
   const settleTimerRef = useRef<number | null>(null)
+  const autoTimerRef = useRef<number | null>(null)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
-  const [overlayOrigin, setOverlayOrigin] = useState<FlameOrigin | null>(null)
+  const [overlayState, setOverlayState] = useState<{ origin: FlameOrigin; variant: StreakVariant; seq: number } | null>(null)
   const [justSettled, setJustSettled] = useState(false)
+  const seqRef = useRef<number>(0)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -143,10 +170,9 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  // Immediately clear an active animation if reduced motion is enabled mid-playback
   useEffect(() => {
     if (prefersReducedMotion) {
-      setOverlayOrigin(null)
+      setOverlayState(null)
     }
   }, [prefersReducedMotion])
 
@@ -160,8 +186,8 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
     return {
       x: slotRect.left - cardRect.left + slotRect.width / 2,
       y: slotRect.top - cardRect.top + slotRect.height / 2,
-      width: slotRect.width || 44,
-      height: slotRect.height || 50,
+      width: slotRect.width || 42,
+      height: slotRect.height || 48,
       cardWidth: cardRect.width,
       cardHeight: cardRect.height,
     }
@@ -178,33 +204,49 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
     }, 520)
   }, [])
 
-  const launchAnimation = useCallback(() => {
-    if (prefersReducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const origin = measureFlameOrigin()
-    if (origin) {
-      setOverlayOrigin(origin)
-    }
-  }, [measureFlameOrigin, prefersReducedMotion])
+  const launchAnimation = useCallback(
+    (variant: StreakVariant) => {
+      if (prefersReducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      if (autoTimerRef.current !== null) {
+        window.clearTimeout(autoTimerRef.current)
+        autoTimerRef.current = null
+      }
+      const origin = measureFlameOrigin()
+      if (origin) {
+        seqRef.current += 1
+        setOverlayState({ origin, variant, seq: seqRef.current })
+      }
+    },
+    [measureFlameOrigin, prefersReducedMotion]
+  )
 
-  // Auto-trigger once per page load when the card first enters view
   useEffect(() => {
-    if (prefersReducedMotion || hasAutoPlayedLanguagesStreak) return
+    const playImmediately = standalone || autoPlayOnMount
+    if (prefersReducedMotion) return
+    if (!playImmediately && hasAutoPlayedLanguagesStreak) return
     const cardEl = cardRef.current
     if (!cardEl) return
 
-    let autoTimer: number | null = null
+    let fired = false
+    const delayMs = playImmediately ? 460 : 280
     const triggerOnce = () => {
-      if (hasAutoPlayedLanguagesStreak) return
-      hasAutoPlayedLanguagesStreak = true
-      autoTimer = window.setTimeout(() => {
-        launchAnimation()
-      }, 280)
+      if (fired) return
+      if (!playImmediately && hasAutoPlayedLanguagesStreak) return
+      fired = true
+      if (!playImmediately) hasAutoPlayedLanguagesStreak = true
+      autoTimerRef.current = window.setTimeout(() => {
+        autoTimerRef.current = null
+        launchAnimation('inplace')
+      }, delayMs)
     }
 
-    if (typeof IntersectionObserver === 'undefined') {
+    if (playImmediately || typeof IntersectionObserver === 'undefined') {
       triggerOnce()
       return () => {
-        if (autoTimer) window.clearTimeout(autoTimer)
+        if (autoTimerRef.current !== null) {
+          window.clearTimeout(autoTimerRef.current)
+          autoTimerRef.current = null
+        }
       }
     }
 
@@ -221,21 +263,24 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
 
     return () => {
       observer.disconnect()
-      if (autoTimer) window.clearTimeout(autoTimer)
+      if (autoTimerRef.current !== null) {
+        window.clearTimeout(autoTimerRef.current)
+        autoTimerRef.current = null
+      }
     }
-  }, [launchAnimation, prefersReducedMotion])
+  }, [autoPlayOnMount, launchAnimation, prefersReducedMotion, standalone])
 
   const handleIgnite = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
-      if (overlayOrigin) return
-      launchAnimation()
+      if (overlayState?.variant === 'full') return
+      launchAnimation('full')
     },
-    [launchAnimation, overlayOrigin]
+    [launchAnimation, overlayState]
   )
 
   const handleOverlayComplete = useCallback(() => {
-    setOverlayOrigin(null)
+    setOverlayState(null)
     triggerSettleBounce()
   }, [triggerSettleBounce])
 
@@ -248,155 +293,171 @@ export function LanguagesCard({ standalone = false }: { standalone?: boolean }) 
   }, [])
 
   return (
-    <BentoCardWrapper
-      className="bento-card-languages"
+    <AboutCardShell
+      className="about-card-languages"
       standalone={standalone}
       cardRef={cardRef}
       overlay={
-        overlayOrigin ? (
-          <StreakFireOverlay origin={overlayOrigin} onComplete={handleOverlayComplete} />
+        overlayState ? (
+          <StreakFireOverlay
+            key={overlayState.seq}
+            origin={overlayState.origin}
+            variant={overlayState.variant}
+            onComplete={handleOverlayComplete}
+          />
         ) : null
       }
     >
-      <div className="bento-languages-content qe-languages-content">
-        <h3 className="bento-card-title">I speak:</h3>
-        <p className="qe-lang-native">Chinese and English</p>
-        <p className="qe-lang-learning">Learning Spanish on Duolingo</p>
+      <div className="about-lang-inner">
+        <div className="about-lang-copy">
+          <h3 className="about-card-heading">Languages</h3>
+          <p className="about-lang-native">
+            <span lang="zh-Hans">中文</span> &amp; English
+          </p>
+          <p className="about-lang-learning">Learning Spanish</p>
+        </div>
+
         {prefersReducedMotion ? (
-          <div className="qe-streak-trigger is-static" aria-label="1,000+ day Duolingo streak">
-            <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
-              <DuolingoVectorFlame size={44} mode="idle" />
+          <div className="about-streak-btn is-static" aria-label="1,000+ day Duolingo streak">
+            <span ref={flameSlotRef} className="about-flame-slot" aria-hidden="true">
+              <DuolingoVectorFlame size={42} mode="idle" />
             </span>
-            <span className="qe-streak-copy">
-              <span className="qe-streak-number">1,000+</span>
-              <span className="qe-streak-caption">day streak</span>
+            <span className="about-streak-meta">
+              <span className="about-streak-num">1,000+</span>
+              <span className="about-streak-caption">day streak</span>
             </span>
           </div>
         ) : (
           <button
             type="button"
-            className={`qe-streak-trigger ${overlayOrigin ? 'is-launched' : ''} ${justSettled ? 'is-settled' : ''}`.trim()}
+            className={`about-streak-btn ${overlayState ? 'is-launched' : ''} ${justSettled ? 'is-settled' : ''}`.trim()}
             onClick={handleIgnite}
-            aria-label="1,000+ day Duolingo streak — click to replay fire animation"
+            aria-label="1,000+ day Duolingo streak — click for full celebration"
           >
-            <span ref={flameSlotRef} className="qe-flame-slot" aria-hidden="true">
-              <DuolingoVectorFlame size={44} mode="idle" />
+            <span ref={flameSlotRef} className="about-flame-slot" aria-hidden="true">
+              <DuolingoVectorFlame size={42} mode="idle" />
             </span>
-            <span className="qe-streak-copy">
-              <span className="qe-streak-number">1,000+</span>
-              <span className="qe-streak-caption">day streak</span>
+            <span className="about-streak-meta">
+              <span className="about-streak-num">1,000+</span>
+              <span className="about-streak-caption">day streak</span>
             </span>
           </button>
         )}
       </div>
-    </BentoCardWrapper>
+    </AboutCardShell>
   )
 }
 
-export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
-  return (
-    <BentoCardWrapper className="bento-card-waterloo" standalone={standalone}>
-      <div className="bento-waterloo-wrap">
-        <div className="bento-crest-box">
-          <img
-            src={`${import.meta.env.BASE_URL}waterloo-crest.png`}
-            alt="University of Waterloo Crest"
-            className="waterloo-crest-img"
-            loading="lazy"
-          />
-        </div>
-        <div className="bento-waterloo-info">
-          <h3 className="bento-card-title">University of Waterloo</h3>
-          <p className="bento-card-subtitle">
-            Waterloo, Ontario | First Year Computer Engineering
-          </p>
-          <p className="bento-card-body">
-            Awesome school with the largest co-op program in NA. I am learning &amp; applying my skills
-            in the workforce here.
-          </p>
-          <button
-            type="button"
-            className="bento-watcloud-pill"
-            onClick={(e) => {
-              e.stopPropagation()
-              document.getElementById('experience')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }}
-          >
-            <span className="exp-live-dot" aria-hidden="true" />
-            <span className="bento-watcloud-name">WATonomous</span>
-            <span className="bento-watcloud-sep" aria-hidden="true">·</span>
-            <span className="bento-watcloud-role">Infrastructure Engineer</span>
-            <span className="bento-watcloud-arrow" aria-hidden="true">→</span>
-          </button>
-        </div>
-      </div>
-    </BentoCardWrapper>
-  )
+interface FocusTrackItem {
+  kind: IconKind
+  title: string
+  summary: string
+  stack: string
+  linkLabel: string
+  projectSlug?: string
+  scrollTarget?: string
 }
+
+const FOCUS_TRACKS: FocusTrackItem[] = [
+  {
+    kind: 'systems',
+    title: 'Distributed systems',
+    summary:
+      'Edge networking, intrusion prevention, Linux clusters, and self-hosted infrastructure built to serve more than just my own desk.',
+    stack: 'Slurm · Kubernetes · CrowdSec IPS',
+    linkLabel: 'Sun Systems',
+    projectSlug: 'sun-systems',
+  },
+  {
+    kind: 'machine-learning',
+    title: 'Machine learning',
+    summary:
+      'Fine-tuning open weights, reproducing research papers, and cutting inference latency down to something practical.',
+    stack: 'PyTorch · LLM Fine-tuning · Evals',
+    linkLabel: 'AI Detector',
+    projectSlug: 'ai-detector',
+  },
+  {
+    kind: 'electronics',
+    title: 'Electronics',
+    summary:
+      'Embedded microcontrollers, camera imaging pipelines, and opening broken hardware until I understand how it works.',
+    stack: 'Embedded · Imaging · PCBs',
+    linkLabel: 'Camera gear',
+    scrollTarget: 'hobbies-photography',
+  },
+]
 
 export function CompEngFocusCard({ standalone = false }: { standalone?: boolean }) {
-  const focusAreas: { kind: IconKind; title: string; details: string }[] = [
-    {
-      kind: 'systems',
-      title: 'Distributed systems',
-      details: 'edge networking & IPS, stack design, data security',
-    },
-    {
-      kind: 'machine-learning',
-      title: 'Machine learning',
-      details: 'LLM Fine tuning, research reproduction & optimization, Applied ML',
-    },
-    {
-      kind: 'electronics',
-      title: 'Electronics',
-      details: 'embedded computing, imaging pipeline engineering, HW repairs',
-    },
-  ]
-
   return (
-    <BentoCardWrapper className="bento-card-compeng" standalone={standalone}>
-      <h3 className="bento-card-title bento-compeng-heading">
-        <CategoryIcon kind="engineering" className="category-icon-heading" />
-        I learn CompEng with a focus on:
-      </h3>
-      <div className="bento-focus-list">
-        {focusAreas.map((area) => (
-          <div key={area.title} className="bento-focus-row">
-            <CategoryIcon kind={area.kind} className="category-icon-bullet" />
-            <div className="bento-focus-text">
-              <span className="bento-focus-name">{area.title}</span>{' '}
-              <span className="bento-focus-desc">({area.details})</span>
+    <AboutCardShell
+      className="about-card-focus"
+      standalone={standalone}
+      ariaLabel="Computer engineering focus areas"
+    >
+      <div className="about-tracks-grid">
+        {FOCUS_TRACKS.map((track) => (
+          <div key={track.title} className="about-track-col">
+            <div className="about-track-head">
+              <CategoryIcon kind={track.kind} className="about-track-icon" />
+              <h3 className="about-track-title">{track.title}</h3>
+            </div>
+
+            <p className="about-track-summary">{track.summary}</p>
+
+            <div className="about-track-foot">
+              <p className="about-track-stack">{track.stack}</p>
+              {track.projectSlug ? (
+                <a
+                  href={projectHref(track.projectSlug)}
+                  className="about-track-link"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+                    e.preventDefault()
+                    openProject(track.projectSlug!)
+                  }}
+                >
+                  <span>{track.linkLabel}</span>
+                  <ArrowRightIcon />
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  className="about-track-link about-track-link-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (track.scrollTarget) scrollToSection(track.scrollTarget)
+                  }}
+                >
+                  <span>{track.linkLabel}</span>
+                  <ArrowRightIcon />
+                </button>
+              )}
             </div>
           </div>
         ))}
       </div>
-    </BentoCardWrapper>
+    </AboutCardShell>
   )
 }
 
 export function AboutBentoGrid() {
   return (
-    <div className="about-bento-grid" aria-label="About Me Grid">
-      {/* Row 1: Profile + Languages */}
-      <BlurFade delay={0.16} duration={0.65} yOffset={16}>
-        <div className="about-bento-row-top">
-          <ProfileCard />
+    <div className="about-bento-grid" aria-label="About Me">
+      <BlurFade delay={0.12} duration={0.55} yOffset={12}>
+        <ProfileCard />
+      </BlurFade>
+
+      <BlurFade delay={0.22} duration={0.55} yOffset={12}>
+        <div className="about-bento-row-mid">
+          <WaterlooCard />
           <LanguagesCard />
         </div>
       </BlurFade>
 
-      {/* Row 2: University of Waterloo */}
-      <BlurFade delay={0.34} duration={0.65} yOffset={16}>
-        <div className="about-bento-row-middle">
-          <WaterlooCard />
-        </div>
-      </BlurFade>
-
-      {/* Row 3: CompEng Focus Areas */}
-      <BlurFade delay={0.52} duration={0.65} yOffset={16}>
-        <div className="about-bento-row-bottom">
-          <CompEngFocusCard />
-        </div>
+      <BlurFade delay={0.32} duration={0.55} yOffset={12}>
+        <CompEngFocusCard />
       </BlurFade>
     </div>
   )

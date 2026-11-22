@@ -14,6 +14,7 @@ import {
   getDefaultWeather,
   getTapestryPalette,
   MORPH_DURATION_MS,
+  PIXEL_GRID_MAJOR,
   renderFlappyInLane,
   renderMorphOverlay,
   renderWeatherTapestry,
@@ -360,9 +361,10 @@ export function InteractiveGridPattern({
       pixelCtx.clearRect(weatherArea.left, weatherArea.top, weatherArea.width, weatherArea.height)
       const morphProgress = morphRef.current ? Math.min(1, (time - morphRef.current.startTime) / MORPH_DURATION_MS) : 1
       const dim = modeRef.current === 'tapestry' ? 1 : modeRef.current === 'morphing' ? 1 - morphProgress * 0.72 : 0.26
+      const activeMood = weatherRef.current.mood
       renderWeatherTapestry(
-        bloomCtx, pixelCtx, w, h, weatherRef.current.mood,
-        getTapestryPalette(weatherRef.current.mood), shouldReduceMotion ? 0 : time,
+        bloomCtx, pixelCtx, w, h, activeMood,
+        getTapestryPalette(activeMood), shouldReduceMotion ? 0 : time,
         runtimeRef.current, dim
       )
       paintAura()
@@ -432,13 +434,21 @@ export function InteractiveGridPattern({
     let prevTime = 0
 
     const tick = (now: number) => {
-      // Weather drifts slowly; reserve full frame-rate work for interaction.
-      if (modeRef.current === 'tapestry' && now - lastWeatherPaint < 1000 / 30) {
-        frame = window.requestAnimationFrame(tick)
-        return
-      }
       const dt = prevTime ? Math.min((now - prevTime) / 1000, 0.05) : 0
       prevTime = now
+
+      const rt = runtimeRef.current
+      const targetStr = rt.mouseActive ? 1 : 0
+      rt.mouseStrength += (targetStr - rt.mouseStrength) * 0.08
+      if (rt.mouseActive) {
+        if (rt.smoothMouseX < -9000) {
+          rt.smoothMouseX = rt.mouseX
+          rt.smoothMouseY = rt.mouseY
+        } else {
+          rt.smoothMouseX += (rt.mouseX - rt.smoothMouseX) * 0.14
+          rt.smoothMouseY += (rt.mouseY - rt.smoothMouseY) * 0.14
+        }
+      }
 
       const curMood = weatherRef.current.mood
       const pal = getTapestryPalette(curMood)
@@ -607,6 +617,8 @@ export function InteractiveGridPattern({
     runtimeRef.current.mouseActive = true
   }, [])
 
+  const gridStep = PIXEL_GRID_MAJOR
+
   return (
     <motion.div
       ref={containerRef}
@@ -621,15 +633,15 @@ export function InteractiveGridPattern({
         onMouseLeave={handleGridMouseLeave}
       >
         <defs>
-          {/* One quiet, unified 20px grid behind the geometric sculptures. */}
+          {/* Quiet architectural graph paper aligned to the active pixel sub-grid. */}
           <pattern
             id="interactive-grid-unified"
-            width={TAPESTRY_CELL}
-            height={TAPESTRY_CELL}
+            width={gridStep}
+            height={gridStep}
             patternUnits="userSpaceOnUse"
           >
             <path
-              d={`M ${TAPESTRY_CELL} 0 L 0 0 0 ${TAPESTRY_CELL}`}
+              d={`M ${gridStep} 0 L 0 0 0 ${gridStep}`}
               fill="none"
               stroke="currentColor"
               className="interactive-grid-line"
