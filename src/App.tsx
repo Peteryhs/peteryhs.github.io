@@ -14,6 +14,8 @@ import { ExternalLink, EmailLink } from './components/hero/SocialLink'
 import { AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 import { WavingHand } from './components/WavingHand'
 import { WebringBadge } from './components/WebringBadge'
+import { FooterGoose } from './components/FooterGoose'
+import { SecretsTracker } from './components/SecretsTracker'
 import { InteractiveGridPattern } from './components/InteractiveGridPattern'
 import { ProjectsSection, ProjectsGrid } from './components/ProjectsSection'
 import { CompactProjectsGrid } from './components/CompactProjectsGrid'
@@ -431,11 +433,15 @@ export default function App() {
           <LongFormSection topicId="contact" />
 
           <footer className="site-footer">
+            <FooterGoose />
             <div className="site-footer-inner">
               <p className="site-footer-text">
                 © {new Date().getFullYear()} Peter Shao. All rights reserved.
               </p>
-              <WebringBadge />
+              <div className="site-footer-tools">
+                <SecretsTracker />
+                <WebringBadge />
+              </div>
             </div>
           </footer>
         </div>

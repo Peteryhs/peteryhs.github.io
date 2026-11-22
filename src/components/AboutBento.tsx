@@ -3,6 +3,9 @@ import { type ReactNode, type MouseEvent, useRef, useEffect, useCallback, useSta
 import { BlurFade } from './BlurFade'
 import { DuolingoVectorFlame, StreakFireOverlay, type FlameOrigin, type StreakVariant } from './StreakFireOverlay'
 import { openProject, projectHref } from '../hooks/useRoute'
+import { discover } from '../hooks/secrets'
+import { PixelPortrait } from './PixelPortrait'
+import { SwapText } from './SwapText'
 import './AboutBento.css'
 
 function scrollToSection(id: string) {
@@ -99,14 +102,7 @@ export function ProfileCard({ standalone = false }: { standalone?: boolean }) {
   return (
     <AboutCardShell className="about-card-profile" standalone={standalone}>
       <div className="about-profile-grid">
-        <figure className="about-portrait-frame">
-          <img
-            src={`${import.meta.env.BASE_URL}peter-photo.jpg`}
-            alt="Peter Shao"
-            className="about-portrait-img"
-            loading="lazy"
-          />
-        </figure>
+        <PixelPortrait src={`${import.meta.env.BASE_URL}peter-photo.jpg`} alt="Peter Shao" />
         <div className="about-bio">
           <p className="about-lead">
             I&rsquo;m Peter, splitting my time between Oakville and Waterloo. I like building
@@ -133,7 +129,9 @@ export function WaterlooCard({ standalone = false }: { standalone?: boolean }) {
           <h3 className="about-card-heading">University of Waterloo</h3>
           <p className="about-school-program">Computer Engineering &rsquo;31</p>
           <p className="about-school-sub">
-            <span className="about-mono">ECE Co-op · Stream 8</span>
+            <span className="about-mono">
+              <SwapText rest="ECE Co-op · Stream 8" alt="8 months of school, then co-op" />
+            </span>
           </p>
         </div>
       </div>
@@ -275,6 +273,7 @@ export function LanguagesCard({
       e.stopPropagation()
       if (overlayState?.variant === 'full') return
       launchAnimation('full')
+      discover('streak')
     },
     [launchAnimation, overlayState]
   )
@@ -314,7 +313,9 @@ export function LanguagesCard({
           <p className="about-lang-native">
             <span lang="zh-Hans">中文</span> &amp; English
           </p>
-          <p className="about-lang-learning">Learning Spanish</p>
+          <p className="about-lang-learning">
+            <SwapText rest="Learning Spanish" alt={<span lang="es">Aprendiendo español</span>} />
+          </p>
         </div>
 
         {prefersReducedMotion ? (

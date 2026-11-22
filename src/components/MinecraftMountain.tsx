@@ -1,6 +1,26 @@
-import { type FC } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
+import { discover } from '../hooks/secrets'
 
 const BLOCK_SIZE = 18
+const BREAK_MS = 170
+const REGROW_MS = 9000
+// An ordinary-looking stone block (column-level) with something behind it.
+const DIAMOND_BLOCK = '8-5'
+
+interface Drop {
+  id: number
+  x: number
+  y: number
+  tone: string
+  label?: string
+}
+
+const toggled = (set: ReadonlySet<string>, key: string, on: boolean) => {
+  const next = new Set(set)
+  if (on) next.add(key)
+  else next.delete(key)
+  return next
+}
 
 // Heights for each column from left to right (22 columns total)
 const COLUMN_HEIGHTS = [
@@ -90,8 +110,50 @@ function getBlockTone(column: number, level: number, height: number): string {
 export const MinecraftMountain: FC<{ className?: string }> = ({ className = '' }) => {
   const GROUND_Y = 198 // row 11
 
+  const [gone, setGone] = useState<ReadonlySet<string>>(new Set())
+  const [breaking, setBreaking] = useState<ReadonlySet<string>>(new Set())
+  const [regrown, setRegrown] = useState<ReadonlySet<string>>(new Set())
+  const [diamondShown, setDiamondShown] = useState(false)
+  const [drops, setDrops] = useState<Drop[]>([])
+  const timers = useRef<number[]>([])
+  const dropId = useRef(0)
+
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), [])
+
+  const later = (fn: () => void, ms: number) => {
+    timers.current.push(window.setTimeout(fn, ms))
+  }
+
+  // Click a block to break it. It grows back after a few seconds, so the mountain always heals.
+  const mine = (key: string, tone: string, x: number, y: number) => {
+    if (breaking.has(key) || gone.has(key)) return
+    discover('miner')
+    const id = ++dropId.current
+    const isDiamond = tone === 'diamond-ore'
+    setDrops((list) => [...list, { id, x, y, tone, label: isDiamond ? 'DIAMONDS!' : undefined }])
+    later(() => setDrops((list) => list.filter((drop) => drop.id !== id)), isDiamond ? 1500 : 520)
+
+    if (key === DIAMOND_BLOCK && !diamondShown) {
+      // The stone face comes away and the ore behind it shows.
+      setDiamondShown(true)
+      return
+    }
+    if (isDiamond) discover('diamonds')
+    setRegrown((set) => toggled(set, key, false))
+    setBreaking((set) => toggled(set, key, true))
+    later(() => {
+      setBreaking((set) => toggled(set, key, false))
+      setGone((set) => toggled(set, key, true))
+    }, BREAK_MS)
+    later(() => {
+      setGone((set) => toggled(set, key, false))
+      setRegrown((set) => toggled(set, key, true))
+      if (key === DIAMOND_BLOCK) setDiamondShown(false)
+    }, REGROW_MS)
+  }
+
   // Build mountain blocks
-  const mountainBlocks: { x: number; y: number; tone: string }[] = []
+  const mountainBlocks: { key: string; x: number; y: number; tone: string }[] = []
 
   COLUMN_HEIGHTS.forEach((height, col) => {
     const caveAirBlocks = CAVE_AIR_COLS[col] || 0
@@ -103,6 +165,7 @@ export const MinecraftMountain: FC<{ className?: string }> = ({ className = '' }
       }
 
       mountainBlocks.push({
+        key: `${col}-${level}`,
         x: col * BLOCK_SIZE,
         y: GROUND_Y - (level + 1) * BLOCK_SIZE,
         tone: getBlockTone(col, level, height),
@@ -170,21 +233,35 @@ export const MinecraftMountain: FC<{ className?: string }> = ({ className = '' }
 
         {/* 3. Mountain Terrain Blocks */}
         <g className="minecraft-mountain-terrain-blocks">
-          {mountainBlocks.map((block) => (
-            <rect
-              key={`mountain-${block.x}-${block.y}`}
-              className={`minecraft-mountain-block minecraft-mountain-${block.tone}`}
-              x={block.x}
-              y={block.y}
-              width={BLOCK_SIZE}
-              height={BLOCK_SIZE}
-            />
-          ))}
+          {mountainBlocks.map((block) => {
+            if (gone.has(block.key)) return null
+            const tone = block.key === DIAMOND_BLOCK && diamondShown ? 'diamond-ore' : block.tone
+            return (
+              <rect
+                key={`mountain-${block.key}`}
+                className={`minecraft-mountain-block minecraft-mountain-${tone} is-mineable${
+                  breaking.has(block.key) ? ' is-breaking' : ''
+                }${regrown.has(block.key) ? ' is-regrown' : ''}`}
+                data-magnetic
+                data-frame="pixel"
+                x={block.x}
+                y={block.y}
+                width={BLOCK_SIZE}
+                height={BLOCK_SIZE}
+                onClick={() => mine(block.key, tone, block.x, block.y)}
+              />
+            )
+          })}
+          {!diamondShown && !gone.has(DIAMOND_BLOCK) && (
+            <rect className="minecraft-mountain-glint" x={8 * BLOCK_SIZE + 11} y={GROUND_Y - 6 * BLOCK_SIZE + 4} width="2" height="2" />
+          )}
         </g>
 
         {/* 4. Mountain Peak Flowers */}
         <g className="minecraft-mountain-flowers" aria-hidden="true">
           {FLOWERS.map((flower) => {
+            // A flower pops when the block it stands on is mined.
+            if (gone.has(`${flower.col}-${COLUMN_HEIGHTS[flower.col] - 1}`)) return null
             const x = flower.col * BLOCK_SIZE + flower.offset
             const topY = GROUND_Y - COLUMN_HEIGHTS[flower.col] * BLOCK_SIZE
             const y = topY - 12
@@ -221,6 +298,22 @@ export const MinecraftMountain: FC<{ className?: string }> = ({ className = '' }
                 animationDuration: ember.dur,
               }}
             />
+          ))}
+        </g>
+
+        {/* 6. Debris from freshly mined blocks */}
+        <g className="minecraft-mountain-drops" aria-hidden="true">
+          {drops.map((drop) => (
+            <g key={drop.id} transform={`translate(${drop.x + BLOCK_SIZE / 2} ${drop.y + BLOCK_SIZE / 2})`}>
+              <rect className={`mine-bit mine-bit-a minecraft-mountain-${drop.tone}`} x="-4" y="-3" width="4" height="4" />
+              <rect className={`mine-bit mine-bit-b minecraft-mountain-${drop.tone}`} x="1" y="-2" width="3" height="3" />
+              <rect className={`mine-bit mine-bit-c minecraft-mountain-${drop.tone}`} x="-1" y="1" width="3" height="3" />
+              {drop.label && (
+                <text className="mine-chip" x="0" y="-14" textAnchor="middle">
+                  {drop.label}
+                </text>
+              )}
+            </g>
           ))}
         </g>
       </svg>

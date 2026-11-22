@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { WheelGestureTracker } from './wheelGesture'
+import { discover } from '../hooks/secrets'
 
 /*
  * Bottom-of-page rubber band, modelled on the iOS edge scroll.
@@ -84,6 +85,7 @@ export function BottomBounceEffect({ children }: { children: ReactNode }) {
         return
       }
       wrapper.style.transform = `translate3d(0, ${-shown}px, 0)`
+      if (shown > 48) discover('bounce')
       glow.style.opacity = String(Math.min(1, shown / GLOW_FULL_AT) * GLOW_MAX_OPACITY)
       glow.style.transform = `scaleY(${1 + (shown * GLOW_REACH) / glowBase})`
     }

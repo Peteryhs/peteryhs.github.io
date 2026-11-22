@@ -9,6 +9,7 @@ import { projectsData, type ProjectItem } from '../content/projects'
 import { useGitHubStars } from '../hooks/useGitHubStars'
 import { setProjectHover, useIsProjectHovered } from '../hooks/projectHover'
 import { openProject, projectHref } from '../hooks/useRoute'
+import { PixelTip } from './PixelTip'
 
 export function GithubIcon({ className = '' }: { className?: string }) {
   return (
@@ -203,12 +204,24 @@ export function ProjectCard({
 
         {/* Stats Grid Metrics */}
         <div className="project-stats-grid">
-          {Object.entries(project.stats).map(([label, value]) => (
-            <div key={label} className="project-stat-pill">
-              <span className="project-stat-value">{value}</span>
-              <span className="project-stat-label">{label}</span>
-            </div>
-          ))}
+          {Object.entries(project.stats).map(([label, value]) => {
+            const note = project.statNotes?.[label]
+            const body = (
+              <>
+                <span className="project-stat-value">{value}</span>
+                <span className="project-stat-label">{label}</span>
+              </>
+            )
+            return note ? (
+              <PixelTip key={label} className="project-stat-pill" tip={note}>
+                {body}
+              </PixelTip>
+            ) : (
+              <div key={label} className="project-stat-pill">
+                {body}
+              </div>
+            )
+          })}
         </div>
 
         {/* Action Footer: Links, Repo, Marketplace */}

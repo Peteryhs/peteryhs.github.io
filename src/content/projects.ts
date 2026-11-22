@@ -5,6 +5,8 @@ export interface ProjectItem {
   repo: string
   description: string
   stats: Record<string, string | number>
+  /** One line of detail per stat, shown on hover. Each restates the case study. */
+  statNotes?: Record<string, string>
   notes?: string
   links: {
     github: string
@@ -23,6 +25,9 @@ export const projectsData: ProjectItem[] = [
     stats: {
       'Combined Downloads': '1,064+',
       Releases: '6',
+    },
+    statNotes: {
+      'Combined Downloads': '767 Auto Tool Selector + 297 Exa Router Search',
     },
     links: {
       github: 'https://github.com/ShaoRou459/OpenWebUI-Agentic-Tooling',
@@ -44,6 +49,11 @@ export const projectsData: ProjectItem[] = [
       'RAID Benchmark': '89.0%',
       'In-Domain Validation': '99.88%',
     },
+    statNotes: {
+      'Unseen Essays': 'ROC-AUC on 4,000 held-out essays, 2,000 per class',
+      'RAID Benchmark': 'Essays from generators it never trained on',
+      'In-Domain Validation': 'Held-out split from the same sources it trained on',
+    },
     notes:
       'Adversarial attacks cost ~8 ROC-AUC points and roughly double false positives (12% to 27% at 80% recall), expected without adversarial training.',
     links: {
@@ -62,6 +72,11 @@ export const projectsData: ProjectItem[] = [
       Containers: '20+',
       Evolution: '4 Yrs · Build v5',
     },
+    statNotes: {
+      Storage: '12 TB of it is a single Ultrastar',
+      Containers: 'Split between Casa at home and a VPS',
+      Evolution: 'Started in 2022 as a lone computer by the desk',
+    },
     links: {
       github: 'https://github.com/Peteryhs/Server',
     },
@@ -75,6 +90,9 @@ export const projectsData: ProjectItem[] = [
       'A contributor to Hermes Agent, one of the most popular open-source AI agent frameworks. My PRs focus on data security, reliability, and UI/UX design. Upstream code I shipped stops secrets from leaking through terminal output.',
     stats: {
       'Pull Requests Upstream': '4',
+    },
+    statNotes: {
+      'Pull Requests Upstream': '1 security, 2 reliability, 1 UI/UX',
     },
     links: {
       github: 'https://github.com/NousResearch/hermes-agent',

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EMAIL_ADDRESS, GITHUB_URL, LINKEDIN_URL } from './blocks'
+import { writeClipboard } from '../../hooks/clipboard'
 
 const COPIED_MS = 1800
 
@@ -69,28 +70,6 @@ export function ExternalLink({ kind }: { kind: 'github' | 'linkedin' }) {
       />
     </a>
   )
-}
-
-async function writeClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    return true
-  } catch {
-    const field = document.createElement('textarea')
-    field.value = text
-    field.setAttribute('readonly', '')
-    field.style.cssText = 'position:fixed;opacity:0;pointer-events:none'
-    document.body.appendChild(field)
-    field.select()
-    let ok = false
-    try {
-      ok = document.execCommand('copy')
-    } catch {
-      ok = false
-    }
-    field.remove()
-    return ok
-  }
 }
 
 export function EmailLink() {

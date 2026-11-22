@@ -1,5 +1,7 @@
 import { type MouseEvent, useState } from 'react'
 import { BlurFade } from './BlurFade'
+import { CopyChip } from './CopyChip'
+import { LocalClock } from './LocalClock'
 
 interface BentoCardProps {
   children: React.ReactNode
@@ -244,6 +246,15 @@ export function EmailContactCard({ standalone = false }: { standalone?: boolean 
             fallbackAvatarUrl="https://github.com/Peteryhs.png"
             brand="email"
           />
+          {!standalone && (
+            <CopyChip
+              className="contact-copy"
+              value="contact@mail.peteryhs.com"
+              rest="Copy"
+              done="Copied!"
+              label="Copy my email address"
+            />
+          )}
         </div>
       </div>
     </BentoCardWrapper>
@@ -279,9 +290,12 @@ export function ContactSection() {
   return (
     <section className="longform-section contact-section" id="contact" aria-labelledby="contact-heading">
       <BlurFade delay={0.06} duration={0.5} yOffset={10}>
-        <h2 id="contact-heading" className="longform-heading">
-          Contact
-        </h2>
+        <div className="contact-heading-row">
+          <h2 id="contact-heading" className="longform-heading">
+            Contact
+          </h2>
+          <LocalClock />
+        </div>
       </BlurFade>
 
       <div className="contact-cards-stack">

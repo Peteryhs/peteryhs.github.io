@@ -1,6 +1,7 @@
 import { CategoryIcon, type IconKind } from './CategoryIcon'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { discover } from '../hooks/secrets'
 import { createPortal } from 'react-dom'
 import { projectsData } from '../content/projects'
 import { topicById, type TopicId } from '../content/site'
@@ -208,6 +209,7 @@ export function CommandPalette({ onOpenTopic }: CommandPaletteProps) {
 
   useEffect(() => {
     if (open) {
+      discover('palette')
       restoreFocus.current = document.activeElement as HTMLElement | null
       setQuery('')
       setIndex(0)

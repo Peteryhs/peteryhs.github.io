@@ -3,6 +3,7 @@ import { useMotionValueEvent, useScroll } from 'motion/react'
 import { BlurFade } from './BlurFade'
 import { CategoryIcon, type IconKind } from './CategoryIcon'
 import { CompassRose } from './CompassRose'
+import { discover } from '../hooks/secrets'
 
 export type ExperienceId = 'next' | 'watcloud' | 'hacktheridge'
 
@@ -16,6 +17,11 @@ export interface ExperienceItem {
   summary: string
   highlights?: string[]
   tags?: string[]
+  /** Phrases in the copy each tag points at, when the tag's own name never appears. */
+  tagTerms?: Record<string, string[]>
+  /** YYYY-MM; `end` is left off while the role is current. */
+  start?: string
+  end?: string
   status?: 'current' | 'upcoming' | 'past'
 }
 
@@ -52,6 +58,7 @@ export const experienceItems: ExperienceItem[] = [
       'Designed an XFS project-quota overhaul to govern 60+ TB of shared cluster storage, backed by Slurm usage audits and Ansible provisioning.',
     ],
     tags: ['Slurm', 'Kubernetes', 'Proxmox', 'Terraform', 'Ansible', 'Prometheus'],
+    start: '2026-09',
     status: 'current',
   },
   {
@@ -67,6 +74,12 @@ export const experienceItems: ExperienceItem[] = [
       'Contributed to 2× registration growth by modernizing the web platform and visual identity.',
     ],
     tags: ['Web Development', 'Brand Design', 'SMTP', 'DNS'],
+    tagTerms: {
+      'Web Development': ['software development', 'web stack', 'web platform'],
+      'Brand Design': ['brand design', 'visual identity'],
+    },
+    start: '2024-09',
+    end: '2026-06',
     status: 'past',
   },
 ]
@@ -76,6 +89,39 @@ function fallbackAngleForId(id: ExperienceId) {
   if (id === 'watcloud') return -90
   if (id === 'hacktheridge') return -118
   return 0
+}
+
+/** How long a role has run, for the timeline badge: "2 mo", "1y 9m". */
+function tenure(item: ExperienceItem): string | null {
+  if (!item.start) return item.status === 'upcoming' ? 'open' : null
+  const [sy, sm] = item.start.split('-').map(Number)
+  const now = new Date()
+  const [ey, em] = item.end ? item.end.split('-').map(Number) : [now.getFullYear(), now.getMonth() + 1]
+  const months = (ey - sy) * 12 + (em - sm)
+  if (months < 1) return 'new'
+  const years = Math.floor(months / 12)
+  return years > 0 ? `${years}y ${months % 12}m` : `${months} mo`
+}
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/** Wraps every phrase a tag points at, so hovering the tag can light them up. */
+function withTerms(text: string, item: ExperienceItem, activeTag: string | null) {
+  const lookup = new Map<string, string>()
+  for (const tag of item.tags ?? []) {
+    for (const term of item.tagTerms?.[tag] ?? [tag]) lookup.set(term.toLowerCase(), tag)
+  }
+  if (lookup.size === 0) return text
+  const pattern = new RegExp(`(${[...lookup.keys()].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|')})`, 'gi')
+  return text.split(pattern).map((part, i) => {
+    const tag = lookup.get(part.toLowerCase())
+    if (!tag) return part
+    return (
+      <span key={i} className={`exp-term ${tag === activeTag ? 'is-lit' : ''}`}>
+        {part}
+      </span>
+    )
+  })
 }
 
 function ExperienceCard({
@@ -138,6 +184,64 @@ function ExperienceCard({
   )
 }
 
+function ExperienceBody({ item, interactiveTags }: { item: ExperienceItem; interactiveTags: boolean }) {
+  const [hovered, setHovered] = useState<string | null>(null)
+  const [pinned, setPinned] = useState<string | null>(null)
+  const active = hovered ?? pinned
+
+  // A pointer just passing over the tags should not count as finding anything.
+  useEffect(() => {
+    if (!hovered) return
+    const timer = window.setTimeout(() => discover('crossref'), 450)
+    return () => window.clearTimeout(timer)
+  }, [hovered])
+
+  return (
+    <>
+      <p className="truenorth-card-body exp-card-summary">{withTerms(item.summary, item, active)}</p>
+
+      {item.highlights && item.highlights.length > 0 && (
+        <ul className="exp-highlights">
+          {item.highlights.map((bullet, bIdx) => (
+            <li key={bIdx} className="exp-highlight-item">
+              {withTerms(bullet, item, active)}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {item.tags && item.tags.length > 0 && (
+        <div className="exp-tags" role="group" aria-label="Skills and areas">
+          {item.tags.map((tag) => !interactiveTags ? (
+            <span key={tag} className="exp-tag">
+              {tag}
+            </span>
+          ) : (
+            <button
+              key={tag}
+              type="button"
+              className={`exp-tag ${tag === active ? 'is-active' : ''}`}
+              aria-pressed={tag === pinned}
+              aria-label={`${tag}: highlight where it comes up`}
+              onMouseEnter={() => setHovered(tag)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(tag)}
+              onBlur={() => setHovered(null)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setPinned((p) => (p === tag ? null : tag))
+                discover('crossref')
+              }}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 export function ExperienceTimeline({
   filterId,
   onHoverId,
@@ -185,7 +289,14 @@ export function ExperienceTimeline({
                   className={`truenorth-year-text ${isCurrent ? 'exp-node-current' : ''} ${isUpcoming ? 'exp-node-upcoming' : ''}`}
                 >
                   {isCurrent && <span className="exp-live-dot" aria-hidden="true" />}
-                  {item.nodeLabel}
+                  {tenure(item) ? (
+                    <span className="exp-node-swap">
+                      <span className="exp-node-face exp-node-rest">{item.nodeLabel}</span>
+                      <span className="exp-node-face exp-node-alt" aria-hidden="true">{tenure(item)}</span>
+                    </span>
+                  ) : (
+                    item.nodeLabel
+                  )}
                 </span>
               </div>
 
@@ -217,27 +328,7 @@ export function ExperienceTimeline({
                   </div>
                 </div>
 
-                <p className="truenorth-card-body exp-card-summary">{item.summary}</p>
-
-                {item.highlights && item.highlights.length > 0 && (
-                  <ul className="exp-highlights">
-                    {item.highlights.map((bullet, bIdx) => (
-                      <li key={bIdx} className="exp-highlight-item">
-                        {bullet}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {item.tags && item.tags.length > 0 && (
-                  <div className="exp-tags" aria-label="Skills and areas">
-                    {item.tags.map((tag) => (
-                      <span key={tag} className="exp-tag">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <ExperienceBody item={item} interactiveTags={!filterId} />
               </ExperienceCard>
             </div>
           </BlurFade>

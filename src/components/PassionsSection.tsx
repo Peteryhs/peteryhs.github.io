@@ -4,6 +4,7 @@ import { CameraGearDock, MicrophoneCoiledWire } from './CameraGearDock'
 import { FolderBadges } from './FolderBadges'
 import { CategoryIcon } from './CategoryIcon'
 import { MinecraftMountain } from './MinecraftMountain'
+import { CopyChip } from './CopyChip'
 
 export function scrollToSection(id: string) {
   const el = document.getElementById(id) || document.getElementById('passions')
@@ -111,9 +112,19 @@ export function MinecraftCard({
         </p>
       </div>
       <div className="hobbies-ign-badge-wrapper">
-        <span className="hobbies-ign-badge" title="Minecraft In-Game Name">
-          IGN: Peterfat11
-        </span>
+        {onClick ? (
+          <span className="hobbies-ign-badge" title="Minecraft In-Game Name">
+            IGN: Peterfat11
+          </span>
+        ) : (
+          <CopyChip
+            className="hobbies-ign-badge"
+            value="Peterfat11"
+            rest="IGN: Peterfat11"
+            done="Copied!"
+            label="Copy my Minecraft username, Peterfat11"
+          />
+        )}
       </div>
     </BentoCardWrapper>
   )

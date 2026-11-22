@@ -207,7 +207,7 @@ function Cursor() {
       if (el === target) return
       target = el
       prevBase = null
-      if (el instanceof HTMLElement) {
+      if (el instanceof HTMLElement || el instanceof SVGElement) {
         const kind = (el.dataset.frame as FrameKind) || 'default'
         box.dataset.frame = kind in FRAME_RADIUS ? kind : 'default'
         const accent = getComputedStyle(el).getPropertyValue('--tb-accent').trim()

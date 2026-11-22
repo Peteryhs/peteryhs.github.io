@@ -25,6 +25,7 @@ import {
   type TapestryRuntime,
   type WeatherInfo,
 } from './weatherTapestryEngine'
+import { discover } from '../hooks/secrets'
 
 interface InteractiveGridPatternProps {
   sectionRef: RefObject<HTMLElement | null>
@@ -245,6 +246,7 @@ export function InteractiveGridPattern({
     const currentLane = laneRef.current
     if (!currentLane) return
 
+    discover('flappy')
     clearTimers()
     setIsDissolving(false)
     const cur = modeRef.current

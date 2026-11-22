@@ -1,0 +1,866 @@
+/* ==========================================================================
+   Small details: extra interactions layered on the long-form sections.
+   None of them carry required content. Each one is a second look at
+   something already on the page, in the hero's pixel vocabulary.
+   ========================================================================== */
+
+:root {
+  --px-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --px-gem: light-dark(#1f9d94, #5fd6cc);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Swap: two lines of copy in one cell, the hero block's rest/hover motion     */
+/* -------------------------------------------------------------------------- */
+
+:where(.swap) {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.swap,
+.swap.copy-chip {
+  display: inline-grid;
+  justify-items: start;
+  align-items: center;
+}
+
+.swap-face {
+  grid-area: 1 / 1;
+  transition:
+    opacity 180ms ease-out,
+    translate 250ms var(--px-ease);
+}
+
+.swap-alt {
+  opacity: 0;
+  translate: 0 62%;
+}
+
+.swap:not(.copy-chip) .swap-rest {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--line-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.swap:is(:focus-visible, [data-flipped='true']) .swap-rest {
+  opacity: 0;
+  translate: 0 -62%;
+}
+
+.swap:is(:focus-visible, [data-flipped='true']) .swap-alt {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .swap:not(.copy-chip):hover .swap-rest {
+    opacity: 0;
+    translate: 0 -62%;
+  }
+
+  .swap:not(.copy-chip):hover .swap-alt {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.swap:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Pixel tooltip                                                               */
+/* -------------------------------------------------------------------------- */
+
+:where(.px-tip-host) {
+  appearance: none;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: help;
+}
+
+.px-tip-host {
+  position: relative;
+}
+
+.px-tip {
+  --notch: 3px;
+  --arrow: 4px;
+  --at: calc(50% - var(--tip-shift, 0px));
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 5px);
+  z-index: 6;
+  width: max-content;
+  max-width: min(19rem, calc(100vw - 24px));
+  padding: 0.42rem 0.62rem calc(0.42rem + var(--arrow));
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  translate: calc(-50% + var(--tip-shift, 0px)) 4px;
+  transition:
+    opacity 120ms ease-out,
+    translate 150ms var(--px-ease),
+    visibility 0s linear 150ms;
+  clip-path: polygon(
+    var(--notch) 0,
+    calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch),
+    100% var(--notch),
+    100% calc(100% - var(--arrow) - var(--notch)),
+    calc(100% - var(--notch)) calc(100% - var(--arrow) - var(--notch)),
+    calc(100% - var(--notch)) calc(100% - var(--arrow)),
+    calc(var(--at) + 4px) calc(100% - var(--arrow)),
+    calc(var(--at) + 4px) calc(100% - 2px),
+    calc(var(--at) + 2px) calc(100% - 2px),
+    calc(var(--at) + 2px) 100%,
+    calc(var(--at) - 2px) 100%,
+    calc(var(--at) - 2px) calc(100% - 2px),
+    calc(var(--at) - 4px) calc(100% - 2px),
+    calc(var(--at) - 4px) calc(100% - var(--arrow)),
+    var(--notch) calc(100% - var(--arrow)),
+    var(--notch) calc(100% - var(--arrow) - var(--notch)),
+    0 calc(100% - var(--arrow) - var(--notch)),
+    0 var(--notch),
+    var(--notch) var(--notch)
+  );
+}
+
+.px-tip-host:is(:focus-visible, [data-open='true']) .px-tip {
+  opacity: 1;
+  visibility: visible;
+  translate: calc(-50% + var(--tip-shift, 0px)) 0;
+  transition-delay: 0s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .px-tip-host:hover .px-tip {
+    opacity: 1;
+    visibility: visible;
+    translate: calc(-50% + var(--tip-shift, 0px)) 0;
+    transition-delay: 0s;
+  }
+}
+
+.project-stat-pill.px-tip-host:is(:hover, :focus-visible, [data-open='true']) {
+  border-color: var(--ink);
+}
+
+.project-stat-pill.px-tip-host:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* About: portrait that steps down into pixel art                              */
+/* -------------------------------------------------------------------------- */
+
+.about-portrait-btn {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: scale 150ms ease-out;
+}
+
+.about-portrait-btn:active {
+  scale: 0.96;
+}
+
+.about-portrait-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.about-portrait-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  image-rendering: pixelated;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.about-portrait-canvas[data-covered='true'] {
+  opacity: 1;
+}
+
+/* A 2x2 checker in the corner: "this can be pixels". */
+.about-portrait-hint {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 10px;
+  height: 10px;
+  background:
+    linear-gradient(#fff, #fff) 0 0 / 5px 5px no-repeat,
+    linear-gradient(#fff, #fff) 5px 5px / 5px 5px no-repeat,
+    rgb(20 20 22 / 0.72);
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.about-portrait-btn:focus-visible .about-portrait-hint,
+.about-portrait-btn[aria-pressed='true'] .about-portrait-hint {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about-portrait-btn:hover .about-portrait-hint {
+    opacity: 1;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Experience: tags light up where they come up, nodes show how long           */
+/* -------------------------------------------------------------------------- */
+
+button.exp-tag {
+  appearance: none;
+  margin: 0;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease-out,
+    background-color 150ms ease-out,
+    color 150ms ease-out,
+    scale 150ms ease-out;
+}
+
+button.exp-tag.is-active {
+  border-color: var(--ink);
+  background: var(--hover-active);
+  color: var(--ink);
+}
+
+button.exp-tag[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+button.exp-tag:active {
+  scale: 0.96;
+}
+
+button.exp-tag:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.exp-term {
+  border-radius: 2px;
+  transition:
+    background-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.exp-term.is-lit {
+  background: var(--hover-active);
+  box-shadow: 0 0 0 2px var(--hover-active);
+  color: var(--ink);
+}
+
+.exp-node-swap {
+  display: inline-grid;
+  justify-items: center;
+}
+
+.exp-node-face {
+  grid-area: 1 / 1;
+  transition:
+    opacity 180ms ease-out,
+    translate 250ms var(--px-ease);
+}
+
+.exp-node-alt {
+  opacity: 0;
+  translate: 0 62%;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .truenorth-timeline-item:hover .exp-node-rest {
+    opacity: 0;
+    translate: 0 -62%;
+  }
+
+  .truenorth-timeline-item:hover .exp-node-alt {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hobbies: copyable IGN, a mountain you can mine                              */
+/* -------------------------------------------------------------------------- */
+
+button.hobbies-ign-badge {
+  cursor: pointer;
+}
+
+button.hobbies-ign-badge:active {
+  scale: 0.96;
+}
+
+button.hobbies-ign-badge:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.hobbies-ign-badge:hover {
+    border-style: solid;
+    border-color: var(--ink);
+  }
+}
+
+/* The mountain sits under the layout grid. Let pointers through to its blocks. */
+.hobbies-grid-layout,
+.hobbies-right-column {
+  pointer-events: none;
+}
+
+.hobbies-left-column,
+.folder-badges-dock {
+  pointer-events: auto;
+}
+
+.minecraft-mountain-block.is-mineable {
+  pointer-events: auto;
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.minecraft-mountain-diamond-ore {
+  fill: var(--px-gem);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .minecraft-mountain-block.is-mineable:hover {
+    filter: brightness(1.16);
+  }
+}
+
+.minecraft-mountain-block.is-breaking {
+  animation: mineBreak 170ms steps(3, end) forwards;
+}
+
+.minecraft-mountain-block.is-regrown {
+  animation: mineRegrow 240ms steps(4, end) both;
+}
+
+@keyframes mineBreak {
+  to {
+    transform: scale(0.35);
+    opacity: 0;
+  }
+}
+
+@keyframes mineRegrow {
+  from {
+    transform: scale(0);
+  }
+}
+
+.minecraft-mountain-glint {
+  fill: #c9fff8;
+  pointer-events: none;
+  animation: mineGlint 3.2s steps(1, end) infinite;
+}
+
+@keyframes mineGlint {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  42%,
+  52% {
+    opacity: 0.9;
+  }
+}
+
+.minecraft-mountain-drops {
+  pointer-events: none;
+}
+
+.mine-bit {
+  animation: 480ms steps(6, end) forwards;
+}
+
+.mine-bit-a {
+  animation-name: mineBitA;
+}
+
+.mine-bit-b {
+  animation-name: mineBitB;
+}
+
+.mine-bit-c {
+  animation-name: mineBitC;
+}
+
+@keyframes mineBitA {
+  to {
+    transform: translate(-11px, 13px);
+    opacity: 0;
+  }
+}
+
+@keyframes mineBitB {
+  to {
+    transform: translate(10px, 9px);
+    opacity: 0;
+  }
+}
+
+@keyframes mineBitC {
+  to {
+    transform: translate(-1px, 17px);
+    opacity: 0;
+  }
+}
+
+.mine-chip {
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 7px;
+  fill: var(--px-gem);
+  stroke: var(--paper);
+  stroke-width: 2.5px;
+  paint-order: stroke;
+  animation: mineChip 1500ms var(--px-ease) forwards;
+}
+
+@keyframes mineChip {
+  0% {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+  14% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-12px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Contact: what time it is for me, and a one-click copy                       */
+/* -------------------------------------------------------------------------- */
+
+.contact-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1.25rem;
+  margin-bottom: 1.4rem;
+}
+
+.contact-heading-row .longform-heading {
+  margin-bottom: 0;
+}
+
+.contact-clock {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.contact-clock-time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.contact-clock-colon {
+  animation: clockColon 2s steps(1, end) infinite;
+}
+
+@keyframes clockColon {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.swap.contact-copy {
+  justify-items: center;
+  padding: 0.2rem 0.55rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition:
+    color 150ms ease-out,
+    border-color 150ms ease-out,
+    scale 150ms ease-out;
+}
+
+.swap.contact-copy:active {
+  scale: 0.96;
+}
+
+.swap.contact-copy[data-flipped='true'] {
+  border-style: solid;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .swap.contact-copy:hover {
+    border-style: solid;
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Footer: a goose on the rule, and a count of what has been found             */
+/* -------------------------------------------------------------------------- */
+
+.site-footer {
+  position: relative;
+}
+
+.site-footer:has(.secrets-chip[aria-expanded='true']) {
+  opacity: 1;
+}
+
+.site-footer-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.footer-goose {
+  position: absolute;
+  bottom: calc(100% + 1px);
+  translate: -50% 0;
+  padding: 10px 8px 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+  cursor: pointer;
+  transition: left 1100ms steps(11, end);
+}
+
+.footer-goose:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.footer-goose-svg {
+  display: block;
+  width: 28px;
+  height: 24px;
+}
+
+.footer-goose-svg[data-facing='right'] {
+  transform: scaleX(-1);
+}
+
+.footer-goose-svg.is-honking {
+  animation: gooseHonk 280ms steps(2, end) 2;
+}
+
+@keyframes gooseHonk {
+  50% {
+    translate: 0 -2px;
+  }
+}
+
+.goose-K {
+  fill: light-dark(#23252b, #b3ad9f);
+}
+
+.goose-k,
+.goose-L {
+  fill: light-dark(#3d4049, #8b8579);
+}
+
+.goose-W {
+  fill: light-dark(#ffffff, #fbfaf7);
+}
+
+.goose-B {
+  fill: light-dark(#8a7a66, #7d7060);
+}
+
+.goose-T {
+  fill: light-dark(#c9bca6, #a59a86);
+}
+
+.footer-goose-honk {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 4px);
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+  font-size: 8px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ink);
+  pointer-events: none;
+  animation: gooseHonkText 700ms var(--px-ease) both;
+}
+
+@keyframes gooseHonkText {
+  0% {
+    translate: -50% 4px;
+    opacity: 0;
+  }
+  20% {
+    translate: -50% -2px;
+    opacity: 1;
+  }
+  80% {
+    translate: -50% -6px;
+    opacity: 1;
+  }
+  100% {
+    translate: -50% -9px;
+    opacity: 0;
+  }
+}
+
+.secrets {
+  position: relative;
+}
+
+.secrets-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.24rem 0.5rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 7px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 150ms ease-out,
+    border-color 150ms ease-out,
+    scale 150ms ease-out;
+}
+
+.secrets-chip:active {
+  scale: 0.96;
+}
+
+.secrets-chip[aria-expanded='true'] {
+  border-style: solid;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .secrets-chip:hover {
+    border-style: solid;
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+}
+
+.secrets-chip:focus-visible,
+.secrets-reset:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.px-gem {
+  display: block;
+  width: 12px;
+  height: 9px;
+}
+
+.px-gem-body {
+  fill: var(--px-gem);
+}
+
+.px-gem-shine {
+  fill: #fff;
+  opacity: 0.75;
+}
+
+.secrets-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 20;
+  width: 15.5rem;
+  max-width: calc(100vw - 2.5rem);
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: var(--bento-shadow-hover);
+  transform-origin: bottom right;
+  animation: secretsPanelIn 150ms ease-out both;
+}
+
+.secrets-panel[data-align='left'] {
+  right: auto;
+  left: 0;
+  transform-origin: bottom left;
+}
+
+@keyframes secretsPanelIn {
+  from {
+    opacity: 0;
+    scale: 0.97;
+    translate: 0 4px;
+  }
+}
+
+.secrets-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.secrets-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.secrets-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.secrets-list li.is-found {
+  color: var(--ink);
+}
+
+.secrets-mark {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--line-strong);
+  translate: 0 0.5px;
+}
+
+.is-found .secrets-mark {
+  border-color: var(--px-gem);
+  background: var(--px-gem);
+}
+
+.secrets-where::before {
+  content: '· ';
+}
+
+.secrets-reset {
+  margin-top: 0.65rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .secrets-reset:hover {
+    color: var(--ink);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reduced motion: keep every state change, drop the travel                    */
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .swap-face,
+  .exp-node-face {
+    translate: 0 0 !important;
+    transition: opacity 150ms ease-out;
+  }
+
+  .px-tip,
+  .px-tip-host:is(:hover, :focus-visible, [data-open='true']) .px-tip {
+    translate: calc(-50% + var(--tip-shift, 0px)) 0;
+  }
+
+  .mine-bit,
+  .minecraft-mountain-glint {
+    display: none;
+  }
+
+  .minecraft-mountain-block.is-breaking,
+  .minecraft-mountain-block.is-regrown,
+  .contact-clock-colon,
+  .footer-goose-svg.is-honking,
+  .secrets-panel {
+    animation: none;
+  }
+
+  .mine-chip,
+  .footer-goose-honk {
+    animation-timing-function: steps(1, end);
+    transform: none;
+  }
+
+  .footer-goose {
+    transition: none;
+  }
+
+  .about-portrait-btn,
+  button.exp-tag,
+  .secrets-chip,
+  .swap.contact-copy {
+    transition-property: color, border-color, background-color;
+  }
+}
